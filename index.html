@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPT Georgia Tender Monitor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+      font-size: 30px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 26px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    }
+
+    .stat span {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 28px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      margin: 0 0 14px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .reg {
+      font-weight: 700;
+      color: #374151;
+    }
+
+    .tag {
+      font-size: 13px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      white-space: nowrap;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .meta {
+      color: #4b5563;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      text-decoration: none;
+      border: 1px solid #d1d5db;
+      color: #111827;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      background: #fff;
+    }
+
+    .btn:hover {
+      background: #f3f4f6;
+    }
+
+    .empty {
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 850px) {
+      .stats, .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🇬🇪 GPT Georgia Tender Monitor</h1>
+    <div class="subtitle">Автоматический мониторинг тендеров по CPV-кодам</div>
+
+    <div class="stats">
+      <div class="stat">
+        <span>Всего тендеров</span>
+        <strong id="totalCount">0</strong>
+      </div>
+      <div class="stat">
+        <span>Найдено сегодня</span>
+        <strong id="todayCount">0</strong>
+      </div>
+      <div class="stat">
+        <span>Категорий</span>
+        <strong id="categoryCount">0</strong>
+      </div>
+      <div class="stat">
+        <span>Общий бюджет</span>
+        <strong id="totalBudget">—</strong>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <h2 class="section-title">🆕 Новые тендеры</h2>
+        <div id="tenderList"></div>
+      </div>
+
+      <div>
+        <h2 class="section-title">🏷 Категории</h2>
+        <div id="categoryList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CSV_FILE = "tenders.csv";
+
+    function parseCSV(text) {
+      const rows = [];
+      let current = "";
+      let row = [];
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && next === '"') {
+          current += '"';
+          i++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === "," && !inQuotes) {
+          row.push(current);
+          current = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (current || row.length) {
+            row.push(current);
+            rows.push(row);
+            row = [];
+            current = "";
+          }
+        } else {
+          current += char;
+        }
+      }
+
+      if (current || row.length) {
+        row.push(current);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function moneyToNumber(value) {
+      if (!value) return 0;
+      const cleaned = value
+        .replace(/GEL/g, "")
+        .replace(/`/g, "")
+        .replace(/'/g, "")
+        .replace(/\s/g, "")
+        .replace(",", ".");
+      return parseFloat(cleaned) || 0;
+    }
+
+    function formatBudget(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + "M GEL";
+      if (num >= 1000) return Math.round(num / 1000) + "K GEL";
+      return num ? Math.round(num) + " GEL" : "—";
+    }
+
+    function todayString() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function renderTenders(tenders) {
+      const list = document.getElementById("tenderList");
+
+      if (!tenders.length) {
+        list.innerHTML = `<div class="empty">Пока нет данных. Запусти GitHub Action.</div>`;
+        return;
+      }
+
+      list.innerHTML = tenders.slice().reverse().map(t => `
+        <div class="card">
+          <div class="top">
+            <div class="reg">${t.reg_id || "N/A"}</div>
+            <div class="tag">${shortCategory(t.category)}</div>
+          </div>
+          <div class="title">${t.name || "Без названия"}</div>
+          <div class="meta">
+            🏢 ${t.organization || "—"}<br>
+            💰 ${t.price || "—"}<br>
+            📅 Срок: ${t.deadline || "—"}
+          </div>
+          <div class="actions">
+            <a class="btn" href="${t.link}" target="_blank">Открыть тендер ↗</a>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function shortCategory(cat) {
+      if (!cat) return "Без категории";
+      if (cat.includes("451127")) return "Ландшафт";
+      if (cat.includes("374400")) return "Фитнес";
+      if (cat.includes("374200")) return "Гимнастика";
+      if (cat.includes("375")) return "Игры";
+      if (cat.includes("374")) return "Спорт";
+      if (cat.includes("451000")) return "Стройплощадка";
+      return cat.split("-")[0].trim();
+    }
+
+    function renderCategories(tenders) {
+      const box = document.getElementById("categoryList");
+      const map = {};
+
+      tenders.forEach(t => {
+        const key = shortCategory(t.category);
+        map[key] = (map[key] || 0) + 1;
+      });
+
+      box.innerHTML = Object.entries(map).map(([name, count]) => `
+        <div class="card">
+          <div class="top">
+            <div class="title" style="margin:0;">${name}</div>
+            <div class="tag">${count} тендер</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(CSV_FILE + "?v=" + Date.now());
+        const text = await res.text();
+
+        const parsed = parseCSV(text);
+        const headers = parsed.shift();
+
+        const tenders = parsed.map(row => {
+          const obj = {};
+          headers.forEach((h, i) => obj[h] = row[i] || "");
+          return obj;
+        }).filter(t => t.id);
+
+        const totalBudget = tenders.reduce((sum, t) => sum + moneyToNumber(t.price), 0);
+        const categories = new Set(tenders.map(t => shortCategory(t.category)));
+        const today = todayString();
+        const todayCount = tenders.filter(t => (t.date_found || "").startsWith(today)).length;
+
+        document.getElementById("totalCount").textContent = tenders.length;
+        document.getElementById("todayCount").textContent = todayCount;
+        document.getElementById("categoryCount").textContent = categories.size;
+        document.getElementById("totalBudget").textContent = formatBudget(totalBudget);
+
+        renderTenders(tenders);
+        renderCategories(tenders);
+
+      } catch (e) {
+        document.getElementById("tenderList").innerHTML =
+          `<div class="empty">Не удалось загрузить tenders.csv. Сначала запусти workflow.</div>`;
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
