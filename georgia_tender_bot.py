@@ -30,6 +30,10 @@ SEARCH_PARAMS = [
 ]
 
 
+def now_str():
+    return datetime.now().strftime("%Y-%m-%d %H:%M")
+
+
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -44,18 +48,23 @@ def save_data(data):
 
 def send_telegram(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Telegram secrets missing")
         return
 
-    requests.post(
-        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-        json={
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": message,
-            "parse_mode": "HTML",
-            "disable_web_page_preview": False,
-        },
-        timeout=20,
-    )
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            json={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": message,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": False,
+            },
+            timeout=20,
+        )
+        print("Telegram:", r.status_code, r.text[:120])
+    except Exception as e:
+        print("Telegram error:", e)
 
 
 def get_session():
@@ -80,7 +89,6 @@ def get_session():
 
 def extract_cpvs(text):
     matches = re.findall(r"\b\d{8}\b", text)
-
     cpvs = []
 
     for cpv in matches:
@@ -93,9 +101,9 @@ def extract_cpvs(text):
 def merge_cpvs(*lists):
     merged = []
 
-    for l in lists:
-        for cpv in l:
-            if cpv not in merged:
+    for cpv_list in lists:
+        for cpv in cpv_list or []:
+            if cpv in ALLOWED_CPVS and cpv not in merged:
                 merged.append(cpv)
 
     return merged
@@ -103,13 +111,11 @@ def merge_cpvs(*lists):
 
 def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
-
     tenders = []
 
     rows = soup.find_all("tr", id=re.compile(r"^A\d+"))
 
     for row in rows:
-
         row_text = row.get_text(" ", strip=True)
 
         tender_id = ""
@@ -120,44 +126,37 @@ def parse_tenders(html):
 
         onclick = row.get("onclick", "")
         m = re.search(r"ShowApp\((\d+)", onclick)
-
         if m:
             tender_id = m.group(1)
 
         reg_id = ""
         m = re.search(r"(NAT|SPA|GEO|CON|MEP|DAP)\d+", row_text)
-
         if m:
             reg_id = m.group(0)
 
         price = ""
         m = re.search(r"[\d\s`']+\.00\s*GEL", row_text)
-
         if m:
             price = m.group(0).strip()
 
         deadline = ""
         m = re.search(r"Срок принятия предложения[:\s]+(\d{2}\.\d{2}\.\d{4})", row_text)
-
         if m:
             deadline = m.group(1)
 
         org = ""
         m = re.search(r"Закупщик[:\s]+(.+?)(?:Категория|Предполагаемая|$)", row_text)
-
         if m:
             org = m.group(1).strip()
 
         name = ""
         m = re.search(r"Категория закупки[:\s]+(.+?)(?:Предполагаемая|Коды|$)", row_text)
-
         if m:
             name = m.group(1).strip()
 
         cpvs = extract_cpvs(row_text)
 
         if tender_id:
-
             tenders.append({
                 "id": tender_id,
                 "reg_id": reg_id,
@@ -172,7 +171,6 @@ def parse_tenders(html):
 
 
 def search_tenders(params):
-
     session = get_session()
 
     data = {
@@ -201,21 +199,22 @@ def search_tenders(params):
     }
 
     try:
+        # Important: warm up session before POST
+        session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
+        time.sleep(1)
 
         r = session.post(
             "https://tenders.procurement.gov.ge/public/library/controller.php",
             data=data,
-            timeout=30
+            timeout=30,
         )
 
-        print(
-            f"Search {params['label']}:",
-            r.status_code,
-            len(r.text)
-        )
+        print(f"Search {params['label']}:", r.status_code, len(r.text))
 
         if r.status_code == 200:
             return parse_tenders(r.text)
+
+        print("Response preview:", r.text[:250])
 
     except Exception as e:
         print("Search error:", e)
@@ -224,9 +223,7 @@ def search_tenders(params):
 
 
 def save_csv(data):
-
     with open(CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
-
         writer = csv.writer(f)
 
         writer.writerow([
@@ -245,11 +242,7 @@ def save_csv(data):
         ])
 
         for tender_id, t in data.items():
-
-            cpv_labels = [
-                ALLOWED_CPVS.get(cpv, cpv)
-                for cpv in t.get("cpvs", [])
-            ]
+            cpv_labels = [ALLOWED_CPVS.get(cpv, cpv) for cpv in t.get("cpvs", [])]
 
             writer.writerow([
                 t.get("date_found", ""),
@@ -267,12 +260,11 @@ def save_csv(data):
             ])
 
 
-def format_message(t):
-
-    cpv_lines = "\n".join([
+def format_new_message(t):
+    cpv_lines = "\n".join(
         f"🏷 {ALLOWED_CPVS.get(cpv, cpv)}"
         for cpv in t.get("cpvs", [])
-    ])
+    )
 
     return (
         f"🆕 <b>НОВЫЙ ТЕНДЕР</b>\n"
@@ -287,77 +279,88 @@ def format_message(t):
     )
 
 
-def main():
+def format_status_message(t, old_status, new_status):
+    return (
+        f"🔄 <b>СТАТУС ИЗМЕНИЛСЯ</b>\n"
+        f"━━━━━━━━━━━━━━━\n"
+        f"📋 <b>{t.get('reg_id') or t.get('id')}</b>\n"
+        f"Было: <b>{old_status}</b>\n"
+        f"Стало: <b>{new_status}</b>\n\n"
+        f"🔗 https://tenders.procurement.gov.ge/public/?lang=ru&go={t.get('id')}"
+    )
 
+
+def main():
     print("Bot started:", datetime.now())
 
     db = load_data()
-
     active_now = set()
 
     new_count = 0
     updated_count = 0
 
     for params in SEARCH_PARAMS:
-
         tenders = search_tenders(params)
-
         print(params["label"], "found:", len(tenders))
 
         search_cpv = params["label"].split(" - ")[0]
 
         for t in tenders:
-
-            tid = t["id"]
+            tid = t.get("id")
+            if not tid:
+                continue
 
             active_now.add(tid)
 
+            existing = db.get(tid, {})
+
             merged_cpvs = merge_cpvs(
+                existing.get("cpvs", []),
                 t.get("cpvs", []),
                 [search_cpv],
-                db.get(tid, {}).get("cpvs", []),
             )
 
             if tid not in db:
-
                 db[tid] = {
                     "id": tid,
-                    "reg_id": t.get("reg_id"),
-                    "name": t.get("name"),
-                    "org": t.get("org"),
-                    "price": t.get("price"),
-                    "deadline": t.get("deadline"),
+                    "reg_id": t.get("reg_id", ""),
+                    "name": t.get("name", ""),
+                    "org": t.get("org", ""),
+                    "price": t.get("price", ""),
+                    "deadline": t.get("deadline", ""),
                     "cpvs": merged_cpvs,
                     "status": "Объявлен",
-                    "date_found": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "last_seen": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "date_found": now_str(),
+                    "last_seen": now_str(),
                 }
 
                 new_count += 1
-
-                send_telegram(format_message(db[tid]))
+                send_telegram(format_new_message(db[tid]))
 
             else:
+                old_status = existing.get("status", "Неизвестно")
 
-                old_status = db[tid].get("status")
-
+                db[tid]["reg_id"] = t.get("reg_id") or db[tid].get("reg_id", "")
+                db[tid]["name"] = t.get("name") or db[tid].get("name", "")
+                db[tid]["org"] = t.get("org") or db[tid].get("org", "")
+                db[tid]["price"] = t.get("price") or db[tid].get("price", "")
+                db[tid]["deadline"] = t.get("deadline") or db[tid].get("deadline", "")
                 db[tid]["cpvs"] = merged_cpvs
-                db[tid]["last_seen"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                db[tid]["last_seen"] = now_str()
 
                 if old_status != "Объявлен":
                     db[tid]["status"] = "Объявлен"
                     updated_count += 1
+                    send_telegram(format_status_message(db[tid], old_status, "Объявлен"))
 
         time.sleep(2)
 
-    for tid in db:
-
-        if tid not in active_now:
-
-            if db[tid]["status"] == "Объявлен":
-
-                db[tid]["status"] = "Не найден в активном поиске"
-                updated_count += 1
+    for tid, tender in db.items():
+        if tid not in active_now and tender.get("status") == "Объявлен":
+            old_status = tender.get("status")
+            tender["status"] = "Не найден в активном поиске"
+            updated_count += 1
+            send_telegram(format_status_message(tender, old_status, tender["status"]))
 
     save_data(db)
     save_csv(db)
