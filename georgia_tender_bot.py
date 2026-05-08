@@ -110,7 +110,9 @@ def extract_status(text):
         if status in clean:
             return status
 
-    return "Неизвестно"
+    # Georgian site sometimes does not return Russian status in get_app response
+    # Current search uses app_status=10, so fallback is active/announced tender
+    return "Объявлен"
 
 
 def cpv_labels(cpvs):
