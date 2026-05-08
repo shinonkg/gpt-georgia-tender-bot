@@ -96,6 +96,33 @@ body{
   box-shadow:0 4px 18px rgba(0,0,0,0.06);
   margin-bottom:24px;
 }
+  .quick-filters{
+  display:flex;
+  gap:10px;
+  margin-bottom:22px;
+  flex-wrap:wrap;
+}
+
+.qf{
+  border:none;
+  background:white;
+  border:1px solid #e5e7eb;
+  padding:10px 16px;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.qf:hover{
+  transform:translateY(-2px);
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.active-qf{
+  background:#2563eb;
+  color:white;
+}
 
 .stats{
   display:grid;
@@ -387,7 +414,34 @@ body{
         placeholder="Поиск: Rustavi, NAT2600, 45112723..."
       />
     </div>
+    
+<div class="quick-filters">
 
+  <button onclick="setQuickFilter('all')" class="qf active-qf">
+    ALL
+  </button>
+
+  <button onclick="setQuickFilter('high')"
+  class="qf">
+    HIGH VALUE
+  </button>
+
+  <button onclick="setQuickFilter('playground')"
+  class="qf">
+    PLAYGROUND
+  </button>
+
+  <button onclick="setQuickFilter('landscape')"
+  class="qf">
+    LANDSCAPE
+  </button>
+
+  <button onclick="setQuickFilter('soon')"
+  class="qf">
+    DEADLINE SOON
+  </button>
+
+</div>
     <div class="stats">
       <div class="stat">
         <span>ACTIVE TENDERS</span>
@@ -405,7 +459,7 @@ body{
       </div>
 
       <div class="stat">
-        <span>OTAL VALUE</span>
+        <span>TOTAL VALUE</span>
         <strong id="budgetCount">—</strong>
       </div>
     </div>
@@ -531,7 +585,27 @@ function formatBudget(num){
   if(num >= 1000) return Math.round(num/1000) + "K";
   return Math.round(num);
 }
+  
+let QUICK_FILTER = "all";
 
+function setQuickFilter(type){
+
+  QUICK_FILTER = type;
+
+  document.querySelectorAll(".qf").forEach(x=>{
+    x.classList.remove("active-qf");
+  });
+
+  const btn = document.querySelector(
+    `.qf[onclick="setQuickFilter('${type}')"]`
+  );
+
+  if(btn){
+    btn.classList.add("active-qf");
+  }
+
+  render();
+}
 function render(){
   const search = document.getElementById("searchInput").value.toLowerCase();
 
@@ -541,7 +615,29 @@ function render(){
 
     const matchesSearch = text.includes(search);
     const matchesFilter = CURRENT_FILTER === "all" || cpvs.includes(CURRENT_FILTER);
+if(QUICK_FILTER === "high"){
+  const p = (t.price || "")
+    .replace(/GEL/g,"")
+    .replace(/`/g,"")
+    .replace(/'/g,"")
+    .replace(/\s/g,"");
 
+  if((parseFloat(p) || 0) < 1000000) return false;
+}
+
+if(QUICK_FILTER === "playground"){
+  if(!getCpvs(t).includes("45112723")) return false;
+}
+
+if(QUICK_FILTER === "landscape"){
+  const cpvs = getCpvs(t);
+
+  if(!cpvs.some(c => c.startsWith("451127"))) return false;
+}
+
+if(QUICK_FILTER === "soon"){
+  if(!t.deadline) return false;
+}
     return matchesSearch && matchesFilter;
   });
 
