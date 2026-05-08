@@ -314,7 +314,41 @@ body{
 .modal-body{
   color:#374151;
   line-height:1.8;
+  
 }  
+  .modal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  margin-top:20px;
+}
+
+.modal-item{
+  background:#f9fafb;
+  border:1px solid #eef2f7;
+  border-radius:16px;
+  padding:14px;
+}
+
+.modal-label{
+  font-size:12px;
+  font-weight:700;
+  color:#6b7280;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.modal-value{
+  font-size:15px;
+  font-weight:600;
+  color:#111827;
+}
+
+.modal-actions{
+  margin-top:26px;
+  display:flex;
+  gap:12px;
+}
 </style>
 </head>
 
@@ -555,22 +589,55 @@ function openModal(tenderId){
   document.getElementById("modalTitle").textContent =
     t.reg_id || "Tender";
 
-  document.getElementById("modalBody").innerHTML = `
-    <p><strong>Название:</strong><br>${t.name || "—"}</p>
-    <p><strong>Статус:</strong><br>
-      <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span>
-    </p>
-    <p><strong>CPV:</strong><br>${renderBadges(t)}</p>
-    <p><strong>Организация:</strong><br>${t.org || "—"}</p>
-    <p><strong>Бюджет:</strong><br>${t.price || "—"}</p>
-    <p><strong>Срок:</strong><br>${t.deadline || "—"}</p>
-    <p><strong>Найден:</strong><br>${t.date_found || "—"}</p>
-    <p><strong>Последняя проверка:</strong><br>${t.last_seen || "—"}</p>
+document.getElementById("modalBody").innerHTML = `
 
-    <div class="actions">
-      <a class="btn" href="${t.link}" target="_blank">Открыть официальный тендер ↗</a>
+<div class="modal-grid">
+
+  <div class="modal-item">
+    <div class="modal-label">Название</div>
+    <div class="modal-value">${t.name || "—"}</div>
+  </div>
+
+  <div class="modal-item">
+    <div class="modal-label">Статус</div>
+    <div class="modal-value">
+      <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span>
     </div>
-  `;
+  </div>
+
+  <div class="modal-item">
+    <div class="modal-label">Организация</div>
+    <div class="modal-value">${t.org || "—"}</div>
+  </div>
+
+  <div class="modal-item">
+    <div class="modal-label">Бюджет</div>
+    <div class="modal-value">${t.price || "—"}</div>
+  </div>
+
+  <div class="modal-item">
+    <div class="modal-label">Deadline</div>
+    <div class="modal-value">${t.deadline || "—"}</div>
+  </div>
+
+  <div class="modal-item">
+    <div class="modal-label">Последняя проверка</div>
+    <div class="modal-value">${t.last_seen || "—"}</div>
+  </div>
+
+</div>
+
+<div style="margin-top:22px">
+  <div class="modal-label">CPV Categories</div>
+  ${renderBadges(t)}
+</div>
+
+<div class="modal-actions">
+  <a class="btn" href="${t.link}" target="_blank">
+    Официальный тендер ↗
+  </a>
+</div>
+`;
 
   document.getElementById("tenderModal").style.display = "block";
 }
