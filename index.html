@@ -37,7 +37,7 @@ body{
 }
 
 .menu button{
-  background:#1f2937;
+  background:rgba(255,255,255,0.04);
   border:none;
   color:white;
   padding:13px;
@@ -49,6 +49,11 @@ body{
 }
 
 .menu button.active{background:#2563eb}
+  .menu button:hover{
+  background:#2563eb;
+  transform:translateX(3px);
+  transition:0.2s;
+}
 
 .main{
   flex:1;
