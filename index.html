@@ -374,20 +374,41 @@ function parseCSV(text){
 
 function getCategory(t){
 
-  const c = (
-    (t.category || "") + " " +
+  const text = (
     (t.label || "") + " " +
     (t.name || "")
   ).toLowerCase();
 
-  if(c.includes("45112723")) return "playground";
-  if(c.includes("45112720")) return "landscape";
-  if(c.includes("45112710")) return "landscape";
-  if(c.includes("45112700")) return "landscape";
-  if(c.includes("45100000")) return "construction";
-  if(c.includes("374400")) return "fitness";
-  if(c.includes("374200")) return "fitness";
-  if(c.includes("375")) return "playground";
+  if(text.includes("45112723")){
+    return "playground";
+  }
+
+  if(
+    text.includes("45112720") ||
+    text.includes("45112710") ||
+    text.includes("45112700")
+  ){
+    return "landscape";
+  }
+
+  if(text.includes("45100000")){
+    return "construction";
+  }
+
+  if(
+    text.includes("374400") ||
+    text.includes("374200") ||
+    text.includes("fitness")
+  ){
+    return "fitness";
+  }
+
+  if(
+    text.includes("37500000") ||
+    text.includes("playground")
+  ){
+    return "playground";
+  }
 
   return "default";
 }
