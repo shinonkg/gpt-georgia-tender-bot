@@ -13,12 +13,20 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 SEEN_FILE = "seen_tenders.json"
 CSV_FILE = "tenders.csv"
 
+ALLOWED_CPVS = {
+    "45100000": "45100000 - Работы по подготовке строительной площадки",
+    "45112720": "45112720 - Ландшафтные работы на спортивных площадках и в зонах отдыха",
+    "45112700": "45112700 - Ландшафтные работы",
+    "45112723": "45112723 - Ландшафтные работы на игровых площадках",
+    "45112710": "45112710 - Ландшафтные работы в зеленых зонах",
+}
+
 SEARCH_PARAMS = [
-    {"app_basecode": "18999", "app_codes": "", "label": "45100000 - Работы по подготовке строительной площадки"},
-    {"app_basecode": "0", "app_codes": "45112720", "label": "45112720 - Ландшафтные работы на спортивных площадках и в зонах отдыха"},
-    {"app_basecode": "0", "app_codes": "45112700", "label": "45112700 - Ландшафтные работы"},
-    {"app_basecode": "0", "app_codes": "45112723", "label": "45112723 - Ландшафтные работы на игровых площадках"},
-    {"app_basecode": "0", "app_codes": "45112710", "label": "45112710 - Ландшафтные работы в зеленых зонах"},
+    {"app_basecode": "18999", "app_codes": "", "label": ALLOWED_CPVS["45100000"]},
+    {"app_basecode": "0", "app_codes": "45112720", "label": ALLOWED_CPVS["45112720"]},
+    {"app_basecode": "0", "app_codes": "45112700", "label": ALLOWED_CPVS["45112700"]},
+    {"app_basecode": "0", "app_codes": "45112723", "label": ALLOWED_CPVS["45112723"]},
+    {"app_basecode": "0", "app_codes": "45112710", "label": ALLOWED_CPVS["45112710"]},
 ]
 
 
@@ -70,6 +78,21 @@ def get_session():
     return session
 
 
+def extract_all_cpvs(text):
+    cpv_matches = re.findall(r"\b\d{8}\b", text)
+    cpvs = []
+
+    for cpv in cpv_matches:
+        if cpv in ALLOWED_CPVS and cpv not in cpvs:
+            cpvs.append(cpv)
+
+    return cpvs
+
+
+def cpv_labels(cpvs):
+    return " | ".join(ALLOWED_CPVS.get(cpv, cpv) for cpv in cpvs)
+
+
 def search_tenders(params):
     session = get_session()
 
@@ -108,7 +131,13 @@ def search_tenders(params):
         print(f"Search {params['label']}:", r.status_code, len(r.text))
 
         if r.status_code == 200:
-            return parse_tenders(r.text)
+            tenders = parse_tenders(r.text)
+
+            for tender in tenders:
+                if not tender.get("cpvs"):
+                    tender["cpvs"] = [params["label"].split(" - ")[0]]
+
+            return tenders
 
     except Exception as e:
         print("Search error:", e)
@@ -160,6 +189,8 @@ def parse_tenders(html):
         if match:
             name = match.group(1).strip()
 
+        cpvs = extract_all_cpvs(row_text)
+
         if tender_id:
             tenders.append({
                 "id": tender_id,
@@ -169,6 +200,7 @@ def parse_tenders(html):
                 "price": price,
                 "deadline": deadline,
                 "text": row_text[:300],
+                "cpvs": cpvs,
             })
 
     return tenders
@@ -177,21 +209,26 @@ def parse_tenders(html):
 def save_to_csv(tender, label):
     file_exists = os.path.exists(CSV_FILE)
 
+    cpvs = tender.get("cpvs") or [label.split(" - ")[0]]
+    cpv_text = "|".join(cpvs)
+    cpv_label_text = cpv_labels(cpvs)
+
     with open(CSV_FILE, "a", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
 
         if not file_exists:
             writer.writerow([
-    "date_found",
-    "id",
-    "reg_id",
-    "name",
-    "org",
-    "price",
-    "deadline",
-    "label",
-    "link",
-])
+                "date_found",
+                "id",
+                "reg_id",
+                "name",
+                "org",
+                "price",
+                "deadline",
+                "cpvs",
+                "label",
+                "link",
+            ])
 
         writer.writerow([
             datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -201,19 +238,22 @@ def save_to_csv(tender, label):
             tender.get("org", ""),
             tender.get("price", ""),
             tender.get("deadline", ""),
-            label,
+            cpv_text,
+            cpv_label_text,
             f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender.get('id', '')}",
         ])
 
 
 def format_message(tender, label):
     link = f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender['id']}"
+    cpvs = tender.get("cpvs") or [label.split(" - ")[0]]
+    cpv_lines = "\n".join(f"🏷 {ALLOWED_CPVS.get(cpv, cpv)}" for cpv in cpvs)
 
     return (
         f"🆕 <b>НОВЫЙ ТЕНДЕР</b>\n"
         f"━━━━━━━━━━━━━━━\n"
         f"📋 <b>{tender.get('reg_id') or 'Без номера'}</b>\n"
-        f"🏷 {label}\n"
+        f"{cpv_lines}\n"
         f"🏢 {tender.get('org') or '—'}\n"
         f"💰 {tender.get('price') or '—'}\n"
         f"📅 Срок: {tender.get('deadline') or '—'}\n\n"
