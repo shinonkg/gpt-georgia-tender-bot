@@ -376,12 +376,14 @@ function render(){
 
         <div class="title">${t.name || "Без названия"}</div>
 
-        <div class="meta">
-          📋 ${t.reg_id || "N/A"}<br>
-          🏢 ${t.org || "—"}<br>
-          💰 ${t.price || "—"}<br>
-          📅 ${t.deadline || "—"}
-        </div>
+<div class="meta">
+  📋 ${t.reg_id || "N/A"}<br>
+  📌 <strong>${t.status || "—"}</strong><br>
+  🏢 ${t.org || "—"}<br>
+  💰 ${t.price || "—"}<br>
+  📅 ${t.deadline || "—"}<br>
+  🕒 ${t.last_seen || "—"}
+</div>
 
         <div class="actions">
           <a class="btn" href="${t.link}" target="_blank">Открыть тендер</a>
