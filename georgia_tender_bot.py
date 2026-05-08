@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-SEEN_FILE = "seen_tenders.json"
+DATA_FILE = "tender_data.json"
 CSV_FILE = "tenders.csv"
 
 ALLOWED_CPVS = {
@@ -21,19 +21,6 @@ ALLOWED_CPVS = {
     "45112710": "45112710 - Ландшафтные работы в зеленых зонах",
 }
 
-STATUS_LIST = [
-    "Объявлен",
-    "Приём предложений начался",
-    "Приём предложений завершён",
-    "Отбор/оценка",
-    "Победитель выявлен",
-    "Завершён с отрицательным результатом",
-    "Не состоялся",
-    "Прекращён",
-    "Идёт подготовка договора",
-    "Договор подписан",
-]
-
 SEARCH_PARAMS = [
     {"app_basecode": "18999", "app_codes": "", "label": ALLOWED_CPVS["45100000"]},
     {"app_basecode": "0", "app_codes": "45112720", "label": ALLOWED_CPVS["45112720"]},
@@ -43,24 +30,23 @@ SEARCH_PARAMS = [
 ]
 
 
-def load_seen():
-    if os.path.exists(SEEN_FILE):
-        with open(SEEN_FILE, "r", encoding="utf-8") as f:
-            return set(json.load(f))
-    return set()
+def load_data():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
 
 
-def save_seen(seen):
-    with open(SEEN_FILE, "w", encoding="utf-8") as f:
-        json.dump(sorted(list(seen)), f, ensure_ascii=False, indent=2)
+def save_data(data):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 def send_telegram(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Telegram secrets missing")
         return
 
-    r = requests.post(
+    requests.post(
         f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
         json={
             "chat_id": TELEGRAM_CHAT_ID,
@@ -70,208 +56,100 @@ def send_telegram(message):
         },
         timeout=20,
     )
-    print("Telegram:", r.status_code, r.text[:200])
 
 
 def get_session():
-    session = requests.Session()
-    session.headers.update({
+    s = requests.Session()
+
+    s.headers.update({
         "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
         "Referer": "https://tenders.procurement.gov.ge/public/?lang=ru",
-        "Origin": "https://tenders.procurement.gov.ge",
     })
 
-    try:
-        session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
-        time.sleep(1)
-    except Exception as e:
-        print("Session init error:", e)
-
-    return session
+    return s
 
 
-def extract_all_cpvs(text):
-    cpv_matches = re.findall(r"\b\d{8}\b", text)
+def extract_cpvs(text):
+    matches = re.findall(r"\b\d{8}\b", text)
+
     cpvs = []
 
-    for cpv in cpv_matches:
+    for cpv in matches:
         if cpv in ALLOWED_CPVS and cpv not in cpvs:
             cpvs.append(cpv)
 
     return cpvs
 
 
-def extract_status(text):
-    clean = BeautifulSoup(text, "html.parser").get_text(" ", strip=True)
-
-    for status in STATUS_LIST:
-        if status in clean:
-            return status
-
-    # Georgian site sometimes does not return Russian status in get_app response
-    # Current search uses app_status=10, so fallback is active/announced tender
-    return "Объявлен"
-
-
-def cpv_labels(cpvs):
-    return " | ".join(ALLOWED_CPVS.get(cpv, cpv) for cpv in cpvs)
-
-
 def merge_cpvs(*lists):
     merged = []
 
-    for cpv_list in lists:
-        for cpv in cpv_list or []:
-            if cpv in ALLOWED_CPVS and cpv not in merged:
+    for l in lists:
+        for cpv in l:
+            if cpv not in merged:
                 merged.append(cpv)
 
     return merged
 
 
-def get_tender_detail(session, tender_id):
-    detail = {
-        "cpvs": [],
-        "status": "Неизвестно",
-    }
-
-    try:
-        r = session.post(
-            "https://tenders.procurement.gov.ge/public/library/controller.php",
-            data={
-                "action": "get_app",
-                "app_id": tender_id,
-                "go": tender_id,
-            },
-            timeout=30,
-        )
-
-        if r.status_code == 200 and len(r.text) > 100:
-            detail["cpvs"] = extract_all_cpvs(r.text)
-            detail["status"] = extract_status(r.text)
-
-    except Exception as e:
-        print(f"Detail error for {tender_id}:", e)
-
-    return detail
-
-
-def search_tenders(params):
-    session = get_session()
-
-    data = {
-        "action": "search_app",
-        "app_t": "0",
-        "search": "1",
-        "app_reg_id": "",
-        "app_shems_id": "0",
-        "org_a": "",
-        "app_monac_id": "0",
-        "org_b": "",
-        "app_particip_status_id": "0",
-        "app_donor_id": "0",
-        "app_status": "10",
-        "app_agr_status": "0",
-        "app_type": "0",
-        "app_basecode": params.get("app_basecode", "0"),
-        "app_codes": params.get("app_codes", ""),
-        "app_date_type": "1",
-        "app_date_from": "",
-        "app_date_tlll": "",
-        "app_amount_from": "",
-        "app_amount_to": "",
-        "app_currency": "2",
-        "app_pricelist": "0",
-    }
-
-    try:
-        r = session.post(
-            "https://tenders.procurement.gov.ge/public/library/controller.php",
-            data=data,
-            timeout=30,
-        )
-
-        print(f"Search {params['label']}:", r.status_code, len(r.text))
-
-        if r.status_code == 200:
-            tenders = parse_tenders(r.text)
-            search_cpv = params["label"].split(" - ")[0]
-
-            for tender in tenders:
-                tender_id = tender.get("id")
-
-                detail = {"cpvs": [], "status": "Неизвестно"}
-                if tender_id:
-                    detail = get_tender_detail(session, tender_id)
-                    time.sleep(0.5)
-
-                tender["cpvs"] = merge_cpvs(
-                    tender.get("cpvs", []),
-                    detail.get("cpvs", []),
-                    [search_cpv],
-                )
-                tender["status"] = detail.get("status") or "Неизвестно"
-
-                print(
-                    f"  {tender.get('reg_id') or tender_id}: "
-                    f"{' | '.join(tender['cpvs'])} / {tender['status']}"
-                )
-
-            return tenders
-
-    except Exception as e:
-        print("Search error:", e)
-
-    return []
-
-
 def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
+
     tenders = []
+
     rows = soup.find_all("tr", id=re.compile(r"^A\d+"))
 
     for row in rows:
+
         row_text = row.get_text(" ", strip=True)
 
         tender_id = ""
+
         row_id = row.get("id", "")
         if row_id.startswith("A"):
             tender_id = row_id.replace("A", "")
 
         onclick = row.get("onclick", "")
-        match = re.search(r"ShowApp\((\d+)", onclick)
-        if match:
-            tender_id = match.group(1)
+        m = re.search(r"ShowApp\((\d+)", onclick)
+
+        if m:
+            tender_id = m.group(1)
 
         reg_id = ""
-        match = re.search(r"(NAT|SPA|GEO|CON|MEP|DAP)\d+", row_text)
-        if match:
-            reg_id = match.group(0)
+        m = re.search(r"(NAT|SPA|GEO|CON|MEP|DAP)\d+", row_text)
+
+        if m:
+            reg_id = m.group(0)
 
         price = ""
-        match = re.search(r"[\d\s`']+\.00\s*GEL", row_text)
-        if match:
-            price = match.group(0).strip()
+        m = re.search(r"[\d\s`']+\.00\s*GEL", row_text)
+
+        if m:
+            price = m.group(0).strip()
 
         deadline = ""
-        match = re.search(r"Срок принятия предложения[:\s]+(\d{2}\.\d{2}\.\d{4})", row_text)
-        if match:
-            deadline = match.group(1)
+        m = re.search(r"Срок принятия предложения[:\s]+(\d{2}\.\d{2}\.\d{4})", row_text)
+
+        if m:
+            deadline = m.group(1)
 
         org = ""
-        match = re.search(r"Закупщик[:\s]+(.+?)(?:Категория|Предполагаемая|$)", row_text)
-        if match:
-            org = match.group(1).strip()
+        m = re.search(r"Закупщик[:\s]+(.+?)(?:Категория|Предполагаемая|$)", row_text)
+
+        if m:
+            org = m.group(1).strip()
 
         name = ""
-        match = re.search(r"Категория закупки[:\s]+(.+?)(?:Предполагаемая|Коды|$)", row_text)
-        if match:
-            name = match.group(1).strip()
+        m = re.search(r"Категория закупки[:\s]+(.+?)(?:Предполагаемая|Коды|$)", row_text)
 
-        cpvs = extract_all_cpvs(row_text)
+        if m:
+            name = m.group(1).strip()
+
+        cpvs = extract_cpvs(row_text)
 
         if tender_id:
+
             tenders.append({
                 "id": tender_id,
                 "reg_id": reg_id,
@@ -279,110 +157,198 @@ def parse_tenders(html):
                 "org": org,
                 "price": price,
                 "deadline": deadline,
-                "text": row_text[:300],
                 "cpvs": cpvs,
-                "status": "Неизвестно",
             })
 
     return tenders
 
 
-def save_to_csv(tender, label):
-    file_exists = os.path.exists(CSV_FILE)
+def search_tenders(params):
 
-    cpvs = tender.get("cpvs") or [label.split(" - ")[0]]
-    cpv_text = "|".join(cpvs)
-    cpv_label_text = cpv_labels(cpvs)
+    session = get_session()
 
-    with open(CSV_FILE, "a", encoding="utf-8-sig", newline="") as f:
+    data = {
+        "action": "search_app",
+        "app_t": "0",
+        "search": "1",
+        "app_status": "10",
+        "app_basecode": params.get("app_basecode", "0"),
+        "app_codes": params.get("app_codes", ""),
+    }
+
+    try:
+
+        r = session.post(
+            "https://tenders.procurement.gov.ge/public/library/controller.php",
+            data=data,
+            timeout=30
+        )
+
+        print(
+            f"Search {params['label']}:",
+            r.status_code,
+            len(r.text)
+        )
+
+        if r.status_code == 200:
+            return parse_tenders(r.text)
+
+    except Exception as e:
+        print("Search error:", e)
+
+    return []
+
+
+def save_csv(data):
+
+    with open(CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
+
         writer = csv.writer(f)
 
-        if not file_exists:
-            writer.writerow([
-                "date_found",
-                "id",
-                "reg_id",
-                "name",
-                "org",
-                "price",
-                "deadline",
-                "status",
-                "cpvs",
-                "label",
-                "link",
-            ])
-
         writer.writerow([
-            datetime.now().strftime("%Y-%m-%d %H:%M"),
-            tender.get("id", ""),
-            tender.get("reg_id", ""),
-            tender.get("name", ""),
-            tender.get("org", ""),
-            tender.get("price", ""),
-            tender.get("deadline", ""),
-            tender.get("status", "Неизвестно"),
-            cpv_text,
-            cpv_label_text,
-            f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender.get('id', '')}",
+            "date_found",
+            "last_seen",
+            "id",
+            "reg_id",
+            "name",
+            "org",
+            "price",
+            "deadline",
+            "status",
+            "cpvs",
+            "label",
+            "link",
         ])
 
+        for tender_id, t in data.items():
 
-def format_message(tender, label):
-    link = f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender['id']}"
-    cpvs = tender.get("cpvs") or [label.split(" - ")[0]]
-    cpv_lines = "\n".join(f"🏷 {ALLOWED_CPVS.get(cpv, cpv)}" for cpv in cpvs)
+            cpv_labels = [
+                ALLOWED_CPVS.get(cpv, cpv)
+                for cpv in t.get("cpvs", [])
+            ]
+
+            writer.writerow([
+                t.get("date_found", ""),
+                t.get("last_seen", ""),
+                tender_id,
+                t.get("reg_id", ""),
+                t.get("name", ""),
+                t.get("org", ""),
+                t.get("price", ""),
+                t.get("deadline", ""),
+                t.get("status", ""),
+                "|".join(t.get("cpvs", [])),
+                " | ".join(cpv_labels),
+                f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
+            ])
+
+
+def format_message(t):
+
+    cpv_lines = "\n".join([
+        f"🏷 {ALLOWED_CPVS.get(cpv, cpv)}"
+        for cpv in t.get("cpvs", [])
+    ])
 
     return (
         f"🆕 <b>НОВЫЙ ТЕНДЕР</b>\n"
         f"━━━━━━━━━━━━━━━\n"
-        f"📋 <b>{tender.get('reg_id') or 'Без номера'}</b>\n"
-        f"📌 Статус: <b>{tender.get('status', 'Неизвестно')}</b>\n"
+        f"📋 <b>{t.get('reg_id') or 'Без номера'}</b>\n"
+        f"📌 Статус: <b>{t.get('status')}</b>\n"
         f"{cpv_lines}\n"
-        f"🏢 {tender.get('org') or '—'}\n"
-        f"💰 {tender.get('price') or '—'}\n"
-        f"📅 Срок: {tender.get('deadline') or '—'}\n\n"
-        f"🔗 <a href='{link}'>Открыть тендер</a>"
+        f"🏢 {t.get('org') or '—'}\n"
+        f"💰 {t.get('price') or '—'}\n"
+        f"📅 Срок: {t.get('deadline') or '—'}\n\n"
+        f"🔗 https://tenders.procurement.gov.ge/public/?lang=ru&go={t.get('id')}"
     )
 
 
 def main():
+
     print("Bot started:", datetime.now())
 
-    seen = load_seen()
+    db = load_data()
+
+    active_now = set()
+
     new_count = 0
+    updated_count = 0
 
     for params in SEARCH_PARAMS:
-        label = params["label"]
+
         tenders = search_tenders(params)
 
-        print(label, "found:", len(tenders))
+        print(params["label"], "found:", len(tenders))
 
-        for tender in tenders:
-            uid = tender.get("id") or tender.get("reg_id")
+        search_cpv = params["label"].split(" - ")[0]
 
-            if not uid:
-                continue
+        for t in tenders:
 
-            if uid not in seen:
-                seen.add(uid)
+            tid = t["id"]
+
+            active_now.add(tid)
+
+            merged_cpvs = merge_cpvs(
+                t.get("cpvs", []),
+                [search_cpv],
+                db.get(tid, {}).get("cpvs", []),
+            )
+
+            if tid not in db:
+
+                db[tid] = {
+                    "id": tid,
+                    "reg_id": t.get("reg_id"),
+                    "name": t.get("name"),
+                    "org": t.get("org"),
+                    "price": t.get("price"),
+                    "deadline": t.get("deadline"),
+                    "cpvs": merged_cpvs,
+                    "status": "Объявлен",
+                    "date_found": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "last_seen": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                }
+
                 new_count += 1
 
-                save_to_csv(tender, label)
-                send_telegram(format_message(tender, label))
+                send_telegram(format_message(db[tid]))
 
-                time.sleep(1)
+            else:
+
+                old_status = db[tid].get("status")
+
+                db[tid]["cpvs"] = merged_cpvs
+                db[tid]["last_seen"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+                if old_status != "Объявлен":
+                    db[tid]["status"] = "Объявлен"
+                    updated_count += 1
 
         time.sleep(2)
 
-    save_seen(seen)
+    for tid in db:
+
+        if tid not in active_now:
+
+            if db[tid]["status"] == "Объявлен":
+
+                db[tid]["status"] = "Не найден в активном поиске"
+                updated_count += 1
+
+    save_data(db)
+    save_csv(db)
 
     send_telegram(
-        f"✅ <b>GPT Tender Bot контроль завершён</b>\n"
-        f"🆕 Новых тендеров: <b>{new_count}</b>\n"
-        f"📌 Всего в базе: <b>{len(seen)}</b>"
+        f"✅ <b>GPT Tender Bot цикл завершён</b>\n"
+        f"🆕 Новых: <b>{new_count}</b>\n"
+        f"🔄 Обновлено: <b>{updated_count}</b>\n"
+        f"📌 Всего: <b>{len(db)}</b>"
     )
 
-    print("Done. New:", new_count)
+    print("Done.")
+    print("New:", new_count)
+    print("Updated:", updated_count)
+    print("Total:", len(db))
 
 
 if __name__ == "__main__":
