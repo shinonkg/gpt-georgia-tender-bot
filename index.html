@@ -406,13 +406,13 @@ async function loadData(){
   const text = await res.text();
 
   const rows = parseCSV(text);
-  const headers = rows.shift();
+  const headers = rows.shift().map(h => h.replace(/\uFEFF/g, "").trim());
 
   ALL_TENDERS = rows.map(r => {
     const obj = {};
     headers.forEach((h,i) => obj[h] = r[i] || "");
     return obj;
-  }).filter(t => t.id);
+  }).filter(t => t.id && t.id.trim() !== "");
 
   document.getElementById("totalCount").textContent = ALL_TENDERS.length;
 
