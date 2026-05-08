@@ -187,16 +187,16 @@ def save_to_csv(tender, label):
 
         if not file_exists:
             writer.writerow([
-                "date_found",
-                "id",
-                "reg_id",
-                "name",
-                "organization",
-                "price",
-                "deadline",
-                "category",
-                "link",
-            ])
+    "date_found",
+    "id",
+    "reg_id",
+    "name",
+    "org",
+    "price",
+    "deadline",
+    "label",
+    "link",
+])
 
         writer.writerow([
             datetime.now().strftime("%Y-%m-%d %H:%M"),
