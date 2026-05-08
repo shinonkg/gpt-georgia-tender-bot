@@ -93,6 +93,40 @@ def cpv_labels(cpvs):
     return " | ".join(ALLOWED_CPVS.get(cpv, cpv) for cpv in cpvs)
 
 
+def get_tender_detail_cpvs(session, tender_id):
+    cpvs = []
+
+    try:
+        r = session.post(
+            "https://tenders.procurement.gov.ge/public/library/controller.php",
+            data={
+                "action": "get_app",
+                "app_id": tender_id,
+                "go": tender_id,
+            },
+            timeout=30
+        )
+
+        if r.status_code == 200 and len(r.text) > 100:
+            cpvs = extract_all_cpvs(r.text)
+
+    except Exception as e:
+        print(f"Detail CPV error for {tender_id}:", e)
+
+    return cpvs
+
+
+def merge_cpvs(*lists):
+    merged = []
+
+    for cpv_list in lists:
+        for cpv in cpv_list or []:
+            if cpv in ALLOWED_CPVS and cpv not in merged:
+                merged.append(cpv)
+
+    return merged
+
+
 def search_tenders(params):
     session = get_session()
 
@@ -133,9 +167,26 @@ def search_tenders(params):
         if r.status_code == 200:
             tenders = parse_tenders(r.text)
 
+            search_cpv = params["label"].split(" - ")[0]
+
             for tender in tenders:
-                if not tender.get("cpvs"):
-                    tender["cpvs"] = [params["label"].split(" - ")[0]]
+                tender_id = tender.get("id")
+
+                detail_cpvs = []
+                if tender_id:
+                    detail_cpvs = get_tender_detail_cpvs(session, tender_id)
+                    time.sleep(0.5)
+
+                tender["cpvs"] = merge_cpvs(
+                    tender.get("cpvs", []),
+                    detail_cpvs,
+                    [search_cpv],
+                )
+
+                print(
+                    f"  CPV {tender.get('reg_id') or tender_id}: "
+                    f"{' | '.join(tender['cpvs'])}"
+                )
 
             return tenders
 
