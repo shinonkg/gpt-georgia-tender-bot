@@ -374,7 +374,7 @@ function parseCSV(text){
 
 function getCategory(t){
 
-  const c = (t.category || "").toLowerCase();
+  const c = (t.label || "").toLowerCase();
 
   if(c.includes("451127")) return "landscape";
   if(c.includes("374400")) return "fitness";
@@ -494,7 +494,7 @@ function render(){
         <div class="meta">
 
           📋 ${t.reg_id || "N/A"}<br>
-          🏢 ${t.organization || "—"}<br>
+          🏢 ${t.org || "—"}<br>
           💰 ${t.price || "—"}<br>
           📅 ${t.deadline || "—"}
 
