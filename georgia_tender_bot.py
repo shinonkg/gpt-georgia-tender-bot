@@ -21,6 +21,19 @@ ALLOWED_CPVS = {
     "45112710": "45112710 - Ландшафтные работы в зеленых зонах",
 }
 
+STATUS_LIST = [
+    "Объявлен",
+    "Приём предложений начался",
+    "Приём предложений завершён",
+    "Отбор/оценка",
+    "Победитель выявлен",
+    "Завершён с отрицательным результатом",
+    "Не состоялся",
+    "Прекращён",
+    "Идёт подготовка договора",
+    "Договор подписан",
+]
+
 SEARCH_PARAMS = [
     {"app_basecode": "18999", "app_codes": "", "label": ALLOWED_CPVS["45100000"]},
     {"app_basecode": "0", "app_codes": "45112720", "label": ALLOWED_CPVS["45112720"]},
@@ -47,15 +60,16 @@ def send_telegram(message):
         print("Telegram secrets missing")
         return
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": False,
-    }
-
-    r = requests.post(url, json=payload, timeout=20)
+    r = requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+        json={
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": False,
+        },
+        timeout=20,
+    )
     print("Telegram:", r.status_code, r.text[:200])
 
 
@@ -89,31 +103,18 @@ def extract_all_cpvs(text):
     return cpvs
 
 
+def extract_status(text):
+    clean = BeautifulSoup(text, "html.parser").get_text(" ", strip=True)
+
+    for status in STATUS_LIST:
+        if status in clean:
+            return status
+
+    return "Неизвестно"
+
+
 def cpv_labels(cpvs):
     return " | ".join(ALLOWED_CPVS.get(cpv, cpv) for cpv in cpvs)
-
-
-def get_tender_detail_cpvs(session, tender_id):
-    cpvs = []
-
-    try:
-        r = session.post(
-            "https://tenders.procurement.gov.ge/public/library/controller.php",
-            data={
-                "action": "get_app",
-                "app_id": tender_id,
-                "go": tender_id,
-            },
-            timeout=30
-        )
-
-        if r.status_code == 200 and len(r.text) > 100:
-            cpvs = extract_all_cpvs(r.text)
-
-    except Exception as e:
-        print(f"Detail CPV error for {tender_id}:", e)
-
-    return cpvs
 
 
 def merge_cpvs(*lists):
@@ -125,6 +126,33 @@ def merge_cpvs(*lists):
                 merged.append(cpv)
 
     return merged
+
+
+def get_tender_detail(session, tender_id):
+    detail = {
+        "cpvs": [],
+        "status": "Неизвестно",
+    }
+
+    try:
+        r = session.post(
+            "https://tenders.procurement.gov.ge/public/library/controller.php",
+            data={
+                "action": "get_app",
+                "app_id": tender_id,
+                "go": tender_id,
+            },
+            timeout=30,
+        )
+
+        if r.status_code == 200 and len(r.text) > 100:
+            detail["cpvs"] = extract_all_cpvs(r.text)
+            detail["status"] = extract_status(r.text)
+
+    except Exception as e:
+        print(f"Detail error for {tender_id}:", e)
+
+    return detail
 
 
 def search_tenders(params):
@@ -159,33 +187,33 @@ def search_tenders(params):
         r = session.post(
             "https://tenders.procurement.gov.ge/public/library/controller.php",
             data=data,
-            timeout=30
+            timeout=30,
         )
 
         print(f"Search {params['label']}:", r.status_code, len(r.text))
 
         if r.status_code == 200:
             tenders = parse_tenders(r.text)
-
             search_cpv = params["label"].split(" - ")[0]
 
             for tender in tenders:
                 tender_id = tender.get("id")
 
-                detail_cpvs = []
+                detail = {"cpvs": [], "status": "Неизвестно"}
                 if tender_id:
-                    detail_cpvs = get_tender_detail_cpvs(session, tender_id)
+                    detail = get_tender_detail(session, tender_id)
                     time.sleep(0.5)
 
                 tender["cpvs"] = merge_cpvs(
                     tender.get("cpvs", []),
-                    detail_cpvs,
+                    detail.get("cpvs", []),
                     [search_cpv],
                 )
+                tender["status"] = detail.get("status") or "Неизвестно"
 
                 print(
-                    f"  CPV {tender.get('reg_id') or tender_id}: "
-                    f"{' | '.join(tender['cpvs'])}"
+                    f"  {tender.get('reg_id') or tender_id}: "
+                    f"{' | '.join(tender['cpvs'])} / {tender['status']}"
                 )
 
             return tenders
@@ -199,7 +227,6 @@ def search_tenders(params):
 def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
     tenders = []
-
     rows = soup.find_all("tr", id=re.compile(r"^A\d+"))
 
     for row in rows:
@@ -252,6 +279,7 @@ def parse_tenders(html):
                 "deadline": deadline,
                 "text": row_text[:300],
                 "cpvs": cpvs,
+                "status": "Неизвестно",
             })
 
     return tenders
@@ -276,6 +304,7 @@ def save_to_csv(tender, label):
                 "org",
                 "price",
                 "deadline",
+                "status",
                 "cpvs",
                 "label",
                 "link",
@@ -289,6 +318,7 @@ def save_to_csv(tender, label):
             tender.get("org", ""),
             tender.get("price", ""),
             tender.get("deadline", ""),
+            tender.get("status", "Неизвестно"),
             cpv_text,
             cpv_label_text,
             f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender.get('id', '')}",
@@ -304,6 +334,7 @@ def format_message(tender, label):
         f"🆕 <b>НОВЫЙ ТЕНДЕР</b>\n"
         f"━━━━━━━━━━━━━━━\n"
         f"📋 <b>{tender.get('reg_id') or 'Без номера'}</b>\n"
+        f"📌 Статус: <b>{tender.get('status', 'Неизвестно')}</b>\n"
         f"{cpv_lines}\n"
         f"🏢 {tender.get('org') or '—'}\n"
         f"💰 {tender.get('price') or '—'}\n"
