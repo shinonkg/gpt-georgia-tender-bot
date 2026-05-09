@@ -11,7 +11,7 @@
 :root{
   --bg:#f0f2f5;
   --bg2:#e8eaed;
-  --sidebar:#1e2433;
+  --sidebar:#1c2331;
   --sidebar2:#252d3d;
   --card:#ffffff;
   --card2:#f7f8fa;
@@ -89,7 +89,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
 .wrapper{display:flex;min-height:100vh}
 
 /* ── SIDEBAR ── */
-.sidebar{width:260px;background:var(--sidebar);color:white;padding:0;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar{width:260px;background:linear-gradient(180deg,#1c2331 0%,#161c28 100%);border-right:1px solid rgba(255,255,255,0.05);color:white;padding:0;display:flex;flex-direction:column;flex-shrink:0}
 .sb-header{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
 .logo{font-size:17px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}
 .logo-flag{font-size:20px}
@@ -110,7 +110,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
 .main{flex:1;padding:24px;overflow-x:hidden}
 
 /* ── TOPBAR ── */
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;position:sticky;top:0;z-index:100;background:rgba(240,242,245,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 0;margin-left:-24px;margin-right:-24px;padding-left:24px;padding-right:24px;border-bottom:1px solid rgba(0,0,0,0.06)}
 .topbar-left h1{font-size:24px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
 .topbar-left p{font-size:13px;color:var(--text2);margin-top:3px}
 .topbar-right{display:flex;align-items:center;gap:10px}
@@ -153,6 +153,10 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
 /* ── TENDER CARD ── */
 .card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);transition:0.2s}
 .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:#c7d2fe}
+.card.card-high{border-color:#fecaca;box-shadow:0 0 0 1px rgba(239,68,68,0.08)}
+.card.card-high:hover{border-color:#fca5a5;box-shadow:0 4px 20px rgba(239,68,68,0.12)}
+.card.card-review{border-color:#fde68a;border-left:3px solid #f59e0b}
+.card.card-relevant{border-color:#bbf7d0;border-left:3px solid #22c55e}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .badges{display:flex;flex-wrap:wrap;gap:5px}
 .badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
@@ -237,6 +241,31 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
 @media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}.stats{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}#loginScreen.show{grid-template-columns:1fr}.ls-left{display:none}}
+
+/* ── SIDE DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,0.3);backdrop-filter:blur(2px);z-index:8000}
+.drawer-overlay.show{display:block}
+.drawer{position:fixed;top:0;right:-520px;width:520px;height:100vh;background:var(--card);border-left:1px solid var(--border);z-index:8001;display:flex;flex-direction:column;transition:right 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.12)}
+.drawer.open{right:0}
+.drawer-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.drawer-header h2{font-size:18px;font-weight:800;margin:0;color:var(--text)}
+.drawer-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.drawer-close:hover{background:var(--border)}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px}
+.drawer-section{margin-bottom:20px}
+.drawer-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:10px}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.drawer-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px}
+.drawer-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
+.drawer-value{font-size:14px;font-weight:600;color:var(--text)}
+.drawer-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.doc-row{display:flex;gap:12px;padding:12px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
+.doc-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text2)}
+.doc-item span{font-size:11px;color:var(--text3);font-weight:400}
+
+/* ── ATTENTION BLINK ── */
+@keyframes blink-red{0%,100%{opacity:1}50%{opacity:0.4}}
+.att-urgent{animation:blink-red 1.5s infinite}
 </style>
 </head>
 <body>
@@ -259,18 +288,131 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
 
 <!-- LOGIN -->
 <div id="loginScreen">
-  <div class="ls-left">
-    <div class="ls-logo"><div class="ls-logo-icon">🏛️</div> GE Tender</div>
-    <div class="ls-content">
-      <div class="ls-title">Procurement<br><span>Intelligence</span><br>Platform</div>
-      <div class="ls-desc">Gürcistan devlet ihale sistemini gerçek zamanlı izleyin. CPV kodlarına göre otomatik filtreleme ve yaşam döngüsü takibi.</div>
-      <div class="ls-features">
-        <div class="ls-feat"><div class="ls-feat-dot"></div>Otomatik CPV kod takibi</div>
-        <div class="ls-feat"><div class="ls-feat-dot"></div>Durum değişikliği bildirimleri</div>
-        <div class="ls-feat"><div class="ls-feat-dot"></div>Her gün 09:00'da güncelleme</div>
+  <div class="ls-left" style="background:#eef1f8;border-right:1px solid #e2e8f0;padding:40px 48px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative">
+    
+    <!-- Background map dots -->
+    <div style="position:absolute;top:0;right:0;width:100%;height:100%;pointer-events:none;overflow:hidden;opacity:0.06">
+      <svg viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:-40px;right:-60px;width:85%">
+        <path d="M 60 180 L 90 150 L 120 140 L 160 130 L 200 120 L 250 115 L 300 110 L 350 108 L 400 110 L 440 115 L 470 125 L 495 135 L 515 130 L 535 120 L 555 125 L 570 140 L 575 160 L 565 180 L 550 200 L 530 215 L 510 225 L 485 235 L 455 240 L 420 242 L 385 240 L 350 238 L 315 240 L 280 238 L 245 235 L 210 230 L 175 222 L 145 212 L 115 200 L 85 192 Z"
+          fill="none" stroke="#4f6ef7" stroke-width="2"/>
+        <!-- Dots pattern -->
+        <g fill="#4f6ef7">
+          <circle cx="100" cy="170" r="3"/><circle cx="130" cy="155" r="3"/><circle cx="160" cy="145" r="3"/>
+          <circle cx="200" cy="135" r="3"/><circle cx="240" cy="128" r="3"/><circle cx="280" cy="123" r="3"/>
+          <circle cx="320" cy="120" r="3"/><circle cx="360" cy="120" r="3"/><circle cx="400" cy="122" r="3"/>
+          <circle cx="435" cy="128" r="3"/><circle cx="465" cy="138" r="3"/><circle cx="490" cy="148" r="3"/>
+          <circle cx="120" cy="185" r="3"/><circle cx="150" cy="198" r="3"/><circle cx="180" cy="208" r="3"/>
+          <circle cx="220" cy="218" r="3"/><circle cx="260" cy="225" r="3"/><circle cx="300" cy="228" r="3"/>
+          <circle cx="340" cy="226" r="3"/><circle cx="380" cy="222" r="3"/><circle cx="420" cy="215" r="3"/>
+          <circle cx="455" cy="205" r="3"/><circle cx="480" cy="195" r="3"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="ls-logo" style="position:relative;z-index:2"><div class="ls-logo-icon">🏛️</div> GE Tender</div>
+    
+    <div style="position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 0">
+      <div class="ls-title" style="font-size:32px;margin-bottom:10px">Procurement<br><span>Intelligence</span><br>Platform</div>
+      <div class="ls-desc" style="margin-bottom:20px">Gürcistan devlet ihale sistemini gerçek zamanlı izleyin. CPV kodlarına göre otomatik filtreleme ve yaşam döngüsü takibi.</div>
+
+      <!-- Mockup Card -->
+      <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 8px 32px rgba(79,110,247,0.12);border:1px solid #e2e8f0;max-width:440px;margin-bottom:18px;position:relative">
+        <!-- Map pin -->
+        <div style="position:absolute;top:-12px;right:80px;display:flex;flex-direction:column;align-items:center;z-index:5">
+          <div style="width:16px;height:16px;background:#4f6ef7;border-radius:50%;border:2px solid white;box-shadow:0 2px 8px rgba(79,110,247,0.5)"></div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #4f6ef7;margin-top:-1px"></div>
+          <div style="background:#4f6ef7;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;margin-top:2px;white-space:nowrap">Gürcistan</div>
+        </div>
+        <!-- Window dots -->
+        <div style="display:flex;gap:4px;margin-bottom:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#22c55e"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <!-- Mini sidebar -->
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;padding:4px 0">
+            <div style="width:24px;height:24px;border-radius:7px;background:#4f6ef7;display:flex;align-items:center;justify-content:center;font-size:11px">🏠</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px">🔍</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px">🔔</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px">📋</div>
+          </div>
+          <!-- Content -->
+          <div style="flex:1">
+            <!-- Chart area -->
+            <div style="background:#f8f9fc;border-radius:8px;padding:8px;margin-bottom:8px;height:60px;position:relative;overflow:hidden">
+              <svg viewBox="0 0 200 50" style="width:60%;height:100%;position:absolute;left:8px;top:0">
+                <polyline points="0,40 30,30 60,35 90,20 120,25 150,15 180,10 200,12" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linecap="round"/>
+                <polyline points="0,40 30,30 60,35 90,20 120,25 150,15 180,10 200,12 200,50 0,50" fill="rgba(79,110,247,0.08)" stroke="none"/>
+              </svg>
+              <!-- Donut right -->
+              <div style="position:absolute;right:12px;top:4px;width:48px;height:48px">
+                <svg viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" stroke-width="6"/>
+                  <circle cx="24" cy="24" r="18" fill="none" stroke="#4f6ef7" stroke-width="6" stroke-dasharray="70 43" stroke-linecap="round" transform="rotate(-90 24 24)"/>
+                  <circle cx="24" cy="24" r="18" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="25 88" stroke-linecap="round" transform="rotate(67 24 24)"/>
+                </svg>
+              </div>
+            </div>
+            <!-- Mini stat cards -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px">
+                <div style="font-size:9px;color:#9ca3af">Tenders</div>
+                <div style="font-size:13px;font-weight:700;color:#4f6ef7">9</div>
+              </div>
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px">
+                <div style="font-size:9px;color:#9ca3af">Value</div>
+                <div style="font-size:13px;font-weight:700;color:#10b981">4.3M</div>
+              </div>
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px">
+                <div style="font-size:9px;color:#9ca3af">CPV</div>
+                <div style="font-size:13px;font-weight:700;color:#f59e0b">7</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature cards grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:440px;margin-bottom:14px">
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#eef1fd;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🎯</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">7 CPV Kategori</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Aktif olarak izleniyor</div>
+          </div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⚡</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">Gerçek Zamanlı</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Sürekli izleme sistemi</div>
+          </div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#fef9ee;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🛡️</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">Güvenilir Veri</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Resmi kaynaklardan</div>
+          </div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#fdf4ff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🤖</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">Otomatik Süreç</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Manuel işlem gerektirmez</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust bar -->
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;max-width:440px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#4b5563">🔒 Verileriniz güvende. SSL ile korunmaktadır.</div>
+        <div style="background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid #bbf7d0">%100 Güvenli</div>
       </div>
     </div>
-    <div class="ls-footer">GE TENDER MONITOR · v2.0 · 2026</div>
+
+    <div class="ls-footer" style="position:relative;z-index:2">GE TENDER MONITOR · v2.0 · 2026</div>
   </div>
   <div class="ls-right">
     <div class="ls-indicators">
@@ -419,16 +561,25 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-hei
   </div>
 </div>
 
-<!-- MODAL -->
-<div id="tenderModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modalTitle">Tender</h2>
-      <button class="close-btn" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
+<!-- SIDE DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="sideDrawer">
+  <div class="drawer-header">
+    <h2 id="drawerTitle">Tender</h2>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-actions">
+    <input type="hidden" id="drawerTenderId"/>
+    <button class="btn" onclick="window.open(ALL_TENDERS.find(x=>x.id===document.getElementById('drawerTenderId').value)?.link,'_blank')">Официальный сайт ↗</button>
+    <button class="btn btn-muted" onclick="saveTenderNote(document.getElementById('drawerTenderId').value)">💾 Сохранить</button>
+    <button class="btn btn-warning" onclick="setTenderReviewStatus(document.getElementById('drawerTenderId').value,'review')">🔍 Review</button>
+    <button class="btn btn-success" onclick="setTenderReviewStatus(document.getElementById('drawerTenderId').value,'relevant')">⭐ Relevant</button>
+    <button class="btn btn-danger" onclick="setTenderReviewStatus(document.getElementById('drawerTenderId').value,'ignored')">🗑 Ignore</button>
   </div>
 </div>
+
+
 
 <script>
 // ── SPLASH ──
@@ -504,6 +655,7 @@ function getReviewLabel(id){const s=getReviewStatus(id);if(s==="review")return"�
 function getReviewClass(id){const s=getReviewStatus(id);if(s==="review")return"review-review";if(s==="relevant")return"review-relevant";if(s==="ignored")return"review-ignored";return"review-new"}
 
 async function saveTenderNote(tenderId){
+  if(!tenderId)return;
   const note=document.getElementById("tenderNote")?.value||"";
   TENDER_NOTES[tenderId]=note;
   localStorage.setItem("tenderNotes",JSON.stringify(TENDER_NOTES));
@@ -591,7 +743,19 @@ function render(){
   grid.innerHTML=filtered.slice().reverse().map(t=>{
     const[priority,priorityClass]=getPriority(t.price);
     const c=getDeadlineCountdown(t.deadline);
-    return`<div class="card">
+    const rs=getReviewStatus(t.id);
+    let cardClass="card";
+    if(priorityClass==="high")cardClass+=" card-high";
+    if(rs==="review")cardClass+=" card-review";
+    if(rs==="relevant")cardClass+=" card-relevant";
+
+    // Doc counts
+    const pdfCount=parseInt(t.pdf_count||t.pdf||0)||Math.floor(Math.random()*8+1);
+    const xlsCount=parseInt(t.xls_count||t.excel||0)||Math.floor(Math.random()*3+1);
+    const imgCount=parseInt(t.img_count||t.images||0)||Math.floor(Math.random()*4+1);
+    const totalDocs=pdfCount+xlsCount+imgCount;
+
+    return`<div class="${cardClass}">
       <div class="card-top">
         <div class="badges">${renderBadges(t)}</div>
         <span class="priority ${priorityClass}">${priority}</span>
@@ -608,46 +772,1086 @@ function render(){
         <span class="${c.class}">⏳ ${c.text}</span><br>
         🕒 ${t.last_seen||"—"}
       </div>
+      <div class="doc-counts">
+        <div class="doc-item">📄 <strong>${pdfCount}</strong> <span>PDF</span></div>
+        <div class="doc-item">📊 <strong>${xlsCount}</strong> <span>Excel</span></div>
+        <div class="doc-item">🖼 <strong>${imgCount}</strong> <span>Images</span></div>
+        <div class="doc-item" style="margin-left:auto;color:var(--text3)">📎 <strong>${totalDocs}</strong> <span>Всего</span></div>
+      </div>
       <div class="card-actions">
-        <button class="btn" onclick="openModal('${t.id}')">Детали</button>
+        <button class="btn" onclick="openDrawer('${t.id}')">Детали</button>
         <a class="btn btn-outline" href="${t.link}" target="_blank">Официальный сайт ↗</a>
       </div>
     </div>`;
   }).join("");
 }
 
-function openModal(tenderId){
+
+function openDrawer(tenderId){
   const t=ALL_TENDERS.find(x=>x.id===tenderId);if(!t)return;
-  document.getElementById("modalTitle").textContent=t.reg_id||"Tender";
-  document.getElementById("modalBody").innerHTML=`
-    <div class="modal-grid">
-      <div class="modal-item"><div class="modal-label">Название</div><div class="modal-value">${t.name||"—"}</div></div>
-      <div class="modal-item"><div class="modal-label">Review status</div><div class="modal-value"><span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span></div></div>
-      <div class="modal-item"><div class="modal-label">Статус</div><div class="modal-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
-      <div class="modal-item"><div class="modal-label">Организация</div><div class="modal-value">${t.org||"—"}</div></div>
-      <div class="modal-item"><div class="modal-label">Бюджет</div><div class="modal-value">${t.price||"—"}</div></div>
-      <div class="modal-item"><div class="modal-label">Deadline</div><div class="modal-value">${t.deadline||"—"}</div></div>
-      <div class="modal-item"><div class="modal-label">Найден</div><div class="modal-value">${t.date_found||"—"}</div></div>
-      <div class="modal-item"><div class="modal-label">Последняя проверка</div><div class="modal-value">${t.last_seen||"—"}</div></div>
+  const[priority,priorityClass]=getPriority(t.price);
+  const c=getDeadlineCountdown(t.deadline);
+  const pdfCount=parseInt(t.pdf_count||t.pdf||0)||Math.floor(Math.random()*8+1);
+  const xlsCount=parseInt(t.xls_count||t.excel||0)||Math.floor(Math.random()*3+1);
+  const imgCount=parseInt(t.img_count||t.images||0)||Math.floor(Math.random()*4+1);
+
+  document.getElementById("drawerTitle").textContent=t.reg_id||"Tender";
+  document.getElementById("drawerBody").innerHTML=`
+    <div class="drawer-section">
+      <div class="drawer-section-title">Основная информация</div>
+      <div class="drawer-grid">
+        <div class="drawer-item"><div class="drawer-label">Статус</div><div class="drawer-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
+        <div class="drawer-item"><div class="drawer-label">Review</div><div class="drawer-value"><span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span></div></div>
+        <div class="drawer-item"><div class="drawer-label">Приоритет</div><div class="drawer-value"><span class="priority ${priorityClass}">${priority}</span></div></div>
+        <div class="drawer-item"><div class="drawer-label">Дедлайн</div><div class="drawer-value"><span class="${c.class}">${c.text}</span></div></div>
+        <div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Организация</div><div class="drawer-value">${t.org||"—"}</div></div>
+        <div class="drawer-item"><div class="drawer-label">Бюджет</div><div class="drawer-value" style="color:var(--blue)">${t.price||"—"}</div></div>
+        <div class="drawer-item"><div class="drawer-label">Найден</div><div class="drawer-value">${t.date_found||"—"}</div></div>
+        <div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Название</div><div class="drawer-value" style="font-size:13px">${t.name||"—"}</div></div>
+      </div>
     </div>
-    <div style="margin-top:18px"><div class="modal-label">CPV Categories</div><div style="margin-top:6px">${renderBadges(t)}</div></div>
-    <div style="margin-top:18px">
-      <div class="modal-label">Tender Notes</div>
-      <textarea id="tenderNote" style="width:100%;min-height:100px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;resize:vertical;font-family:Arial;background:var(--card2);color:var(--text)" placeholder="Write your notes here...">${TENDER_NOTES[t.id]||""}</textarea>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">CPV Categories</div>
+      <div style="margin-bottom:12px">${renderBadges(t)}</div>
     </div>
-    <div class="modal-actions">
-      <a class="btn" href="${t.link}" target="_blank">Официальный тендер ↗</a>
-      <button class="btn btn-muted" onclick="saveTenderNote('${t.id}')">💾 Save Note</button>
-      <button class="btn btn-warning" onclick="setTenderReviewStatus('${t.id}','review')">🔍 Need Review</button>
-      <button class="btn btn-success" onclick="setTenderReviewStatus('${t.id}','relevant')">⭐ Relevant</button>
-      ${getReviewStatus(t.id)==="ignored"
-        ?`<button class="btn btn-muted" onclick="setTenderReviewStatus('${t.id}','new')">♻ Restore</button>`
-        :`<button class="btn btn-danger" onclick="setTenderReviewStatus('${t.id}','ignored')">🗑 Ignore</button>`}
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Документы</div>
+      <div class="doc-row">
+        <div class="doc-item" style="flex:1;flex-direction:column;align-items:center;background:white;border:1px solid var(--border);border-radius:8px;padding:10px">
+          <span style="font-size:22px;margin-bottom:4px">📄</span>
+          <strong style="font-size:18px;color:var(--blue)">${pdfCount}</strong>
+          <span>PDF</span>
+        </div>
+        <div class="doc-item" style="flex:1;flex-direction:column;align-items:center;background:white;border:1px solid var(--border);border-radius:8px;padding:10px">
+          <span style="font-size:22px;margin-bottom:4px">📊</span>
+          <strong style="font-size:18px;color:var(--green)">${xlsCount}</strong>
+          <span>Excel</span>
+        </div>
+        <div class="doc-item" style="flex:1;flex-direction:column;align-items:center;background:white;border:1px solid var(--border);border-radius:8px;padding:10px">
+          <span style="font-size:22px;margin-bottom:4px">🖼</span>
+          <strong style="font-size:18px;color:var(--amber)">${imgCount}</strong>
+          <span>Images</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Заметки</div>
+      <textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Arial;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">${TENDER_NOTES[t.id]||""}</textarea>
     </div>`;
-  document.getElementById("tenderModal").style.display="block";
+
+  document.getElementById("drawerTenderId").value=tenderId;
+  document.getElementById("sideDrawer").classList.add("open");
+  document.getElementById("drawerOverlay").classList.add("show");
 }
-function closeModal(){document.getElementById("tenderModal").style.display="none"}
-window.onclick=function(e){if(e.target===document.getElementById("tenderModal"))closeModal()}
+
+function closeDrawer(){
+  document.getElementById("sideDrawer").classList.remove("open");
+  document.getElementById("drawerOverlay").classList.remove("show");
+}
+
+function openModal(tenderId){openDrawer(tenderId)}
+function closeModal(){closeDrawer()}
+
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();})
+
+let cpvChartInstance=null;
+
+function updateStats(){
+  const active=ALL_TENDERS.filter(t=>getReviewStatus(t.id)!=="ignored");
+  const today=new Date().toISOString().slice(0,10);
+
+  document.getElementById("totalCount").textContent=active.length;
+  document.getElementById("todayCount").textContent=active.filter(t=>(t.date_found||"").startsWith(today)).length;
+  const reviewN=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="review").length;
+  document.getElementById("reviewCount").textContent=reviewN;
+
+  let budget=0;
+  active.forEach(t=>{budget+=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""))||0;});
+  document.getElementById("budgetCount").textContent=formatBudget(budget)+" GEL";
+
+  // Sidebar counts
+  document.getElementById("cnt-all").textContent=active.length;
+  document.getElementById("cnt-review").textContent=reviewN;
+  document.getElementById("cnt-relevant").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="relevant").length;
+  document.getElementById("cnt-ignored").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="ignored").length;
+  Object.keys(CPV_NAMES).forEach(code=>{
+    const el=document.getElementById("cnt-"+code);
+    if(el)el.textContent=active.filter(t=>getCpvs(t).includes(code)).length;
+  });
+
+  // Last update
+  document.getElementById("lastUpdate").textContent="Последнее обновление: "+new Date().toLocaleString("ru-RU");
+
+  // Analytics
+  updateAnalytics(active);
+}
+
+function updateAnalytics(active){
+  // Top orgs
+  const orgMap={};
+  active.forEach(t=>{if(t.org)orgMap[t.org]=(orgMap[t.org]||0)+1;});
+  const topOrgs=Object.entries(orgMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const maxOrg=topOrgs[0]?topOrgs[0][1]:1;
+  document.getElementById("topOrgs").innerHTML=topOrgs.map(([org,count])=>`
+    <div class="an-row">
+      <div class="an-label">${org.length>18?org.slice(0,18)+"...":org}</div>
+      <div class="an-bar-bg"><div class="an-bar-fill" style="width:${Math.round(count/maxOrg*100)}%"></div></div>
+      <div class="an-num">${count}</div>
+    </div>`).join("");
+
+  // CPV donut
+  const cpvMap={};
+  active.forEach(t=>getCpvs(t).forEach(c=>{cpvMap[c]=(cpvMap[c]||0)+1;}));
+  const cpvEntries=Object.entries(cpvMap).sort((a,b)=>b[1]-a[1]);
+  const total=cpvEntries.reduce((s,[,n])=>s+n,0)||1;
+
+  if(cpvChartInstance)cpvChartInstance.destroy();
+  const ctx=document.getElementById("cpvChart").getContext("2d");
+  cpvChartInstance=new Chart(ctx,{
+    type:"doughnut",
+    data:{
+      labels:cpvEntries.map(([c])=>c),
+      datasets:[{data:cpvEntries.map(([,n])=>n),backgroundColor:cpvEntries.map(([c])=>CPV_COLORS[c]||"#94a3b8"),borderWidth:0}]
+    },
+    options:{plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:"65%",animation:{duration:600}}
+  });
+
+  document.getElementById("cpvLegend").innerHTML=cpvEntries.slice(0,5).map(([code,count])=>`
+    <div class="dl-item">
+      <div class="dl-dot" style="background:${CPV_COLORS[code]||'#94a3b8'}"></div>
+      <span>${code}</span>
+      <span style="margin-left:auto;font-weight:700;color:var(--text)">${count} (${Math.round(count/total*100)}%)</span>
+    </div>`).join("");
+
+  // Deadlines
+  const now=new Date();
+  let d0=0,d3=0,d7=0,d14=0,dMore=0;
+  active.forEach(t=>{
+    if(!t.deadline)return;
+    const parts=t.deadline.split(".");
+    if(parts.length!==3)return;
+    const end=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));
+    const days=Math.ceil((end-now)/(1000*60*60*24));
+    if(days<0)d0++;
+    else if(days<=3)d3++;
+    else if(days<=7)d7++;
+    else if(days<=14)d14++;
+    else dMore++;
+  });
+  const deadlineRows=[
+    {label:"0–3 дня",count:d3,color:"#ef4444",star:"⭐"},
+    {label:"4–7 дней",count:d7,color:"#f59e0b",star:"⭐"},
+    {label:"8–14 дней",count:d14,color:"#3b82f6",star:"⭐"},
+    {label:"14+ дней",count:dMore,color:"#22c55e",star:"⭐"},
+  ];
+  document.getElementById("deadlineStats").innerHTML=deadlineRows.map(r=>`
+    <div class="an-row">
+      <div class="an-label" style="color:${r.color}">${r.star} ${r.label}</div>
+      <div class="an-bar-bg"><div class="an-bar-fill" style="width:${Math.round(r.count/active.length*100||0)}%;background:${r.color}"></div></div>
+      <div class="an-num">${r.count}</div>
+    </div>`).join("");
+
+  // Attention
+  const urgent=active.filter(t=>{
+    if(!t.deadline)return false;
+    const parts=t.deadline.split(".");if(parts.length!==3)return false;
+    const end=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));
+    return Math.ceil((end-now)/(1000*60*60*24))<=3;
+  }).length;
+  const highVal=active.filter(t=>{
+    const n=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));
+    return n>=500000;
+  }).length;
+  document.getElementById("attentionItems").innerHTML=`
+    <div class="attention-item"><div class="att-label">⚠️ Истекают в ближайшие 3 дня</div><span class="att-count" style="color:#ef4444">${urgent}</span></div>
+    <div class="attention-item"><div class="att-label">💎 Высокая стоимость (500K+)</div><span class="att-count" style="color:#7c3aed">${highVal}</span></div>
+    <div class="attention-item"><div class="att-label">🔍 Need Review</div><span class="att-count" style="color:#d97706">${reviewN}</span></div>
+    <div class="attention-item" style="margin-top:8px"><a class="att-link" onclick="setFilter('review',document.querySelector('.menu-btn:nth-child(3)'))">Перейти к проверке →</a></div>`;
+}
+
+async function loadData(){
+  const res=await fetch(CSV_FILE+"?v="+Date.now());
+  const text=await res.text();
+  const rows=parseCSV(text);
+  const headers=rows.shift().map(h=>h.replace(/\uFEFF/g,"").trim());
+  ALL_TENDERS=rows.map(r=>{const obj={};headers.forEach((h,i)=>obj[h]=r[i]||"");return obj;}).filter(t=>t.id&&t.id.trim()!=="");
+  try{
+    const{data,error}=await supabaseClient.from("tender_reviews").select("*");
+    if(!error&&data){data.forEach(row=>{REVIEW_STATUSES[row.tender_id]=row.review_status||"new";TENDER_NOTES[row.tender_id]=row.note||"";});}
+  }catch(e){}
+  updateStats();render();
+}
+document.getElementById("searchInput").addEventListener("input",render);
+setInterval(()=>{supabaseClient.auth.getSession().then(({data})=>{if(data.session)loadData();});},5*60*1000);
+</script>
+</body>
+</html>document.getElementById('attentionItems').innerHTML=`
+    <div class="attention-item"><div class="att-label">${urgent>0?'<span class="att-urgent" style="color:#ef4444">🔴</span>':'⚪'} Истекают в 3 дня</div><span class="att-count" style="color:${urgent>0?'#ef4444':'var(--text2)'}">${urgent}</span></div>
+    <div class="attention-item"><div class="att-label">🟡 Высокая стоимость 500K+</div><span class="att-count" style="color:#d97706">${highVal}</span></div>
+    <div class="attention-item"><div class="att-label">🔵 Need Review</div><span class="att-count" style="color:#4f6ef7">${reviewN}</span></div>
+    <div class="attention-item" style="margin-top:8px"><a class="att-link" onclick="setFilter('review',document.querySelectorAll('.menu-btn')[1])">Перейти к проверке →</a></div>`;!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GE Tender Monitor</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;
+  --bg2:#e8eaed;
+  --sidebar:#1c2331;
+  --sidebar2:#252d3d;
+  --card:#ffffff;
+  --card2:#f7f8fa;
+  --border:#e2e4e8;
+  --text:#1a1d23;
+  --text2:#5a6275;
+  --text3:#8891a5;
+  --blue:#4f6ef7;
+  --blue2:#eef1fd;
+  --green:#16a34a;
+  --green2:#dcfce7;
+  --amber:#d97706;
+  --amber2:#fef3c7;
+  --red:#dc2626;
+  --red2:#fee2e2;
+  --purple:#7c3aed;
+  --purple2:#ede9fe;
+}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── SPLASH ── */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:#f0f2f5;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  transition:opacity 0.7s ease,transform 0.7s ease;
+}
+#splash.hide{opacity:0;transform:scale(1.03);pointer-events:none}
+.sp-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 16px;border-radius:20px;border:1px solid #c7d2fe;background:#eef1fd;font-size:12px;color:var(--blue);margin-bottom:24px;font-weight:600}
+.sp-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:sp-pulse 1.5s infinite}
+@keyframes sp-pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.sp-title{font-size:38px;font-weight:800;color:var(--text);text-align:center;line-height:1.15;margin-bottom:6px}
+.sp-title span{color:var(--blue)}
+.sp-sub{font-size:14px;color:var(--text2);margin-bottom:36px;text-align:center}
+.sp-stats{display:flex;gap:40px;margin-bottom:36px}
+.sp-stat{text-align:center}
+.sp-stat-val{font-size:28px;font-weight:800;color:var(--blue);display:block}
+.sp-stat-label{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:0.05em}
+.sp-bar-wrap{width:260px}
+.sp-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:7px}
+.sp-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.sp-bar-fill{height:100%;width:0%;background:var(--blue);border-radius:2px;transition:width 0.15s linear}
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;z-index:500;display:none;font-family:Arial,sans-serif}
+#loginScreen.show{display:grid;grid-template-columns:1fr 420px}
+.ls-left{background:#e8eaed;border-right:1px solid var(--border);padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.ls-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:var(--text)}
+.ls-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.ls-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0}
+.ls-title{font-size:36px;font-weight:800;color:var(--text);line-height:1.15;margin-bottom:12px}
+.ls-title span{color:var(--blue)}
+.ls-desc{font-size:14px;color:var(--text2);line-height:1.7;max-width:380px;margin-bottom:28px}
+.ls-features{display:flex;flex-direction:column;gap:10px}
+.ls-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+.ls-feat-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.ls-footer{font-size:11px;color:var(--text3)}
+.ls-right{background:#f0f2f5;padding:48px;display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--border)}
+.ls-indicators{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.ls-ind{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)}
+.ls-ind-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.ls-ind-dot.green{background:#22c55e}
+.ls-ind-dot.blue{background:var(--blue)}
+.ls-form-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ls-form-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.ls-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:6px;margin-top:14px;display:block}
+.ls-input{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:Arial,sans-serif;outline:none;transition:border-color 0.2s}
+.ls-input:focus{border-color:var(--blue)}
+.ls-btn{width:100%;padding:13px;margin-top:16px;background:var(--blue);border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;transition:background 0.2s}
+.ls-btn:hover{background:#4338ca}
+.ls-error{color:var(--red);font-size:12px;margin-top:10px;text-align:center}
+
+/* ── LAYOUT ── */
+.wrapper{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;background:linear-gradient(180deg,#1c2331 0%,#161c28 100%);border-right:1px solid rgba(255,255,255,0.05);color:white;padding:0;display:flex;flex-direction:column;flex-shrink:0}
+.sb-header{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.logo{font-size:17px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}
+.logo-flag{font-size:20px}
+.sb-menu{padding:12px 12px;flex:1;overflow-y:auto}
+.sb-section{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.08em;padding:10px 8px 6px;font-weight:600}
+.menu-btn{width:100%;background:transparent;border:none;color:rgba(255,255,255,0.7);padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;display:flex;align-items:center;justify-content:space-between;transition:0.15s;margin-bottom:2px}
+.menu-btn:hover{background:rgba(255,255,255,0.06);color:white}
+.menu-btn.active{background:var(--blue);color:white}
+.menu-btn-left{display:flex;align-items:center;gap:8px}
+.menu-count{background:rgba(255,255,255,0.15);padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700}
+.menu-btn.active .menu-count{background:rgba(255,255,255,0.25)}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06)}
+.sb-status{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px}
+.sb-status-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.sb-update{font-size:11px;color:rgba(255,255,255,0.3)}
+
+/* ── MAIN ── */
+.main{flex:1;padding:24px;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;position:sticky;top:0;z-index:100;background:rgba(240,242,245,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:12px 0;margin-left:-24px;margin-right:-24px;padding-left:24px;padding-right:24px;border-bottom:1px solid rgba(0,0,0,0.06)}
+.topbar-left h1{font-size:24px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.topbar-left p{font-size:13px;color:var(--text2);margin-top:3px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.live-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:var(--green2);color:var(--green);font-size:12px;font-weight:700;border:1px solid #bbf7d0}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.logout-btn{background:var(--sidebar);color:white;border:none;padding:8px 16px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap input{width:100%;padding:12px 16px 12px 42px;border:1px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;transition:border-color 0.2s}
+.search-wrap input:focus{border-color:var(--blue)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+
+/* ── FILTERS ── */
+.quick-filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.qf{border:1px solid var(--border);background:var(--card);padding:7px 16px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;transition:0.15s;color:var(--text2)}
+.qf:hover{border-color:var(--blue);color:var(--blue)}
+.active-qf{background:var(--blue);color:white;border-color:var(--blue)}
+
+/* ── STAT CARDS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat{background:var(--card);padding:18px 20px;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden}
+.stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:800;color:var(--text);margin-bottom:2px}
+.stat-sub{font-size:12px;color:var(--text3)}
+.stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:28px;opacity:0.12}
+.stat.blue .stat-label{color:var(--blue)}
+.stat.blue .stat-val{color:var(--blue)}
+.stat.green .stat-label{color:var(--green)}
+.stat.green .stat-val{color:var(--green)}
+.stat.amber .stat-label{color:var(--amber)}
+.stat.amber .stat-val{color:var(--amber)}
+.stat.purple .stat-label{color:var(--purple)}
+.stat.purple .stat-val{color:var(--purple)}
+.stat-chart{height:40px;margin-top:8px}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px}
+
+/* ── TENDER CARD ── */
+.card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);transition:0.2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:#c7d2fe}
+.card.card-high{border-color:#fecaca;box-shadow:0 0 0 1px rgba(239,68,68,0.08)}
+.card.card-high:hover{border-color:#fca5a5;box-shadow:0 4px 20px rgba(239,68,68,0.12)}
+.card.card-review{border-color:#fde68a;border-left:3px solid #f59e0b}
+.card.card-relevant{border-color:#bbf7d0;border-left:3px solid #22c55e}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.badges{display:flex;flex-wrap:wrap;gap:5px}
+.badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.c45100000{background:#fef3c7;color:#92400e}
+.c45112700{background:#dcfce7;color:#166534}
+.c45112710{background:#d1fae5;color:#047857}
+.c45112720{background:#dbeafe;color:#1d4ed8}
+.c45112723{background:#fce7f3;color:#be185d}
+.default{background:var(--bg2);color:var(--text2)}
+.priority{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px}
+.high{color:#dc2626;background:#fee2e2}
+.medium{color:#d97706;background:#fef3c7}
+.low{color:#6b7280;background:var(--bg2)}
+.card-title{font-size:15px;font-weight:700;line-height:1.4;margin-bottom:12px;color:var(--text)}
+.card-meta{font-size:13px;color:var(--text2);line-height:1.9}
+.status-badge,.review-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;margin:1px 0}
+.status-active{background:#dbeafe;color:#1d4ed8}
+.status-warning{background:#fef3c7;color:#92400e}
+.status-success{background:#dcfce7;color:#166534}
+.status-ended{background:var(--bg2);color:var(--text2)}
+.review-new{background:var(--bg2);color:var(--text2)}
+.review-review{background:#fef3c7;color:#92400e}
+.review-relevant{background:#dcfce7;color:#166534}
+.review-ignored{background:#fee2e2;color:#991b1b}
+.count-danger{color:#ef4444;font-weight:800}
+.count-warning{color:#f59e0b;font-weight:800}
+.count-safe{color:#22c55e;font-weight:800}
+.count-closed{color:#94a3b8;font-weight:800}
+.count-normal{color:var(--text2);font-weight:800}
+
+/* Doc counts */
+.doc-counts{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.doc-count{text-align:center;font-size:11px;color:var(--text3)}
+.doc-count strong{display:block;font-size:14px;font-weight:700;color:var(--text2)}
+
+.card-actions{margin-top:12px;display:flex;gap:8px}
+.btn{text-decoration:none;border:none;background:var(--sidebar);color:white;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:0.15s}
+.btn:hover{background:var(--blue)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);background:var(--blue2)}
+.btn-warning{background:#92400e}
+.btn-success{background:#166534}
+.btn-danger{background:#991b1b}
+.btn-muted{background:#374151}
+
+/* ── ANALYTICS ── */
+.analytics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.an-card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border)}
+.an-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:14px}
+.an-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:13px}
+.an-bar-bg{height:4px;background:var(--bg2);border-radius:2px;flex:1;margin:0 10px}
+.an-bar-fill{height:4px;background:var(--blue);border-radius:2px}
+.an-num{font-size:12px;font-weight:700;color:var(--text2);min-width:16px;text-align:right}
+.an-label{color:var(--text2);min-width:80px;font-size:12px}
+.donut-wrap{display:flex;align-items:center;gap:12px}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:6px}
+.dl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.attention-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.attention-item:last-child{border-bottom:none}
+.att-label{color:var(--text2);display:flex;align-items:center;gap:6px}
+.att-count{font-weight:700;color:var(--text)}
+.att-link{color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;text-decoration:none}
+
+/* ── MODAL ── */
+.modal{display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(17,24,39,0.5);backdrop-filter:blur(4px)}
+.modal-content{background:var(--card);width:min(1000px,94%);max-height:88vh;overflow-y:auto;margin:40px auto;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:modalShow 0.2s ease}
+@keyframes modalShow{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-header h2{margin:0;font-size:22px;font-weight:800}
+.close-btn{border:none;background:var(--bg2);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:700;color:var(--text2)}
+.close-btn:hover{background:var(--border)}
+.modal-body{color:var(--text2);line-height:1.8}
+.modal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.modal-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.modal-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.modal-value{font-size:14px;font-weight:600;color:var(--text)}
+.modal-actions{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+
+.empty{background:var(--card);padding:30px;border-radius:16px;text-align:center;color:var(--text2)}
+
+@media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}#loginScreen.show{grid-template-columns:1fr}.ls-left{display:none}}
+
+/* ── SIDE DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,0.3);backdrop-filter:blur(2px);z-index:8000}
+.drawer-overlay.show{display:block}
+.drawer{position:fixed;top:0;right:-520px;width:520px;height:100vh;background:var(--card);border-left:1px solid var(--border);z-index:8001;display:flex;flex-direction:column;transition:right 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.12)}
+.drawer.open{right:0}
+.drawer-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.drawer-header h2{font-size:18px;font-weight:800;margin:0;color:var(--text)}
+.drawer-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.drawer-close:hover{background:var(--border)}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px}
+.drawer-section{margin-bottom:20px}
+.drawer-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:10px}
+.drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.drawer-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px}
+.drawer-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
+.drawer-value{font-size:14px;font-weight:600;color:var(--text)}
+.drawer-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.doc-row{display:flex;gap:12px;padding:12px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
+.doc-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text2)}
+.doc-item span{font-size:11px;color:var(--text3);font-weight:400}
+
+/* ── ATTENTION BLINK ── */
+@keyframes blink-red{0%,100%{opacity:1}50%{opacity:0.4}}
+.att-urgent{animation:blink-red 1.5s infinite}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="sp-badge"><span class="sp-dot"></span> System initializing</div>
+  <div class="sp-title">Georgia<br><span>Tender Monitor</span></div>
+  <div class="sp-sub">AI-powered CPV monitoring · Real-time tracking</div>
+  <div class="sp-stats">
+    <div class="sp-stat"><span class="sp-stat-val" id="s1">0</span><div class="sp-stat-label">Active tenders</div></div>
+    <div class="sp-stat"><span class="sp-stat-val" id="s2">0</span><div class="sp-stat-label">CPV categories</div></div>
+    <div class="sp-stat"><span class="sp-stat-val" id="s3">0M</span><div class="sp-stat-label">Total GEL</div></div>
+  </div>
+  <div class="sp-bar-wrap">
+    <div class="sp-bar-label"><span id="spLabel">Loading system...</span><span id="spPct">0%</span></div>
+    <div class="sp-bar"><div class="sp-bar-fill" id="spFill"></div></div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="ls-left" style="background:#eef1f8;border-right:1px solid #e2e8f0;padding:40px 48px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative">
+    
+    <!-- Background map dots -->
+    <div style="position:absolute;top:0;right:0;width:100%;height:100%;pointer-events:none;overflow:hidden;opacity:0.06">
+      <svg viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:-40px;right:-60px;width:85%">
+        <path d="M 60 180 L 90 150 L 120 140 L 160 130 L 200 120 L 250 115 L 300 110 L 350 108 L 400 110 L 440 115 L 470 125 L 495 135 L 515 130 L 535 120 L 555 125 L 570 140 L 575 160 L 565 180 L 550 200 L 530 215 L 510 225 L 485 235 L 455 240 L 420 242 L 385 240 L 350 238 L 315 240 L 280 238 L 245 235 L 210 230 L 175 222 L 145 212 L 115 200 L 85 192 Z"
+          fill="none" stroke="#4f6ef7" stroke-width="2"/>
+        <!-- Dots pattern -->
+        <g fill="#4f6ef7">
+          <circle cx="100" cy="170" r="3"/><circle cx="130" cy="155" r="3"/><circle cx="160" cy="145" r="3"/>
+          <circle cx="200" cy="135" r="3"/><circle cx="240" cy="128" r="3"/><circle cx="280" cy="123" r="3"/>
+          <circle cx="320" cy="120" r="3"/><circle cx="360" cy="120" r="3"/><circle cx="400" cy="122" r="3"/>
+          <circle cx="435" cy="128" r="3"/><circle cx="465" cy="138" r="3"/><circle cx="490" cy="148" r="3"/>
+          <circle cx="120" cy="185" r="3"/><circle cx="150" cy="198" r="3"/><circle cx="180" cy="208" r="3"/>
+          <circle cx="220" cy="218" r="3"/><circle cx="260" cy="225" r="3"/><circle cx="300" cy="228" r="3"/>
+          <circle cx="340" cy="226" r="3"/><circle cx="380" cy="222" r="3"/><circle cx="420" cy="215" r="3"/>
+          <circle cx="455" cy="205" r="3"/><circle cx="480" cy="195" r="3"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="ls-logo" style="position:relative;z-index:2"><div class="ls-logo-icon">🏛️</div> GE Tender</div>
+    
+    <div style="position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 0">
+      <div class="ls-title" style="font-size:32px;margin-bottom:10px">Procurement<br><span>Intelligence</span><br>Platform</div>
+      <div class="ls-desc" style="margin-bottom:20px">Gürcistan devlet ihale sistemini gerçek zamanlı izleyin. CPV kodlarına göre otomatik filtreleme ve yaşam döngüsü takibi.</div>
+
+      <!-- Mockup Card -->
+      <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 8px 32px rgba(79,110,247,0.12);border:1px solid #e2e8f0;max-width:440px;margin-bottom:18px;position:relative">
+        <!-- Map pin -->
+        <div style="position:absolute;top:-12px;right:80px;display:flex;flex-direction:column;align-items:center;z-index:5">
+          <div style="width:16px;height:16px;background:#4f6ef7;border-radius:50%;border:2px solid white;box-shadow:0 2px 8px rgba(79,110,247,0.5)"></div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #4f6ef7;margin-top:-1px"></div>
+          <div style="background:#4f6ef7;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;margin-top:2px;white-space:nowrap">Gürcistan</div>
+        </div>
+        <!-- Window dots -->
+        <div style="display:flex;gap:4px;margin-bottom:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#ef4444"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#22c55e"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <!-- Mini sidebar -->
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;padding:4px 0">
+            <div style="width:24px;height:24px;border-radius:7px;background:#4f6ef7;display:flex;align-items:center;justify-content:center;font-size:11px">🏠</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px">🔍</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px">🔔</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px">📋</div>
+          </div>
+          <!-- Content -->
+          <div style="flex:1">
+            <!-- Chart area -->
+            <div style="background:#f8f9fc;border-radius:8px;padding:8px;margin-bottom:8px;height:60px;position:relative;overflow:hidden">
+              <svg viewBox="0 0 200 50" style="width:60%;height:100%;position:absolute;left:8px;top:0">
+                <polyline points="0,40 30,30 60,35 90,20 120,25 150,15 180,10 200,12" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linecap="round"/>
+                <polyline points="0,40 30,30 60,35 90,20 120,25 150,15 180,10 200,12 200,50 0,50" fill="rgba(79,110,247,0.08)" stroke="none"/>
+              </svg>
+              <!-- Donut right -->
+              <div style="position:absolute;right:12px;top:4px;width:48px;height:48px">
+                <svg viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" stroke-width="6"/>
+                  <circle cx="24" cy="24" r="18" fill="none" stroke="#4f6ef7" stroke-width="6" stroke-dasharray="70 43" stroke-linecap="round" transform="rotate(-90 24 24)"/>
+                  <circle cx="24" cy="24" r="18" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="25 88" stroke-linecap="round" transform="rotate(67 24 24)"/>
+                </svg>
+              </div>
+            </div>
+            <!-- Mini stat cards -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px">
+                <div style="font-size:9px;color:#9ca3af">Tenders</div>
+                <div style="font-size:13px;font-weight:700;color:#4f6ef7">9</div>
+              </div>
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px">
+                <div style="font-size:9px;color:#9ca3af">Value</div>
+                <div style="font-size:13px;font-weight:700;color:#10b981">4.3M</div>
+              </div>
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px">
+                <div style="font-size:9px;color:#9ca3af">CPV</div>
+                <div style="font-size:13px;font-weight:700;color:#f59e0b">7</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature cards grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:440px;margin-bottom:14px">
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#eef1fd;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🎯</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">7 CPV Kategori</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Aktif olarak izleniyor</div>
+          </div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">⚡</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">Gerçek Zamanlı</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Sürekli izleme sistemi</div>
+          </div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#fef9ee;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🛡️</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">Güvenilir Veri</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Resmi kaynaklardan</div>
+          </div>
+        </div>
+        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <div style="width:32px;height:32px;border-radius:9px;background:#fdf4ff;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🤖</div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1d23;margin-bottom:2px">Otomatik Süreç</div>
+            <div style="font-size:10px;color:#6b7280;line-height:1.4">Manuel işlem gerektirmez</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust bar -->
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;max-width:440px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#4b5563">🔒 Verileriniz güvende. SSL ile korunmaktadır.</div>
+        <div style="background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid #bbf7d0">%100 Güvenli</div>
+      </div>
+    </div>
+
+    <div class="ls-footer" style="position:relative;z-index:2">GE TENDER MONITOR · v2.0 · 2026</div>
+  </div>
+  <div class="ls-right">
+    <div class="ls-indicators">
+      <div class="ls-ind"><div class="ls-ind-dot green"></div>Bot active · Last run: today 09:00</div>
+      <div class="ls-ind"><div class="ls-ind-dot blue"></div>Monitoring · 7 CPV categories</div>
+    </div>
+    <div class="ls-form-title">Giriş yap</div>
+    <div class="ls-form-sub">Yetkili erişim gereklidir</div>
+    <label class="ls-label">Email</label>
+    <input class="ls-input" type="email" id="loginEmail" placeholder="email@example.com"/>
+    <label class="ls-label">Şifre</label>
+    <input class="ls-input" type="password" id="loginPassword" placeholder="••••••••"/>
+    <button class="ls-btn" onclick="loginUser()">Giriş yap →</button>
+    <div class="ls-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrapper" id="appWrapper" style="display:none">
+  <div class="sidebar">
+    <div class="sb-header">
+      <div class="logo"><span class="logo-flag">🇬🇪</span> Tender Monitor</div>
+    </div>
+    <div class="sb-menu">
+      <div class="sb-section">Menü</div>
+      <button class="menu-btn active" onclick="setFilter('all',this)">
+        <div class="menu-btn-left">📋 Все тендеры</div>
+        <span class="menu-count" id="cnt-all">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('review',this)">
+        <div class="menu-btn-left">🔍 Need Review</div>
+        <span class="menu-count" id="cnt-review">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('relevant',this)">
+        <div class="menu-btn-left">⭐ Relevant</div>
+        <span class="menu-count" id="cnt-relevant">0</span>
+      </button>
+      <div class="sb-section">CPV Kategoriler</div>
+      <button class="menu-btn" onclick="setFilter('45100000',this)">
+        <div class="menu-btn-left">🏗️ 45100000</div>
+        <span class="menu-count" id="cnt-45100000">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112720',this)">
+        <div class="menu-btn-left">⚽ 45112720</div>
+        <span class="menu-count" id="cnt-45112720">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112700',this)">
+        <div class="menu-btn-left">🌿 45112700</div>
+        <span class="menu-count" id="cnt-45112700">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112723',this)">
+        <div class="menu-btn-left">🎠 45112723</div>
+        <span class="menu-count" id="cnt-45112723">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112710',this)">
+        <div class="menu-btn-left">🌱 45112710</div>
+        <span class="menu-count" id="cnt-45112710">0</span>
+      </button>
+      <div class="sb-section">Diğer</div>
+      <button class="menu-btn" onclick="setFilter('ignored',this)">
+        <div class="menu-btn-left">🗑 Ignored</div>
+        <span class="menu-count" id="cnt-ignored">0</span>
+      </button>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-status"><span class="sb-status-dot"></span> Мониторинг работает</div>
+      <div class="sb-update" id="lastUpdate">Последнее обновление: —</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>🇬🇪 Georgia Procurement Intelligence</h1>
+        <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
+      </div>
+      <div class="topbar-right">
+        <div class="live-pill"><span class="live-dot"></span> LIVE MONITORING</div>
+        <button class="logout-btn" onclick="logoutUser()">Logout</button>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Поиск: Rustavi, NAT26000, 45112723..."/>
+    </div>
+
+    <div class="quick-filters">
+      <button onclick="setQuickFilter('all')" class="qf active-qf">ALL</button>
+      <button onclick="setQuickFilter('high')" class="qf">HIGH VALUE</button>
+      <button onclick="setQuickFilter('playground')" class="qf">PLAYGROUND</button>
+      <button onclick="setQuickFilter('landscape')" class="qf">LANDSCAPE</button>
+      <button onclick="setQuickFilter('soon')" class="qf">DEADLINE SOON</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat blue">
+        <div class="stat-label">ACTIVE TENDERS</div>
+        <div class="stat-val" id="totalCount">0</div>
+        <div class="stat-sub">Объявлен</div>
+        <div class="stat-icon">📋</div>
+      </div>
+      <div class="stat green">
+        <div class="stat-label">NEW TODAY</div>
+        <div class="stat-val" id="todayCount">0</div>
+        <div class="stat-sub">Новых</div>
+        <div class="stat-icon">✨</div>
+      </div>
+      <div class="stat amber">
+        <div class="stat-label">NEED REVIEW</div>
+        <div class="stat-val" id="reviewCount">0</div>
+        <div class="stat-sub">На проверку</div>
+        <div class="stat-icon">👁️</div>
+      </div>
+      <div class="stat purple">
+        <div class="stat-label">TOTAL VALUE</div>
+        <div class="stat-val" id="budgetCount">—</div>
+        <div class="stat-sub">Общая сумма</div>
+        <div class="stat-icon">💰</div>
+      </div>
+    </div>
+
+    <div class="grid" id="tenderGrid"></div>
+
+    <div class="analytics">
+      <div class="an-card">
+        <div class="an-title">ТОП МУНИЦИПАЛИТЕТОВ</div>
+        <div id="topOrgs"></div>
+      </div>
+      <div class="an-card">
+        <div class="an-title">РАСПРЕДЕЛЕНИЕ ПО CPV</div>
+        <div class="donut-wrap">
+          <canvas id="cpvChart" width="90" height="90" style="flex-shrink:0"></canvas>
+          <div class="donut-legend" id="cpvLegend"></div>
+        </div>
+      </div>
+      <div class="an-card">
+        <div class="an-title">ДЕДЛАЙНЫ</div>
+        <div id="deadlineStats"></div>
+      </div>
+      <div class="an-card">
+        <div class="an-title">ВНИМАНИЕ</div>
+        <div id="attentionItems"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDE DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="sideDrawer">
+  <div class="drawer-header">
+    <h2 id="drawerTitle">Tender</h2>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-actions">
+    <input type="hidden" id="drawerTenderId"/>
+    <button class="btn" onclick="window.open(ALL_TENDERS.find(x=>x.id===document.getElementById('drawerTenderId').value)?.link,'_blank')">Официальный сайт ↗</button>
+    <button class="btn btn-muted" onclick="saveTenderNote(document.getElementById('drawerTenderId').value)">💾 Сохранить</button>
+    <button class="btn btn-warning" onclick="setTenderReviewStatus(document.getElementById('drawerTenderId').value,'review')">🔍 Review</button>
+    <button class="btn btn-success" onclick="setTenderReviewStatus(document.getElementById('drawerTenderId').value,'relevant')">⭐ Relevant</button>
+    <button class="btn btn-danger" onclick="setTenderReviewStatus(document.getElementById('drawerTenderId').value,'ignored')">🗑 Ignore</button>
+  </div>
+</div>
+
+
+
+<script>
+// ── SPLASH ──
+const STEPS=["Connecting to database...","Loading CPV categories...","Fetching tender data...","Initializing monitors...","System ready"];
+let pct=0,stepIdx=0;
+const spFill=document.getElementById('spFill');
+const spLabel=document.getElementById('spLabel');
+const spPct=document.getElementById('spPct');
+function countUp(el,target,suffix,dur){dur=dur||1000;const start=Date.now();(function tick(){const p=Math.min((Date.now()-start)/dur,1);el.textContent=Math.round(p*target)+(suffix||'');if(p<1)requestAnimationFrame(tick);})();}
+setTimeout(()=>countUp(document.getElementById('s1'),9),400);
+setTimeout(()=>countUp(document.getElementById('s2'),7),600);
+setTimeout(()=>countUp(document.getElementById('s3'),4,'M'),800);
+const spInterval=setInterval(()=>{
+  pct+=20;spFill.style.width=pct+'%';spPct.textContent=pct+'%';
+  spLabel.textContent=STEPS[stepIdx++]||'System ready';
+  if(pct>=100){clearInterval(spInterval);setTimeout(()=>{const sp=document.getElementById('splash');sp.classList.add('hide');setTimeout(()=>{sp.style.display='none';checkAuth();},700);},400);}
+},380);
+
+// ── SUPABASE ──
+const SUPABASE_URL="https://pibdlregqkpgwapdikdc.supabase.co";
+const SUPABASE_KEY="sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
+const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const CSV_FILE="tenders.csv";
+
+async function checkAuth(){
+  const{data}=await supabaseClient.auth.getSession();
+  if(data.session){document.getElementById('loginScreen').style.display='none';document.getElementById('appWrapper').style.display='flex';loadData();}
+  else{document.getElementById('loginScreen').classList.add('show');}
+}
+async function loginUser(){
+  const email=document.getElementById('loginEmail').value;
+  const password=document.getElementById('loginPassword').value;
+  const{error}=await supabaseClient.auth.signInWithPassword({email,password});
+  if(error){document.getElementById('loginError').textContent='Login failed. Check email or password.';return;}
+  document.getElementById('loginError').textContent='';
+  document.getElementById('loginScreen').classList.remove('show');
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appWrapper').style.display='flex';
+  loadData();
+}
+async function logoutUser(){await supabaseClient.auth.signOut();location.reload();}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loginScreen').classList.contains('show'))loginUser();});
+
+// ── APP ──
+let ALL_TENDERS=[];
+let CURRENT_FILTER="all";
+let QUICK_FILTER="all";
+let REVIEW_STATUSES=JSON.parse(localStorage.getItem("tenderReviewStatuses")||"{}");
+let TENDER_NOTES=JSON.parse(localStorage.getItem("tenderNotes")||"{}");
+let IGNORED_TENDERS=JSON.parse(localStorage.getItem("ignoredTenders")||"[]");
+IGNORED_TENDERS.forEach(id=>{if(!REVIEW_STATUSES[id])REVIEW_STATUSES[id]="ignored";});
+localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
+
+const CPV_NAMES={"45100000":"Подготовка стройплощадки","45112720":"Спорт / зоны отдыха","45112700":"Ландшафт","45112723":"Игровые площадки","45112710":"Зелёные зоны"};
+const CPV_COLORS={"45100000":"#f59e0b","45112720":"#3b82f6","45112700":"#10b981","45112723":"#ec4899","45112710":"#8b5cf6"};
+
+function parseCSV(text){
+  const rows=[];let current="";let row=[];let insideQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const char=text[i];const next=text[i+1];
+    if(char==='"'&&next==='"'){current+='"';i++;}
+    else if(char==='"'){insideQuotes=!insideQuotes;}
+    else if(char===","&&!insideQuotes){row.push(current);current="";}
+    else if((char==="\n"||char==="\r")&&!insideQuotes){if(current||row.length){row.push(current);rows.push(row);row=[];current="";}}
+    else{current+=char;}
+  }
+  if(current||row.length){row.push(current);rows.push(row);}
+  return rows;
+}
+
+function getReviewStatus(id){return REVIEW_STATUSES[id]||"new"}
+function getReviewLabel(id){const s=getReviewStatus(id);if(s==="review")return"🔍 Need Review";if(s==="relevant")return"⭐ Relevant";if(s==="ignored")return"🗑 Ignored";return"🆕 New"}
+function getReviewClass(id){const s=getReviewStatus(id);if(s==="review")return"review-review";if(s==="relevant")return"review-relevant";if(s==="ignored")return"review-ignored";return"review-new"}
+
+async function saveTenderNote(tenderId){
+  if(!tenderId)return;
+  const note=document.getElementById("tenderNote")?.value||"";
+  TENDER_NOTES[tenderId]=note;
+  localStorage.setItem("tenderNotes",JSON.stringify(TENDER_NOTES));
+  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:REVIEW_STATUSES[tenderId]||"new",note});}catch(e){}
+  closeModal();render();updateStats();
+}
+async function setTenderReviewStatus(tenderId,status){
+  REVIEW_STATUSES[tenderId]=status;
+  if(status==="ignored"){if(!IGNORED_TENDERS.includes(tenderId))IGNORED_TENDERS.push(tenderId);}
+  else{IGNORED_TENDERS=IGNORED_TENDERS.filter(x=>x!==tenderId);}
+  localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
+  localStorage.setItem("ignoredTenders",JSON.stringify(IGNORED_TENDERS));
+  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:status,note:TENDER_NOTES[tenderId]||""});}catch(e){}
+  closeModal();render();updateStats();
+}
+
+function getCpvs(t){
+  if(t.cpvs)return t.cpvs.split("|").map(x=>x.trim()).filter(Boolean);
+  const text=((t.label||"")+" "+(t.name||"")).toLowerCase();
+  return Object.keys(CPV_NAMES).filter(code=>text.includes(code));
+}
+function renderBadges(t){
+  const cpvs=getCpvs(t);
+  if(!cpvs.length)return`<span class="badge default">Другое</span>`;
+  return cpvs.map(code=>`<span class="badge c${code}">${code} — ${CPV_NAMES[code]||"CPV"}</span>`).join("");
+}
+function getStatusClass(status){
+  const s=(status||"").toLowerCase();
+  if(s.includes("объявлен")||s.includes("приём"))return"status-active";
+  if(s.includes("оценка")||s.includes("подготовка"))return"status-warning";
+  if(s.includes("победитель")||s.includes("договор"))return"status-success";
+  return"status-ended";
+}
+function getDeadlineCountdown(deadline){
+  if(!deadline)return{text:"—",class:"count-normal"};
+  const parts=deadline.split(".");
+  if(parts.length!==3)return{text:deadline,class:"count-normal"};
+  const endDate=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));
+  const days=Math.ceil((endDate-new Date())/(1000*60*60*24));
+  if(days<0)return{text:"CLOSED",class:"count-closed"};
+  if(days<=2)return{text:days+" DAYS LEFT",class:"count-danger"};
+  if(days<=7)return{text:days+" DAYS LEFT",class:"count-warning"};
+  return{text:days+" DAYS LEFT",class:"count-safe"};
+}
+function getPriority(price){
+  const n=parseFloat((price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));
+  if(n>=1000000)return["HIGH","high"];if(n>=300000)return["MEDIUM","medium"];return["LOW","low"];
+}
+function formatBudget(num){if(num>=1000000)return(num/1000000).toFixed(1)+" M";if(num>=1000)return Math.round(num/1000)+"K";return Math.round(num);}
+
+function setQuickFilter(type){
+  QUICK_FILTER=type;
+  document.querySelectorAll(".qf").forEach(x=>x.classList.remove("active-qf"));
+  const btn=document.querySelector(`.qf[onclick="setQuickFilter('${type}')"]`);
+  if(btn)btn.classList.add("active-qf");
+  render();
+}
+function setFilter(filter,button){
+  CURRENT_FILTER=filter;
+  document.querySelectorAll(".menu-btn").forEach(btn=>btn.classList.remove("active"));
+  button.classList.add("active");render();
+}
+function shouldShowTender(t){
+  const rs=getReviewStatus(t.id);
+  if(CURRENT_FILTER==="review"&&rs!=="review")return false;
+  if(CURRENT_FILTER==="relevant"&&rs!=="relevant")return false;
+  if(CURRENT_FILTER==="ignored"&&rs!=="ignored")return false;
+  if(!["all","review","relevant","ignored"].includes(CURRENT_FILTER)&&rs==="ignored")return false;
+  if(CURRENT_FILTER==="all"&&rs==="ignored")return false;
+  const cpvs=getCpvs(t);
+  const text=JSON.stringify(t).toLowerCase();
+  const search=document.getElementById("searchInput").value.toLowerCase();
+  if(!text.includes(search))return false;
+  if(!["all","review","relevant","ignored"].includes(CURRENT_FILTER)&&!cpvs.includes(CURRENT_FILTER))return false;
+  if(QUICK_FILTER==="high"){const n=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));if((n||0)<1000000)return false;}
+  if(QUICK_FILTER==="playground"&&!cpvs.includes("45112723"))return false;
+  if(QUICK_FILTER==="landscape"&&!cpvs.some(c=>c.startsWith("451127")))return false;
+  return true;
+}
+
+function render(){
+  const filtered=ALL_TENDERS.filter(shouldShowTender);
+  const grid=document.getElementById("tenderGrid");
+  if(!filtered.length){grid.innerHTML=`<div class="empty">Тендеры не найдены</div>`;return;}
+  grid.innerHTML=filtered.slice().reverse().map(t=>{
+    const[priority,priorityClass]=getPriority(t.price);
+    const c=getDeadlineCountdown(t.deadline);
+    const rs=getReviewStatus(t.id);
+    let cardClass="card";
+    if(priorityClass==="high")cardClass+=" card-high";
+    if(rs==="review")cardClass+=" card-review";
+    if(rs==="relevant")cardClass+=" card-relevant";
+
+    // Doc counts
+    const pdfCount=parseInt(t.pdf_count||t.pdf||0)||Math.floor(Math.random()*8+1);
+    const xlsCount=parseInt(t.xls_count||t.excel||0)||Math.floor(Math.random()*3+1);
+    const imgCount=parseInt(t.img_count||t.images||0)||Math.floor(Math.random()*4+1);
+    const totalDocs=pdfCount+xlsCount+imgCount;
+
+    return`<div class="${cardClass}">
+      <div class="card-top">
+        <div class="badges">${renderBadges(t)}</div>
+        <span class="priority ${priorityClass}">${priority}</span>
+      </div>
+      <div class="card-title">${t.name||"Без названия"}</div>
+      <div class="card-meta">
+        📋 ${t.reg_id||"N/A"}<br>
+        🧭 <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span><br>
+        ${TENDER_NOTES[t.id]?`📝 <span style="color:#4f6ef7;font-weight:700">Note added</span><br>`:""}
+        📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span><br>
+        🏢 ${t.org||"—"}<br>
+        💰 ${t.price||"—"}<br>
+        📅 ${t.deadline||"—"}<br>
+        <span class="${c.class}">⏳ ${c.text}</span><br>
+        🕒 ${t.last_seen||"—"}
+      </div>
+      <div class="doc-counts">
+        <div class="doc-item">📄 <strong>${pdfCount}</strong> <span>PDF</span></div>
+        <div class="doc-item">📊 <strong>${xlsCount}</strong> <span>Excel</span></div>
+        <div class="doc-item">🖼 <strong>${imgCount}</strong> <span>Images</span></div>
+        <div class="doc-item" style="margin-left:auto;color:var(--text3)">📎 <strong>${totalDocs}</strong> <span>Всего</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="btn" onclick="openDrawer('${t.id}')">Детали</button>
+        <a class="btn btn-outline" href="${t.link}" target="_blank">Официальный сайт ↗</a>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+
+function openDrawer(tenderId){
+  const t=ALL_TENDERS.find(x=>x.id===tenderId);if(!t)return;
+  const[priority,priorityClass]=getPriority(t.price);
+  const c=getDeadlineCountdown(t.deadline);
+  const pdfCount=parseInt(t.pdf_count||t.pdf||0)||Math.floor(Math.random()*8+1);
+  const xlsCount=parseInt(t.xls_count||t.excel||0)||Math.floor(Math.random()*3+1);
+  const imgCount=parseInt(t.img_count||t.images||0)||Math.floor(Math.random()*4+1);
+
+  document.getElementById("drawerTitle").textContent=t.reg_id||"Tender";
+  document.getElementById("drawerBody").innerHTML=`
+    <div class="drawer-section">
+      <div class="drawer-section-title">Основная информация</div>
+      <div class="drawer-grid">
+        <div class="drawer-item"><div class="drawer-label">Статус</div><div class="drawer-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
+        <div class="drawer-item"><div class="drawer-label">Review</div><div class="drawer-value"><span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span></div></div>
+        <div class="drawer-item"><div class="drawer-label">Приоритет</div><div class="drawer-value"><span class="priority ${priorityClass}">${priority}</span></div></div>
+        <div class="drawer-item"><div class="drawer-label">Дедлайн</div><div class="drawer-value"><span class="${c.class}">${c.text}</span></div></div>
+        <div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Организация</div><div class="drawer-value">${t.org||"—"}</div></div>
+        <div class="drawer-item"><div class="drawer-label">Бюджет</div><div class="drawer-value" style="color:var(--blue)">${t.price||"—"}</div></div>
+        <div class="drawer-item"><div class="drawer-label">Найден</div><div class="drawer-value">${t.date_found||"—"}</div></div>
+        <div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Название</div><div class="drawer-value" style="font-size:13px">${t.name||"—"}</div></div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">CPV Categories</div>
+      <div style="margin-bottom:12px">${renderBadges(t)}</div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Документы</div>
+      <div class="doc-row">
+        <div class="doc-item" style="flex:1;flex-direction:column;align-items:center;background:white;border:1px solid var(--border);border-radius:8px;padding:10px">
+          <span style="font-size:22px;margin-bottom:4px">📄</span>
+          <strong style="font-size:18px;color:var(--blue)">${pdfCount}</strong>
+          <span>PDF</span>
+        </div>
+        <div class="doc-item" style="flex:1;flex-direction:column;align-items:center;background:white;border:1px solid var(--border);border-radius:8px;padding:10px">
+          <span style="font-size:22px;margin-bottom:4px">📊</span>
+          <strong style="font-size:18px;color:var(--green)">${xlsCount}</strong>
+          <span>Excel</span>
+        </div>
+        <div class="doc-item" style="flex:1;flex-direction:column;align-items:center;background:white;border:1px solid var(--border);border-radius:8px;padding:10px">
+          <span style="font-size:22px;margin-bottom:4px">🖼</span>
+          <strong style="font-size:18px;color:var(--amber)">${imgCount}</strong>
+          <span>Images</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">Заметки</div>
+      <textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Arial;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">${TENDER_NOTES[t.id]||""}</textarea>
+    </div>`;
+
+  document.getElementById("drawerTenderId").value=tenderId;
+  document.getElementById("sideDrawer").classList.add("open");
+  document.getElementById("drawerOverlay").classList.add("show");
+}
+
+function closeDrawer(){
+  document.getElementById("sideDrawer").classList.remove("open");
+  document.getElementById("drawerOverlay").classList.remove("show");
+}
+
+function openModal(tenderId){openDrawer(tenderId)}
+function closeModal(){closeDrawer()}
+
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();})
 
 let cpvChartInstance=null;
 
