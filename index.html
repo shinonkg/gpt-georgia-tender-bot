@@ -854,6 +854,13 @@ function render(){
         <div class="meta">
           📋 ${t.reg_id || "N/A"}<br>
           🧭 <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span><br>
+          ${
+  TENDER_NOTES[t.id]
+  ?
+  `📝 <span style="color:#2563eb;font-weight:700">Note added</span><br>`
+  :
+  ""
+}
           📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span><br>
           🏢 ${t.org || "—"}<br>
           💰 ${t.price || "—"}<br>
