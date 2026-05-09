@@ -580,7 +580,36 @@ function getReviewClass(id){
 
   return "review-new";
 }
+async function saveTenderNote(tenderId){
 
+  const note =
+    document.getElementById("tenderNote")?.value || "";
+
+  TENDER_NOTES[tenderId] = note;
+
+  localStorage.setItem(
+    "tenderNotes",
+    JSON.stringify(TENDER_NOTES)
+  );
+
+  try{
+
+    await supabaseClient
+      .from("tender_reviews")
+      .upsert({
+        tender_id: tenderId,
+        review_status: REVIEW_STATUSES[tenderId] || "new",
+        note: note
+      });
+
+  }catch(e){
+    console.log("Supabase note save error", e);
+  }
+
+  closeModal();
+  render();
+  updateStats();
+}
 async function setTenderReviewStatus(tenderId, status){
 
   REVIEW_STATUSES[tenderId] = status;
@@ -901,11 +930,37 @@ function openModal(tenderId){
       <div class="modal-label">CPV Categories</div>
       ${renderBadges(t)}
     </div>
+    <div style="margin-top:22px">
+
+  <div class="modal-label">
+    Tender Notes
+  </div>
+
+  <textarea
+    id="tenderNote"
+    style="
+      width:100%;
+      min-height:120px;
+      border:1px solid #d1d5db;
+      border-radius:14px;
+      padding:14px;
+      font-size:14px;
+      resize:vertical;
+      font-family:Arial;
+    "
+    placeholder="Write your tender notes here..."
+  >${TENDER_NOTES[t.id] || ""}</textarea>
+
+</div>
 
     <div class="modal-actions">
       <a class="btn" href="${t.link}" target="_blank">
         Официальный тендер ↗
       </a>
+      
+      <button class="btn btn-muted" onclick="saveTenderNote('${t.id}')">
+  💾 Save Note
+      </button>
 
       <button class="btn btn-warning" onclick="setTenderReviewStatus('${t.id}', 'review')">
         🔍 Need Review
