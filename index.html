@@ -631,11 +631,14 @@ function setFilter(filter, button){
 }
 
 function shouldShowTender(t){
+
   const isIgnored =
-  IGNORED_TENDERS.includes(t.id);
-  
-  if(CURRENT_FILTER !== "ignored" && IGNORED_TENDERS.includes(t.id)){
-    return false;
+    IGNORED_TENDERS.includes(t.id);
+
+  if(CURRENT_FILTER === "ignored"){
+    if(!isIgnored) return false;
+  }else{
+    if(isIgnored) return false;
   }
 
   const cpvs = getCpvs(t);
