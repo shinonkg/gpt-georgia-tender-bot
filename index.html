@@ -389,6 +389,25 @@ body{
   .grid{grid-template-columns:1fr}
   .modal-grid{grid-template-columns:1fr}
 }
+  .count-danger{
+  color:#ef4444;
+  font-weight:800;
+}
+
+.count-warning{
+  color:#f59e0b;
+  font-weight:800;
+}
+
+.count-safe{
+  color:#22c55e;
+  font-weight:800;
+}
+
+.count-closed{
+  color:#94a3b8;
+  font-weight:800;
+}
 </style>
 </head>
 
@@ -584,11 +603,21 @@ function getStatusClass(status){
   
 function getDeadlineCountdown(deadline){
 
-  if(!deadline) return "—";
+  if(!deadline){
+    return {
+      text:"—",
+      class:"count-normal"
+    };
+  }
 
   const parts = deadline.split(".");
 
-  if(parts.length !== 3) return deadline;
+  if(parts.length !== 3){
+    return {
+      text:deadline,
+      class:"count-normal"
+    };
+  }
 
   const d = parseInt(parts[0]);
   const m = parseInt(parts[1]) - 1;
@@ -604,18 +633,30 @@ function getDeadlineCountdown(deadline){
     Math.ceil(diff / (1000 * 60 * 60 * 24));
 
   if(days < 0){
-    return "CLOSED";
+    return {
+      text:"CLOSED",
+      class:"count-closed"
+    };
   }
 
-  if(days === 0){
-    return "TODAY";
+  if(days <= 2){
+    return {
+      text:days + " DAYS LEFT",
+      class:"count-danger"
+    };
   }
 
-  if(days === 1){
-    return "1 DAY LEFT";
+  if(days <= 7){
+    return {
+      text:days + " DAYS LEFT",
+      class:"count-warning"
+    };
   }
 
-  return days + " DAYS LEFT";
+  return {
+    text:days + " DAYS LEFT",
+    class:"count-safe"
+  };
 }
   
 function getPriority(price){
@@ -739,7 +780,17 @@ function render(){
           🏢 ${t.org || "—"}<br>
           💰 ${t.price || "—"}<br>
           📅 ${t.deadline || "—"}<br>
-          ⏳ ${getDeadlineCountdown(t.deadline)}<br>
+          ${
+(() => {
+  const c = getDeadlineCountdown(t.deadline);
+
+  return `
+    <span class="${c.class}">
+      ⏳ ${c.text}
+    </span><br>
+  `;
+})()
+}
           🕒 ${t.last_seen || "—"}
         </div>
 
