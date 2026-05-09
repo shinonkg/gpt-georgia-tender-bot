@@ -1,203 +1,247 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>GPT Georgia Tender Monitor</title>
+<title>GE Tender Monitor</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;
+  --bg2:#e8eaed;
+  --sidebar:#1e2433;
+  --sidebar2:#252d3d;
+  --card:#ffffff;
+  --card2:#f7f8fa;
+  --border:#e2e4e8;
+  --text:#1a1d23;
+  --text2:#5a6275;
+  --text3:#8891a5;
+  --blue:#4f6ef7;
+  --blue2:#eef1fd;
+  --green:#16a34a;
+  --green2:#dcfce7;
+  --amber:#d97706;
+  --amber2:#fef3c7;
+  --red:#dc2626;
+  --red2:#fee2e2;
+  --purple:#7c3aed;
+  --purple2:#ede9fe;
+}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ── SPLASH ── */
 #splash{
   position:fixed;inset:0;z-index:9999;
-  background:#f8f9fc;
+  background:#f0f2f5;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  font-family:Arial,sans-serif;
   transition:opacity 0.7s ease,transform 0.7s ease;
 }
 #splash.hide{opacity:0;transform:scale(1.03);pointer-events:none}
-
-.sp-badge{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:5px 16px;border-radius:20px;
-  border:1px solid #c7d2fe;background:#eef1fd;
-  font-size:12px;color:#4f6ef7;margin-bottom:24px;
-  font-weight:600;
-}
-.sp-dot{width:6px;height:6px;border-radius:50%;background:#4f6ef7;animation:sp-pulse 1.5s infinite}
+.sp-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 16px;border-radius:20px;border:1px solid #c7d2fe;background:#eef1fd;font-size:12px;color:var(--blue);margin-bottom:24px;font-weight:600}
+.sp-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:sp-pulse 1.5s infinite}
 @keyframes sp-pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-
-.sp-title{
-  font-size:36px;font-weight:800;color:#111827;
-  text-align:center;line-height:1.15;margin-bottom:6px;
-}
-.sp-title span{color:#4f6ef7}
-.sp-sub{font-size:14px;color:#6b7280;margin-bottom:36px;text-align:center}
-
+.sp-title{font-size:38px;font-weight:800;color:var(--text);text-align:center;line-height:1.15;margin-bottom:6px}
+.sp-title span{color:var(--blue)}
+.sp-sub{font-size:14px;color:var(--text2);margin-bottom:36px;text-align:center}
 .sp-stats{display:flex;gap:40px;margin-bottom:36px}
 .sp-stat{text-align:center}
-.sp-stat-val{font-size:28px;font-weight:800;color:#4f6ef7;display:block}
-.sp-stat-label{font-size:11px;color:#9ca3af;margin-top:3px;text-transform:uppercase;letter-spacing:0.05em}
-
+.sp-stat-val{font-size:28px;font-weight:800;color:var(--blue);display:block}
+.sp-stat-label{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:0.05em}
 .sp-bar-wrap{width:260px}
-.sp-bar-label{display:flex;justify-content:space-between;font-size:11px;color:#9ca3af;margin-bottom:7px}
-.sp-bar{height:3px;background:#e5e7eb;border-radius:2px;overflow:hidden}
-.sp-bar-fill{height:100%;width:0%;background:#4f6ef7;border-radius:2px;transition:width 0.15s linear}
+.sp-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:7px}
+.sp-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.sp-bar-fill{height:100%;width:0%;background:var(--blue);border-radius:2px;transition:width 0.15s linear}
 
 /* ── LOGIN ── */
-#loginScreen{
-  position:fixed;inset:0;z-index:500;
-  display:none;font-family:Arial,sans-serif;
-}
+#loginScreen{position:fixed;inset:0;z-index:500;display:none;font-family:Arial,sans-serif}
 #loginScreen.show{display:grid;grid-template-columns:1fr 420px}
-
-.ls-left{
-  background:#f8f9fc;
-  border-right:1px solid #e5e7eb;
-  padding:48px;display:flex;flex-direction:column;justify-content:space-between;
-}
-.ls-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#111827;margin-bottom:0}
-.ls-logo-icon{
-  width:36px;height:36px;background:#4f6ef7;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;font-size:18px;
-}
+.ls-left{background:#e8eaed;border-right:1px solid var(--border);padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.ls-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:var(--text)}
+.ls-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
 .ls-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0}
-.ls-title{font-size:36px;font-weight:800;color:#111827;line-height:1.15;margin-bottom:12px}
-.ls-title span{color:#4f6ef7}
-.ls-desc{font-size:14px;color:#6b7280;line-height:1.7;max-width:380px;margin-bottom:28px}
+.ls-title{font-size:36px;font-weight:800;color:var(--text);line-height:1.15;margin-bottom:12px}
+.ls-title span{color:var(--blue)}
+.ls-desc{font-size:14px;color:var(--text2);line-height:1.7;max-width:380px;margin-bottom:28px}
 .ls-features{display:flex;flex-direction:column;gap:10px}
-.ls-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:#4b5563}
-.ls-feat-dot{width:5px;height:5px;border-radius:50%;background:#4f6ef7;flex-shrink:0}
-.ls-footer{font-size:11px;color:#9ca3af}
-
-.ls-right{
-  background:white;padding:48px;
-  display:flex;flex-direction:column;justify-content:center;
-  border-left:1px solid #e5e7eb;
-}
+.ls-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+.ls-feat-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.ls-footer{font-size:11px;color:var(--text3)}
+.ls-right{background:#f0f2f5;padding:48px;display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--border)}
 .ls-indicators{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
-.ls-ind{
-  display:flex;align-items:center;gap:8px;
-  padding:9px 12px;background:#f8f9fc;
-  border:1px solid #e5e7eb;border-radius:10px;
-  font-size:12px;color:#6b7280;
-}
+.ls-ind{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2)}
 .ls-ind-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .ls-ind-dot.green{background:#22c55e}
-.ls-ind-dot.blue{background:#4f6ef7}
-
-.ls-form-title{font-size:20px;font-weight:700;color:#111827;margin-bottom:4px}
-.ls-form-sub{font-size:13px;color:#6b7280;margin-bottom:24px}
-.ls-label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:6px;margin-top:14px;display:block}
-.ls-input{
-  width:100%;padding:12px 14px;
-  background:#f8f9fc;border:1px solid #d1d5db;
-  border-radius:10px;color:#111827;font-size:14px;
-  font-family:Arial,sans-serif;outline:none;
-  transition:border-color 0.2s;
-}
-.ls-input:focus{border-color:#4f6ef7;background:white}
-.ls-btn{
-  width:100%;padding:13px;margin-top:16px;
-  background:#4f6ef7;border:none;border-radius:10px;
-  color:white;font-size:14px;font-weight:700;
-  cursor:pointer;font-family:Arial,sans-serif;
-  transition:background 0.2s,transform 0.1s;
-}
+.ls-ind-dot.blue{background:var(--blue)}
+.ls-form-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ls-form-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.ls-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:6px;margin-top:14px;display:block}
+.ls-input{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:Arial,sans-serif;outline:none;transition:border-color 0.2s}
+.ls-input:focus{border-color:var(--blue)}
+.ls-btn{width:100%;padding:13px;margin-top:16px;background:var(--blue);border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;transition:background 0.2s}
 .ls-btn:hover{background:#4338ca}
-.ls-btn:active{transform:scale(0.99)}
-.ls-error{color:#dc2626;font-size:12px;margin-top:10px;text-align:center}
+.ls-error{color:var(--red);font-size:12px;margin-top:10px;text-align:center}
 
-@media(max-width:900px){
-  #loginScreen.show{grid-template-columns:1fr}
-  .ls-left{display:none}
-}
-
-/* ── MAIN APP (orijinal) ── */
-body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#1f2937}
+/* ── LAYOUT ── */
 .wrapper{display:flex;min-height:100vh}
-.sidebar{width:290px;background:#111827;color:white;padding:24px}
-.logo{font-size:22px;font-weight:700;margin-bottom:26px}
-.menu{display:flex;flex-direction:column;gap:10px}
-.menu button{background:rgba(255,255,255,0.04);border:none;color:white;padding:13px;border-radius:12px;cursor:pointer;text-align:left;font-size:14px;line-height:1.35}
-.menu button.active{background:#2563eb}
-.menu button:hover{background:#2563eb;transform:translateX(3px);transition:0.2s}
-.main{flex:1;padding:28px}
-.hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-.hero h1{margin:0;font-size:32px;font-weight:800}
-.hero p{margin-top:8px;color:#6b7280;font-size:15px}
-.hero-status{background:#dcfce7;color:#166534;padding:10px 16px;border-radius:999px;font-weight:700;font-size:13px}
-.search input{width:100%;padding:16px;border:none;border-radius:16px;font-size:16px;box-shadow:0 4px 18px rgba(0,0,0,0.06);margin-bottom:24px}
-.quick-filters{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
-.qf{border:none;background:white;border:1px solid #e5e7eb;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer;transition:0.2s}
-.qf:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.08)}
-.active-qf{background:#2563eb;color:white}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.stat{background:white;padding:20px;border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,0.06);border:1px solid #eef2f7;transition:0.25s}
-.stat:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(37,99,235,0.10)}
-.stat span{color:#6b7280;font-size:14px}
-.stat strong{display:block;margin-top:10px;font-size:28px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px}
-.card{background:white;border-radius:22px;padding:22px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e5e7eb;transition:0.25s}
-.card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,0.10)}
-.badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;background:var(--sidebar);color:white;padding:0;display:flex;flex-direction:column;flex-shrink:0}
+.sb-header{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.logo{font-size:17px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}
+.logo-flag{font-size:20px}
+.sb-menu{padding:12px 12px;flex:1;overflow-y:auto}
+.sb-section{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.08em;padding:10px 8px 6px;font-weight:600}
+.menu-btn{width:100%;background:transparent;border:none;color:rgba(255,255,255,0.7);padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;display:flex;align-items:center;justify-content:space-between;transition:0.15s;margin-bottom:2px}
+.menu-btn:hover{background:rgba(255,255,255,0.06);color:white}
+.menu-btn.active{background:var(--blue);color:white}
+.menu-btn-left{display:flex;align-items:center;gap:8px}
+.menu-count{background:rgba(255,255,255,0.15);padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700}
+.menu-btn.active .menu-count{background:rgba(255,255,255,0.25)}
+.sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06)}
+.sb-status{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px}
+.sb-status-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.sb-update{font-size:11px;color:rgba(255,255,255,0.3)}
+
+/* ── MAIN ── */
+.main{flex:1;padding:24px;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.topbar-left h1{font-size:24px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.topbar-left p{font-size:13px;color:var(--text2);margin-top:3px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.live-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:var(--green2);color:var(--green);font-size:12px;font-weight:700;border:1px solid #bbf7d0}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.logout-btn{background:var(--sidebar);color:white;border:none;padding:8px 16px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap input{width:100%;padding:12px 16px 12px 42px;border:1px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;transition:border-color 0.2s}
+.search-wrap input:focus{border-color:var(--blue)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+
+/* ── FILTERS ── */
+.quick-filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.qf{border:1px solid var(--border);background:var(--card);padding:7px 16px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;transition:0.15s;color:var(--text2)}
+.qf:hover{border-color:var(--blue);color:var(--blue)}
+.active-qf{background:var(--blue);color:white;border-color:var(--blue)}
+
+/* ── STAT CARDS ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat{background:var(--card);padding:18px 20px;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden}
+.stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:800;color:var(--text);margin-bottom:2px}
+.stat-sub{font-size:12px;color:var(--text3)}
+.stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:28px;opacity:0.12}
+.stat.blue .stat-label{color:var(--blue)}
+.stat.blue .stat-val{color:var(--blue)}
+.stat.green .stat-label{color:var(--green)}
+.stat.green .stat-val{color:var(--green)}
+.stat.amber .stat-label{color:var(--amber)}
+.stat.amber .stat-val{color:var(--amber)}
+.stat.purple .stat-label{color:var(--purple)}
+.stat.purple .stat-val{color:var(--purple)}
+.stat-chart{height:40px;margin-top:8px}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px}
+
+/* ── TENDER CARD ── */
+.card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);transition:0.2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:#c7d2fe}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.badges{display:flex;flex-wrap:wrap;gap:5px}
+.badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .c45100000{background:#fef3c7;color:#92400e}
 .c45112700{background:#dcfce7;color:#166534}
 .c45112710{background:#d1fae5;color:#047857}
 .c45112720{background:#dbeafe;color:#1d4ed8}
 .c45112723{background:#fce7f3;color:#be185d}
-.default{background:#e5e7eb;color:#374151}
-.status-badge,.review-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;margin:2px 0}
+.default{background:var(--bg2);color:var(--text2)}
+.priority{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px}
+.high{color:#dc2626;background:#fee2e2}
+.medium{color:#d97706;background:#fef3c7}
+.low{color:#6b7280;background:var(--bg2)}
+.card-title{font-size:15px;font-weight:700;line-height:1.4;margin-bottom:12px;color:var(--text)}
+.card-meta{font-size:13px;color:var(--text2);line-height:1.9}
+.status-badge,.review-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;margin:1px 0}
 .status-active{background:#dbeafe;color:#1d4ed8}
 .status-warning{background:#fef3c7;color:#92400e}
 .status-success{background:#dcfce7;color:#166534}
-.status-ended{background:#e5e7eb;color:#374151}
-.review-new{background:#e5e7eb;color:#374151}
+.status-ended{background:var(--bg2);color:var(--text2)}
+.review-new{background:var(--bg2);color:var(--text2)}
 .review-review{background:#fef3c7;color:#92400e}
 .review-relevant{background:#dcfce7;color:#166534}
 .review-ignored{background:#fee2e2;color:#991b1b}
-.card-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.priority{font-size:13px;font-weight:700}
-.high{color:#dc2626}.medium{color:#d97706}.low{color:#6b7280}
-.title{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:14px}
-.meta{color:#4b5563;line-height:1.8;font-size:15px}
-.actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
-.btn{text-decoration:none;border:none;background:#111827;color:white;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
-.btn:hover{background:#2563eb}
-.btn-warning{background:#92400e}
-.btn-success{background:#166534}
-.btn-danger{background:#991b1b}
-.btn-muted{background:#374151}
-.empty{background:white;padding:30px;border-radius:20px}
-.modal{display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(17,24,39,0.65);backdrop-filter:blur(4px)}
-.modal-content{background:white;width:min(1100px,94%);max-height:86vh;overflow-y:auto;margin:40px auto;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:modalShow 0.2s ease}
-@keyframes modalShow{from{transform:translateY(15px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
-.modal-header h2{margin:0;font-size:24px}
-.close-btn{border:none;background:#f3f4f6;width:38px;height:38px;border-radius:999px;cursor:pointer;font-size:16px;font-weight:700}
-.close-btn:hover{background:#e5e7eb}
-.modal-body{color:#374151;line-height:1.8}
-.modal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:20px}
-.modal-item{background:#f9fafb;border:1px solid #eef2f7;border-radius:16px;padding:14px}
-.modal-label{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px}
-.modal-value{font-size:15px;font-weight:600;color:#111827}
-.modal-actions{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
 .count-danger{color:#ef4444;font-weight:800}
 .count-warning{color:#f59e0b;font-weight:800}
 .count-safe{color:#22c55e;font-weight:800}
 .count-closed{color:#94a3b8;font-weight:800}
-.count-normal{color:#6b7280;font-weight:800}
-.logout-btn{border:none;background:#111827;color:white;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}
-@media(max-width:1000px){.wrapper{flex-direction:column}.sidebar{width:100%}.stats{grid-template-columns:1fr 1fr}}
-@media(max-width:650px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}}
+.count-normal{color:var(--text2);font-weight:800}
+
+/* Doc counts */
+.doc-counts{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.doc-count{text-align:center;font-size:11px;color:var(--text3)}
+.doc-count strong{display:block;font-size:14px;font-weight:700;color:var(--text2)}
+
+.card-actions{margin-top:12px;display:flex;gap:8px}
+.btn{text-decoration:none;border:none;background:var(--sidebar);color:white;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:0.15s}
+.btn:hover{background:var(--blue)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);background:var(--blue2)}
+.btn-warning{background:#92400e}
+.btn-success{background:#166534}
+.btn-danger{background:#991b1b}
+.btn-muted{background:#374151}
+
+/* ── ANALYTICS ── */
+.analytics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.an-card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border)}
+.an-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:14px}
+.an-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:13px}
+.an-bar-bg{height:4px;background:var(--bg2);border-radius:2px;flex:1;margin:0 10px}
+.an-bar-fill{height:4px;background:var(--blue);border-radius:2px}
+.an-num{font-size:12px;font-weight:700;color:var(--text2);min-width:16px;text-align:right}
+.an-label{color:var(--text2);min-width:80px;font-size:12px}
+.donut-wrap{display:flex;align-items:center;gap:12px}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:6px}
+.dl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.attention-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.attention-item:last-child{border-bottom:none}
+.att-label{color:var(--text2);display:flex;align-items:center;gap:6px}
+.att-count{font-weight:700;color:var(--text)}
+.att-link{color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;text-decoration:none}
+
+/* ── MODAL ── */
+.modal{display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(17,24,39,0.5);backdrop-filter:blur(4px)}
+.modal-content{background:var(--card);width:min(1000px,94%);max-height:88vh;overflow-y:auto;margin:40px auto;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:modalShow 0.2s ease}
+@keyframes modalShow{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-header h2{margin:0;font-size:22px;font-weight:800}
+.close-btn{border:none;background:var(--bg2);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:700;color:var(--text2)}
+.close-btn:hover{background:var(--border)}
+.modal-body{color:var(--text2);line-height:1.8}
+.modal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.modal-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.modal-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.modal-value{font-size:14px;font-weight:600;color:var(--text)}
+.modal-actions{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+
+.empty{background:var(--card);padding:30px;border-radius:16px;text-align:center;color:var(--text2)}
+
+@media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}#loginScreen.show{grid-template-columns:1fr}.ls-left{display:none}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
 
-<!-- ── SPLASH ── -->
+<!-- SPLASH -->
 <div id="splash">
   <div class="sp-badge"><span class="sp-dot"></span> System initializing</div>
   <div class="sp-title">Georgia<br><span>Tender Monitor</span></div>
@@ -213,7 +257,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#1f2937}
   </div>
 </div>
 
-<!-- ── LOGIN ── -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="ls-left">
     <div class="ls-logo"><div class="ls-logo-icon">🏛️</div> GE Tender</div>
@@ -236,42 +280,84 @@ body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#1f2937}
     <div class="ls-form-title">Giriş yap</div>
     <div class="ls-form-sub">Yetkili erişim gereklidir</div>
     <label class="ls-label">Email</label>
-    <input class="ls-input" type="email" id="loginEmail" placeholder="email@example.com" autocomplete="email"/>
+    <input class="ls-input" type="email" id="loginEmail" placeholder="email@example.com"/>
     <label class="ls-label">Şifre</label>
-    <input class="ls-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/>
+    <input class="ls-input" type="password" id="loginPassword" placeholder="••••••••"/>
     <button class="ls-btn" onclick="loginUser()">Giriş yap →</button>
     <div class="ls-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- ── APP ── -->
+<!-- APP -->
 <div class="wrapper" id="appWrapper" style="display:none">
   <div class="sidebar">
-    <div class="logo">🇬🇪 Tender Monitor</div>
-    <div class="menu">
-      <button class="active" onclick="setFilter('all', this)">Все тендеры</button>
-      <button onclick="setFilter('review', this)">🔍 Need Review</button>
-      <button onclick="setFilter('relevant', this)">⭐ Relevant</button>
-      <button onclick="setFilter('45100000', this)">45100000<br>Подготовка стройплощадки</button>
-      <button onclick="setFilter('45112720', this)">45112720<br>Спорт / зоны отдыха</button>
-      <button onclick="setFilter('45112700', this)">45112700<br>Ландшафтные работы</button>
-      <button onclick="setFilter('45112723', this)">45112723<br>Игровые площадки</button>
-      <button onclick="setFilter('45112710', this)">45112710<br>Зелёные зоны</button>
-      <button onclick="setFilter('ignored', this)">🗑 Ignored tenders</button>
+    <div class="sb-header">
+      <div class="logo"><span class="logo-flag">🇬🇪</span> Tender Monitor</div>
+    </div>
+    <div class="sb-menu">
+      <div class="sb-section">Menü</div>
+      <button class="menu-btn active" onclick="setFilter('all',this)">
+        <div class="menu-btn-left">📋 Все тендеры</div>
+        <span class="menu-count" id="cnt-all">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('review',this)">
+        <div class="menu-btn-left">🔍 Need Review</div>
+        <span class="menu-count" id="cnt-review">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('relevant',this)">
+        <div class="menu-btn-left">⭐ Relevant</div>
+        <span class="menu-count" id="cnt-relevant">0</span>
+      </button>
+      <div class="sb-section">CPV Kategoriler</div>
+      <button class="menu-btn" onclick="setFilter('45100000',this)">
+        <div class="menu-btn-left">🏗️ 45100000</div>
+        <span class="menu-count" id="cnt-45100000">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112720',this)">
+        <div class="menu-btn-left">⚽ 45112720</div>
+        <span class="menu-count" id="cnt-45112720">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112700',this)">
+        <div class="menu-btn-left">🌿 45112700</div>
+        <span class="menu-count" id="cnt-45112700">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112723',this)">
+        <div class="menu-btn-left">🎠 45112723</div>
+        <span class="menu-count" id="cnt-45112723">0</span>
+      </button>
+      <button class="menu-btn" onclick="setFilter('45112710',this)">
+        <div class="menu-btn-left">🌱 45112710</div>
+        <span class="menu-count" id="cnt-45112710">0</span>
+      </button>
+      <div class="sb-section">Diğer</div>
+      <button class="menu-btn" onclick="setFilter('ignored',this)">
+        <div class="menu-btn-left">🗑 Ignored</div>
+        <span class="menu-count" id="cnt-ignored">0</span>
+      </button>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-status"><span class="sb-status-dot"></span> Мониторинг работает</div>
+      <div class="sb-update" id="lastUpdate">Последнее обновление: —</div>
     </div>
   </div>
+
   <div class="main">
-    <div class="hero">
-      <div>
+    <div class="topbar">
+      <div class="topbar-left">
         <h1>🇬🇪 Georgia Procurement Intelligence</h1>
         <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
       </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <div class="hero-status">● LIVE MONITORING</div>
+      <div class="topbar-right">
+        <div class="live-pill"><span class="live-dot"></span> LIVE MONITORING</div>
         <button class="logout-btn" onclick="logoutUser()">Logout</button>
       </div>
     </div>
-    <div class="search"><input type="text" id="searchInput" placeholder="Поиск: Rustavi, NAT2600, 45112723..."/></div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Поиск: Rustavi, NAT26000, 45112723..."/>
+    </div>
+
     <div class="quick-filters">
       <button onclick="setQuickFilter('all')" class="qf active-qf">ALL</button>
       <button onclick="setQuickFilter('high')" class="qf">HIGH VALUE</button>
@@ -279,16 +365,61 @@ body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#1f2937}
       <button onclick="setQuickFilter('landscape')" class="qf">LANDSCAPE</button>
       <button onclick="setQuickFilter('soon')" class="qf">DEADLINE SOON</button>
     </div>
+
     <div class="stats">
-      <div class="stat"><span>ACTIVE TENDERS</span><strong id="totalCount">0</strong></div>
-      <div class="stat"><span>NEW TODAY</span><strong id="todayCount">0</strong></div>
-      <div class="stat"><span>NEED REVIEW</span><strong id="reviewCount">0</strong></div>
-      <div class="stat"><span>TOTAL VALUE</span><strong id="budgetCount">—</strong></div>
+      <div class="stat blue">
+        <div class="stat-label">ACTIVE TENDERS</div>
+        <div class="stat-val" id="totalCount">0</div>
+        <div class="stat-sub">Объявлен</div>
+        <div class="stat-icon">📋</div>
+      </div>
+      <div class="stat green">
+        <div class="stat-label">NEW TODAY</div>
+        <div class="stat-val" id="todayCount">0</div>
+        <div class="stat-sub">Новых</div>
+        <div class="stat-icon">✨</div>
+      </div>
+      <div class="stat amber">
+        <div class="stat-label">NEED REVIEW</div>
+        <div class="stat-val" id="reviewCount">0</div>
+        <div class="stat-sub">На проверку</div>
+        <div class="stat-icon">👁️</div>
+      </div>
+      <div class="stat purple">
+        <div class="stat-label">TOTAL VALUE</div>
+        <div class="stat-val" id="budgetCount">—</div>
+        <div class="stat-sub">Общая сумма</div>
+        <div class="stat-icon">💰</div>
+      </div>
     </div>
+
     <div class="grid" id="tenderGrid"></div>
+
+    <div class="analytics">
+      <div class="an-card">
+        <div class="an-title">ТОП МУНИЦИПАЛИТЕТОВ</div>
+        <div id="topOrgs"></div>
+      </div>
+      <div class="an-card">
+        <div class="an-title">РАСПРЕДЕЛЕНИЕ ПО CPV</div>
+        <div class="donut-wrap">
+          <canvas id="cpvChart" width="90" height="90" style="flex-shrink:0"></canvas>
+          <div class="donut-legend" id="cpvLegend"></div>
+        </div>
+      </div>
+      <div class="an-card">
+        <div class="an-title">ДЕДЛАЙНЫ</div>
+        <div id="deadlineStats"></div>
+      </div>
+      <div class="an-card">
+        <div class="an-title">ВНИМАНИЕ</div>
+        <div id="attentionItems"></div>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- MODAL -->
 <div id="tenderModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -306,33 +437,14 @@ let pct=0,stepIdx=0;
 const spFill=document.getElementById('spFill');
 const spLabel=document.getElementById('spLabel');
 const spPct=document.getElementById('spPct');
-
-function countUp(el,target,suffix,dur){
-  dur=dur||1000;const start=Date.now();
-  (function tick(){
-    const p=Math.min((Date.now()-start)/dur,1);
-    el.textContent=Math.round(p*target)+(suffix||'');
-    if(p<1)requestAnimationFrame(tick);
-  })();
-}
+function countUp(el,target,suffix,dur){dur=dur||1000;const start=Date.now();(function tick(){const p=Math.min((Date.now()-start)/dur,1);el.textContent=Math.round(p*target)+(suffix||'');if(p<1)requestAnimationFrame(tick);})();}
 setTimeout(()=>countUp(document.getElementById('s1'),9),400);
 setTimeout(()=>countUp(document.getElementById('s2'),7),600);
 setTimeout(()=>countUp(document.getElementById('s3'),4,'M'),800);
-
 const spInterval=setInterval(()=>{
   pct+=20;spFill.style.width=pct+'%';spPct.textContent=pct+'%';
   spLabel.textContent=STEPS[stepIdx++]||'System ready';
-  if(pct>=100){
-    clearInterval(spInterval);
-    setTimeout(()=>{
-      const sp=document.getElementById('splash');
-      sp.classList.add('hide');
-      setTimeout(()=>{
-        sp.style.display='none';
-        checkAuth();
-      },700);
-    },400);
-  }
+  if(pct>=100){clearInterval(spInterval);setTimeout(()=>{const sp=document.getElementById('splash');sp.classList.add('hide');setTimeout(()=>{sp.style.display='none';checkAuth();},700);},400);}
 },380);
 
 // ── SUPABASE ──
@@ -343,40 +455,24 @@ const CSV_FILE="tenders.csv";
 
 async function checkAuth(){
   const{data}=await supabaseClient.auth.getSession();
-  if(data.session){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('appWrapper').style.display='flex';
-    loadData();
-  }else{
-    document.getElementById('loginScreen').classList.add('show');
-  }
+  if(data.session){document.getElementById('loginScreen').style.display='none';document.getElementById('appWrapper').style.display='flex';loadData();}
+  else{document.getElementById('loginScreen').classList.add('show');}
 }
-
 async function loginUser(){
   const email=document.getElementById('loginEmail').value;
   const password=document.getElementById('loginPassword').value;
   const{error}=await supabaseClient.auth.signInWithPassword({email,password});
-  if(error){
-    document.getElementById('loginError').textContent='Login failed. Check email or password.';
-    return;
-  }
+  if(error){document.getElementById('loginError').textContent='Login failed. Check email or password.';return;}
   document.getElementById('loginError').textContent='';
   document.getElementById('loginScreen').classList.remove('show');
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appWrapper').style.display='flex';
   loadData();
 }
+async function logoutUser(){await supabaseClient.auth.signOut();location.reload();}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loginScreen').classList.contains('show'))loginUser();});
 
-async function logoutUser(){
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&document.getElementById('loginScreen').classList.contains('show'))loginUser();
-});
-
-// ── APP (orijinal kod aynen) ──
+// ── APP ──
 let ALL_TENDERS=[];
 let CURRENT_FILTER="all";
 let QUICK_FILTER="all";
@@ -385,7 +481,9 @@ let TENDER_NOTES=JSON.parse(localStorage.getItem("tenderNotes")||"{}");
 let IGNORED_TENDERS=JSON.parse(localStorage.getItem("ignoredTenders")||"[]");
 IGNORED_TENDERS.forEach(id=>{if(!REVIEW_STATUSES[id])REVIEW_STATUSES[id]="ignored";});
 localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
+
 const CPV_NAMES={"45100000":"Подготовка стройплощадки","45112720":"Спорт / зоны отдыха","45112700":"Ландшафт","45112723":"Игровые площадки","45112710":"Зелёные зоны"};
+const CPV_COLORS={"45100000":"#f59e0b","45112720":"#3b82f6","45112700":"#10b981","45112723":"#ec4899","45112710":"#8b5cf6"};
 
 function parseCSV(text){
   const rows=[];let current="";let row=[];let insideQuotes=false;
@@ -409,17 +507,16 @@ async function saveTenderNote(tenderId){
   const note=document.getElementById("tenderNote")?.value||"";
   TENDER_NOTES[tenderId]=note;
   localStorage.setItem("tenderNotes",JSON.stringify(TENDER_NOTES));
-  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:REVIEW_STATUSES[tenderId]||"new",note});}catch(e){console.log("note save error",e);}
+  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:REVIEW_STATUSES[tenderId]||"new",note});}catch(e){}
   closeModal();render();updateStats();
 }
-
 async function setTenderReviewStatus(tenderId,status){
   REVIEW_STATUSES[tenderId]=status;
   if(status==="ignored"){if(!IGNORED_TENDERS.includes(tenderId))IGNORED_TENDERS.push(tenderId);}
   else{IGNORED_TENDERS=IGNORED_TENDERS.filter(x=>x!==tenderId);}
   localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
   localStorage.setItem("ignoredTenders",JSON.stringify(IGNORED_TENDERS));
-  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:status,note:TENDER_NOTES[tenderId]||""});}catch(e){console.log("save error",e);}
+  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:status,note:TENDER_NOTES[tenderId]||""});}catch(e){}
   closeModal();render();updateStats();
 }
 
@@ -428,11 +525,10 @@ function getCpvs(t){
   const text=((t.label||"")+" "+(t.name||"")).toLowerCase();
   return Object.keys(CPV_NAMES).filter(code=>text.includes(code));
 }
-function badgeClass(code){return"c"+code}
 function renderBadges(t){
   const cpvs=getCpvs(t);
   if(!cpvs.length)return`<span class="badge default">Другое</span>`;
-  return cpvs.map(code=>`<span class="badge ${badgeClass(code)}">${code} — ${CPV_NAMES[code]||"CPV"}</span>`).join("");
+  return cpvs.map(code=>`<span class="badge c${code}">${code} — ${CPV_NAMES[code]||"CPV"}</span>`).join("");
 }
 function getStatusClass(status){
   const s=(status||"").toLowerCase();
@@ -456,7 +552,8 @@ function getPriority(price){
   const n=parseFloat((price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));
   if(n>=1000000)return["HIGH","high"];if(n>=300000)return["MEDIUM","medium"];return["LOW","low"];
 }
-function formatBudget(num){if(num>=1000000)return(num/1000000).toFixed(1)+"M";if(num>=1000)return Math.round(num/1000)+"K";return Math.round(num);}
+function formatBudget(num){if(num>=1000000)return(num/1000000).toFixed(1)+" M";if(num>=1000)return Math.round(num/1000)+"K";return Math.round(num);}
+
 function setQuickFilter(type){
   QUICK_FILTER=type;
   document.querySelectorAll(".qf").forEach(x=>x.classList.remove("active-qf"));
@@ -466,7 +563,7 @@ function setQuickFilter(type){
 }
 function setFilter(filter,button){
   CURRENT_FILTER=filter;
-  document.querySelectorAll(".menu button").forEach(btn=>btn.classList.remove("active"));
+  document.querySelectorAll(".menu-btn").forEach(btn=>btn.classList.remove("active"));
   button.classList.add("active");render();
 }
 function shouldShowTender(t){
@@ -486,6 +583,7 @@ function shouldShowTender(t){
   if(QUICK_FILTER==="landscape"&&!cpvs.some(c=>c.startsWith("451127")))return false;
   return true;
 }
+
 function render(){
   const filtered=ALL_TENDERS.filter(shouldShowTender);
   const grid=document.getElementById("tenderGrid");
@@ -494,23 +592,30 @@ function render(){
     const[priority,priorityClass]=getPriority(t.price);
     const c=getDeadlineCountdown(t.deadline);
     return`<div class="card">
-      <div class="card-top"><div class="badges">${renderBadges(t)}</div><div class="priority ${priorityClass}">${priority}</div></div>
-      <div class="title">${t.name||"Без названия"}</div>
-      <div class="meta">
+      <div class="card-top">
+        <div class="badges">${renderBadges(t)}</div>
+        <span class="priority ${priorityClass}">${priority}</span>
+      </div>
+      <div class="card-title">${t.name||"Без названия"}</div>
+      <div class="card-meta">
         📋 ${t.reg_id||"N/A"}<br>
         🧭 <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span><br>
-        ${TENDER_NOTES[t.id]?`📝 <span style="color:#2563eb;font-weight:700">Note added</span><br>`:""}
+        ${TENDER_NOTES[t.id]?`📝 <span style="color:#4f6ef7;font-weight:700">Note added</span><br>`:""}
         📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span><br>
-        🏢 ${t.org||"—"}<br>💰 ${t.price||"—"}<br>📅 ${t.deadline||"—"}<br>
-        <span class="${c.class}">⏳ ${c.text}</span><br>🕒 ${t.last_seen||"—"}
+        🏢 ${t.org||"—"}<br>
+        💰 ${t.price||"—"}<br>
+        📅 ${t.deadline||"—"}<br>
+        <span class="${c.class}">⏳ ${c.text}</span><br>
+        🕒 ${t.last_seen||"—"}
       </div>
-      <div class="actions">
+      <div class="card-actions">
         <button class="btn" onclick="openModal('${t.id}')">Детали</button>
-        <a class="btn" href="${t.link}" target="_blank">Официальный сайт ↗</a>
+        <a class="btn btn-outline" href="${t.link}" target="_blank">Официальный сайт ↗</a>
       </div>
     </div>`;
   }).join("");
 }
+
 function openModal(tenderId){
   const t=ALL_TENDERS.find(x=>x.id===tenderId);if(!t)return;
   document.getElementById("modalTitle").textContent=t.reg_id||"Tender";
@@ -518,17 +623,17 @@ function openModal(tenderId){
     <div class="modal-grid">
       <div class="modal-item"><div class="modal-label">Название</div><div class="modal-value">${t.name||"—"}</div></div>
       <div class="modal-item"><div class="modal-label">Review status</div><div class="modal-value"><span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span></div></div>
-      <div class="modal-item"><div class="modal-label">Статус закупки</div><div class="modal-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
+      <div class="modal-item"><div class="modal-label">Статус</div><div class="modal-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
       <div class="modal-item"><div class="modal-label">Организация</div><div class="modal-value">${t.org||"—"}</div></div>
       <div class="modal-item"><div class="modal-label">Бюджет</div><div class="modal-value">${t.price||"—"}</div></div>
       <div class="modal-item"><div class="modal-label">Deadline</div><div class="modal-value">${t.deadline||"—"}</div></div>
       <div class="modal-item"><div class="modal-label">Найден</div><div class="modal-value">${t.date_found||"—"}</div></div>
       <div class="modal-item"><div class="modal-label">Последняя проверка</div><div class="modal-value">${t.last_seen||"—"}</div></div>
     </div>
-    <div style="margin-top:22px"><div class="modal-label">CPV Categories</div>${renderBadges(t)}</div>
-    <div style="margin-top:22px">
+    <div style="margin-top:18px"><div class="modal-label">CPV Categories</div><div style="margin-top:6px">${renderBadges(t)}</div></div>
+    <div style="margin-top:18px">
       <div class="modal-label">Tender Notes</div>
-      <textarea id="tenderNote" style="width:100%;min-height:120px;border:1px solid #d1d5db;border-radius:14px;padding:14px;font-size:14px;resize:vertical;font-family:Arial" placeholder="Write your tender notes here...">${TENDER_NOTES[t.id]||""}</textarea>
+      <textarea id="tenderNote" style="width:100%;min-height:100px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;resize:vertical;font-family:Arial;background:var(--card2);color:var(--text)" placeholder="Write your notes here...">${TENDER_NOTES[t.id]||""}</textarea>
     </div>
     <div class="modal-actions">
       <a class="btn" href="${t.link}" target="_blank">Официальный тендер ↗</a>
@@ -543,16 +648,122 @@ function openModal(tenderId){
 }
 function closeModal(){document.getElementById("tenderModal").style.display="none"}
 window.onclick=function(e){if(e.target===document.getElementById("tenderModal"))closeModal()}
+
+let cpvChartInstance=null;
+
 function updateStats(){
   const active=ALL_TENDERS.filter(t=>getReviewStatus(t.id)!=="ignored");
-  document.getElementById("totalCount").textContent=active.length;
   const today=new Date().toISOString().slice(0,10);
+
+  document.getElementById("totalCount").textContent=active.length;
   document.getElementById("todayCount").textContent=active.filter(t=>(t.date_found||"").startsWith(today)).length;
-  document.getElementById("reviewCount").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="review").length;
+  const reviewN=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="review").length;
+  document.getElementById("reviewCount").textContent=reviewN;
+
   let budget=0;
   active.forEach(t=>{budget+=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""))||0;});
   document.getElementById("budgetCount").textContent=formatBudget(budget)+" GEL";
+
+  // Sidebar counts
+  document.getElementById("cnt-all").textContent=active.length;
+  document.getElementById("cnt-review").textContent=reviewN;
+  document.getElementById("cnt-relevant").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="relevant").length;
+  document.getElementById("cnt-ignored").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="ignored").length;
+  Object.keys(CPV_NAMES).forEach(code=>{
+    const el=document.getElementById("cnt-"+code);
+    if(el)el.textContent=active.filter(t=>getCpvs(t).includes(code)).length;
+  });
+
+  // Last update
+  document.getElementById("lastUpdate").textContent="Последнее обновление: "+new Date().toLocaleString("ru-RU");
+
+  // Analytics
+  updateAnalytics(active);
 }
+
+function updateAnalytics(active){
+  // Top orgs
+  const orgMap={};
+  active.forEach(t=>{if(t.org)orgMap[t.org]=(orgMap[t.org]||0)+1;});
+  const topOrgs=Object.entries(orgMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const maxOrg=topOrgs[0]?topOrgs[0][1]:1;
+  document.getElementById("topOrgs").innerHTML=topOrgs.map(([org,count])=>`
+    <div class="an-row">
+      <div class="an-label">${org.length>18?org.slice(0,18)+"...":org}</div>
+      <div class="an-bar-bg"><div class="an-bar-fill" style="width:${Math.round(count/maxOrg*100)}%"></div></div>
+      <div class="an-num">${count}</div>
+    </div>`).join("");
+
+  // CPV donut
+  const cpvMap={};
+  active.forEach(t=>getCpvs(t).forEach(c=>{cpvMap[c]=(cpvMap[c]||0)+1;}));
+  const cpvEntries=Object.entries(cpvMap).sort((a,b)=>b[1]-a[1]);
+  const total=cpvEntries.reduce((s,[,n])=>s+n,0)||1;
+
+  if(cpvChartInstance)cpvChartInstance.destroy();
+  const ctx=document.getElementById("cpvChart").getContext("2d");
+  cpvChartInstance=new Chart(ctx,{
+    type:"doughnut",
+    data:{
+      labels:cpvEntries.map(([c])=>c),
+      datasets:[{data:cpvEntries.map(([,n])=>n),backgroundColor:cpvEntries.map(([c])=>CPV_COLORS[c]||"#94a3b8"),borderWidth:0}]
+    },
+    options:{plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:"65%",animation:{duration:600}}
+  });
+
+  document.getElementById("cpvLegend").innerHTML=cpvEntries.slice(0,5).map(([code,count])=>`
+    <div class="dl-item">
+      <div class="dl-dot" style="background:${CPV_COLORS[code]||'#94a3b8'}"></div>
+      <span>${code}</span>
+      <span style="margin-left:auto;font-weight:700;color:var(--text)">${count} (${Math.round(count/total*100)}%)</span>
+    </div>`).join("");
+
+  // Deadlines
+  const now=new Date();
+  let d0=0,d3=0,d7=0,d14=0,dMore=0;
+  active.forEach(t=>{
+    if(!t.deadline)return;
+    const parts=t.deadline.split(".");
+    if(parts.length!==3)return;
+    const end=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));
+    const days=Math.ceil((end-now)/(1000*60*60*24));
+    if(days<0)d0++;
+    else if(days<=3)d3++;
+    else if(days<=7)d7++;
+    else if(days<=14)d14++;
+    else dMore++;
+  });
+  const deadlineRows=[
+    {label:"0–3 дня",count:d3,color:"#ef4444",star:"⭐"},
+    {label:"4–7 дней",count:d7,color:"#f59e0b",star:"⭐"},
+    {label:"8–14 дней",count:d14,color:"#3b82f6",star:"⭐"},
+    {label:"14+ дней",count:dMore,color:"#22c55e",star:"⭐"},
+  ];
+  document.getElementById("deadlineStats").innerHTML=deadlineRows.map(r=>`
+    <div class="an-row">
+      <div class="an-label" style="color:${r.color}">${r.star} ${r.label}</div>
+      <div class="an-bar-bg"><div class="an-bar-fill" style="width:${Math.round(r.count/active.length*100||0)}%;background:${r.color}"></div></div>
+      <div class="an-num">${r.count}</div>
+    </div>`).join("");
+
+  // Attention
+  const urgent=active.filter(t=>{
+    if(!t.deadline)return false;
+    const parts=t.deadline.split(".");if(parts.length!==3)return false;
+    const end=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));
+    return Math.ceil((end-now)/(1000*60*60*24))<=3;
+  }).length;
+  const highVal=active.filter(t=>{
+    const n=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));
+    return n>=500000;
+  }).length;
+  document.getElementById("attentionItems").innerHTML=`
+    <div class="attention-item"><div class="att-label">⚠️ Истекают в ближайшие 3 дня</div><span class="att-count" style="color:#ef4444">${urgent}</span></div>
+    <div class="attention-item"><div class="att-label">💎 Высокая стоимость (500K+)</div><span class="att-count" style="color:#7c3aed">${highVal}</span></div>
+    <div class="attention-item"><div class="att-label">🔍 Need Review</div><span class="att-count" style="color:#d97706">${reviewN}</span></div>
+    <div class="attention-item" style="margin-top:8px"><a class="att-link" onclick="setFilter('review',document.querySelector('.menu-btn:nth-child(3)'))">Перейти к проверке →</a></div>`;
+}
+
 async function loadData(){
   const res=await fetch(CSV_FILE+"?v="+Date.now());
   const text=await res.text();
@@ -562,7 +773,7 @@ async function loadData(){
   try{
     const{data,error}=await supabaseClient.from("tender_reviews").select("*");
     if(!error&&data){data.forEach(row=>{REVIEW_STATUSES[row.tender_id]=row.review_status||"new";TENDER_NOTES[row.tender_id]=row.note||"";});}
-  }catch(e){console.log("load error",e);}
+  }catch(e){}
   updateStats();render();
 }
 document.getElementById("searchInput").addEventListener("input",render);
