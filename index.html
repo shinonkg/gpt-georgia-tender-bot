@@ -192,7 +192,8 @@ body{
 .c45112723{background:#fce7f3;color:#be185d}
 .default{background:#e5e7eb;color:#374151}
 
-.status-badge{
+.status-badge,
+.review-badge{
   display:inline-flex;
   align-items:center;
   padding:3px 8px;
@@ -202,25 +203,15 @@ body{
   margin:2px 0;
 }
 
-.status-active{
-  background:#dbeafe;
-  color:#1d4ed8;
-}
+.status-active{background:#dbeafe;color:#1d4ed8}
+.status-warning{background:#fef3c7;color:#92400e}
+.status-success{background:#dcfce7;color:#166534}
+.status-ended{background:#e5e7eb;color:#374151}
 
-.status-warning{
-  background:#fef3c7;
-  color:#92400e;
-}
-
-.status-success{
-  background:#dcfce7;
-  color:#166534;
-}
-
-.status-ended{
-  background:#e5e7eb;
-  color:#374151;
-}
+.review-new{background:#e5e7eb;color:#374151}
+.review-review{background:#fef3c7;color:#92400e}
+.review-relevant{background:#dcfce7;color:#166534}
+.review-ignored{background:#fee2e2;color:#991b1b}
 
 .card-top{
   display:flex;
@@ -272,6 +263,11 @@ body{
 
 .btn:hover{background:#2563eb}
 
+.btn-warning{background:#92400e}
+.btn-success{background:#166534}
+.btn-danger{background:#991b1b}
+.btn-muted{background:#374151}
+
 .empty{
   background:white;
   padding:30px;
@@ -301,14 +297,8 @@ body{
 }
 
 @keyframes modalShow{
-  from{
-    transform:translateY(15px);
-    opacity:0;
-  }
-  to{
-    transform:translateY(0);
-    opacity:1;
-  }
+  from{transform:translateY(15px);opacity:0}
+  to{transform:translateY(0);opacity:1}
 }
 
 .modal-header{
@@ -334,9 +324,7 @@ body{
   font-weight:700;
 }
 
-.close-btn:hover{
-  background:#e5e7eb;
-}
+.close-btn:hover{background:#e5e7eb}
 
 .modal-body{
   color:#374151;
@@ -378,6 +366,12 @@ body{
   flex-wrap:wrap;
 }
 
+.count-danger{color:#ef4444;font-weight:800}
+.count-warning{color:#f59e0b;font-weight:800}
+.count-safe{color:#22c55e;font-weight:800}
+.count-closed{color:#94a3b8;font-weight:800}
+.count-normal{color:#6b7280;font-weight:800}
+
 @media(max-width:1000px){
   .wrapper{flex-direction:column}
   .sidebar{width:100%}
@@ -388,25 +382,6 @@ body{
   .stats{grid-template-columns:1fr}
   .grid{grid-template-columns:1fr}
   .modal-grid{grid-template-columns:1fr}
-}
-  .count-danger{
-  color:#ef4444;
-  font-weight:800;
-}
-
-.count-warning{
-  color:#f59e0b;
-  font-weight:800;
-}
-
-.count-safe{
-  color:#22c55e;
-  font-weight:800;
-}
-
-.count-closed{
-  color:#94a3b8;
-  font-weight:800;
 }
 </style>
 </head>
@@ -419,14 +394,14 @@ body{
 
     <div class="menu">
       <button class="active" onclick="setFilter('all', this)">Все тендеры</button>
+      <button onclick="setFilter('review', this)">🔍 Need Review</button>
+      <button onclick="setFilter('relevant', this)">⭐ Relevant</button>
       <button onclick="setFilter('45100000', this)">45100000<br>Подготовка стройплощадки</button>
       <button onclick="setFilter('45112720', this)">45112720<br>Спорт / зоны отдыха</button>
       <button onclick="setFilter('45112700', this)">45112700<br>Ландшафтные работы</button>
       <button onclick="setFilter('45112723', this)">45112723<br>Игровые площадки</button>
       <button onclick="setFilter('45112710', this)">45112710<br>Зелёные зоны</button>
-      <button onclick="setFilter('ignored', this)">
-  🗑 Ignored tenders
-</button>
+      <button onclick="setFilter('ignored', this)">🗑 Ignored tenders</button>
     </div>
   </div>
 
@@ -438,9 +413,7 @@ body{
         <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
       </div>
 
-      <div class="hero-status">
-        ● LIVE MONITORING
-      </div>
+      <div class="hero-status">● LIVE MONITORING</div>
     </div>
 
     <div class="search">
@@ -471,8 +444,8 @@ body{
       </div>
 
       <div class="stat">
-        <span>TRACKED CPVs</span>
-        <strong id="categoryCount">0</strong>
+        <span>NEED REVIEW</span>
+        <strong id="reviewCount">0</strong>
       </div>
 
       <div class="stat">
@@ -505,8 +478,23 @@ const CSV_FILE = "tenders.csv";
 let ALL_TENDERS = [];
 let CURRENT_FILTER = "all";
 let QUICK_FILTER = "all";
+
+let REVIEW_STATUSES =
+  JSON.parse(localStorage.getItem("tenderReviewStatuses") || "{}");
+
 let IGNORED_TENDERS =
   JSON.parse(localStorage.getItem("ignoredTenders") || "[]");
+
+IGNORED_TENDERS.forEach(id=>{
+  if(!REVIEW_STATUSES[id]){
+    REVIEW_STATUSES[id] = "ignored";
+  }
+});
+
+localStorage.setItem(
+  "tenderReviewStatuses",
+  JSON.stringify(REVIEW_STATUSES)
+);
 
 const CPV_NAMES = {
   "45100000": "Подготовка стройплощадки",
@@ -552,6 +540,57 @@ function parseCSV(text){
   }
 
   return rows;
+}
+
+function getReviewStatus(id){
+  return REVIEW_STATUSES[id] || "new";
+}
+
+function getReviewLabel(id){
+  const status = getReviewStatus(id);
+
+  if(status === "review") return "🔍 Need Review";
+  if(status === "relevant") return "⭐ Relevant";
+  if(status === "ignored") return "🗑 Ignored";
+
+  return "🆕 New";
+}
+
+function getReviewClass(id){
+  const status = getReviewStatus(id);
+
+  if(status === "review") return "review-review";
+  if(status === "relevant") return "review-relevant";
+  if(status === "ignored") return "review-ignored";
+
+  return "review-new";
+}
+
+function setTenderReviewStatus(tenderId, status){
+  REVIEW_STATUSES[tenderId] = status;
+
+  if(status === "ignored"){
+    if(!IGNORED_TENDERS.includes(tenderId)){
+      IGNORED_TENDERS.push(tenderId);
+    }
+  }else{
+    IGNORED_TENDERS =
+      IGNORED_TENDERS.filter(x => x !== tenderId);
+  }
+
+  localStorage.setItem(
+    "tenderReviewStatuses",
+    JSON.stringify(REVIEW_STATUSES)
+  );
+
+  localStorage.setItem(
+    "ignoredTenders",
+    JSON.stringify(IGNORED_TENDERS)
+  );
+
+  closeModal();
+  render();
+  updateStats();
 }
 
 function getCpvs(t){
@@ -600,23 +639,16 @@ function getStatusClass(status){
 
   return "status-ended";
 }
-  
-function getDeadlineCountdown(deadline){
 
+function getDeadlineCountdown(deadline){
   if(!deadline){
-    return {
-      text:"—",
-      class:"count-normal"
-    };
+    return { text:"—", class:"count-normal" };
   }
 
   const parts = deadline.split(".");
 
   if(parts.length !== 3){
-    return {
-      text:deadline,
-      class:"count-normal"
-    };
+    return { text:deadline, class:"count-normal" };
   }
 
   const d = parseInt(parts[0]);
@@ -626,39 +658,16 @@ function getDeadlineCountdown(deadline){
   const endDate = new Date(y,m,d);
   const now = new Date();
 
-  const diff =
-    endDate.getTime() - now.getTime();
+  const diff = endDate.getTime() - now.getTime();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
-  const days =
-    Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if(days < 0) return { text:"CLOSED", class:"count-closed" };
+  if(days <= 2) return { text:days + " DAYS LEFT", class:"count-danger" };
+  if(days <= 7) return { text:days + " DAYS LEFT", class:"count-warning" };
 
-  if(days < 0){
-    return {
-      text:"CLOSED",
-      class:"count-closed"
-    };
-  }
-
-  if(days <= 2){
-    return {
-      text:days + " DAYS LEFT",
-      class:"count-danger"
-    };
-  }
-
-  if(days <= 7){
-    return {
-      text:days + " DAYS LEFT",
-      class:"count-warning"
-    };
-  }
-
-  return {
-    text:days + " DAYS LEFT",
-    class:"count-safe"
-  };
+  return { text:days + " DAYS LEFT", class:"count-safe" };
 }
-  
+
 function getPriority(price){
   const p = (price || "")
     .replace(/GEL/g,"")
@@ -670,6 +679,7 @@ function getPriority(price){
 
   if(n >= 1000000) return ["HIGH","high"];
   if(n >= 300000) return ["MEDIUM","medium"];
+
   return ["LOW","low"];
 }
 
@@ -708,14 +718,16 @@ function setFilter(filter, button){
 }
 
 function shouldShowTender(t){
+  const reviewStatus = getReviewStatus(t.id);
 
-  const isIgnored =
-    IGNORED_TENDERS.includes(t.id);
-
-  if(CURRENT_FILTER === "ignored"){
-    if(!isIgnored) return false;
+  if(CURRENT_FILTER === "review"){
+    if(reviewStatus !== "review") return false;
+  }else if(CURRENT_FILTER === "relevant"){
+    if(reviewStatus !== "relevant") return false;
+  }else if(CURRENT_FILTER === "ignored"){
+    if(reviewStatus !== "ignored") return false;
   }else{
-    if(isIgnored) return false;
+    if(reviewStatus === "ignored") return false;
   }
 
   const cpvs = getCpvs(t);
@@ -723,10 +735,13 @@ function shouldShowTender(t){
 
   const search = document.getElementById("searchInput").value.toLowerCase();
   const matchesSearch = text.includes(search);
+
   const matchesFilter =
-  CURRENT_FILTER === "all" ||
-  CURRENT_FILTER === "ignored" ||
-  cpvs.includes(CURRENT_FILTER);
+    CURRENT_FILTER === "all" ||
+    CURRENT_FILTER === "review" ||
+    CURRENT_FILTER === "relevant" ||
+    CURRENT_FILTER === "ignored" ||
+    cpvs.includes(CURRENT_FILTER);
 
   if(QUICK_FILTER === "high"){
     const p = (t.price || "")
@@ -764,6 +779,7 @@ function render(){
 
   grid.innerHTML = filtered.slice().reverse().map(t => {
     const [priority, priorityClass] = getPriority(t.price);
+    const c = getDeadlineCountdown(t.deadline);
 
     return `
       <div class="card">
@@ -776,21 +792,12 @@ function render(){
 
         <div class="meta">
           📋 ${t.reg_id || "N/A"}<br>
+          🧭 <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span><br>
           📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span><br>
           🏢 ${t.org || "—"}<br>
           💰 ${t.price || "—"}<br>
           📅 ${t.deadline || "—"}<br>
-          ${
-(() => {
-  const c = getDeadlineCountdown(t.deadline);
-
-  return `
-    <span class="${c.class}">
-      ⏳ ${c.text}
-    </span><br>
-  `;
-})()
-}
+          <span class="${c.class}">⏳ ${c.text}</span><br>
           🕒 ${t.last_seen || "—"}
         </div>
 
@@ -803,33 +810,6 @@ function render(){
   }).join("");
 }
 
-function ignoreTender(tenderId){
-  if(!IGNORED_TENDERS.includes(tenderId)){
-    IGNORED_TENDERS.push(tenderId);
-  }
-  
-  localStorage.setItem(
-    "ignoredTenders",
-    JSON.stringify(IGNORED_TENDERS)
-  );
-
-  closeModal();
-  render();
-}
-
-function restoreTender(tenderId){
-
-  IGNORED_TENDERS =
-    IGNORED_TENDERS.filter(x => x !== tenderId);
-
-  localStorage.setItem(
-    "ignoredTenders",
-    JSON.stringify(IGNORED_TENDERS)
-  );
-
-  closeModal();
-  render();
-}
 function openModal(tenderId){
   const t = ALL_TENDERS.find(x => x.id === tenderId);
 
@@ -847,7 +827,14 @@ function openModal(tenderId){
       </div>
 
       <div class="modal-item">
-        <div class="modal-label">Статус</div>
+        <div class="modal-label">Review status</div>
+        <div class="modal-value">
+          <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span>
+        </div>
+      </div>
+
+      <div class="modal-item">
+        <div class="modal-label">Статус закупки</div>
         <div class="modal-value">
           <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span>
         </div>
@@ -869,6 +856,11 @@ function openModal(tenderId){
       </div>
 
       <div class="modal-item">
+        <div class="modal-label">Найден</div>
+        <div class="modal-value">${t.date_found || "—"}</div>
+      </div>
+
+      <div class="modal-item">
         <div class="modal-label">Последняя проверка</div>
         <div class="modal-value">${t.last_seen || "—"}</div>
       </div>
@@ -885,22 +877,30 @@ function openModal(tenderId){
         Официальный тендер ↗
       </a>
 
-${
-  IGNORED_TENDERS.includes(t.id)
-  ?
-  `
-  <button class="btn" onclick="restoreTender('${t.id}')">
-    ♻ Restore tender
-  </button>
-  `
-  :
-  `
-  <button class="btn" onclick="ignoreTender('${t.id}')">
-    🗑 Ignore tender
-  </button>
-  `
-}
-</div>
+      <button class="btn btn-warning" onclick="setTenderReviewStatus('${t.id}', 'review')">
+        🔍 Need Review
+      </button>
+
+      <button class="btn btn-success" onclick="setTenderReviewStatus('${t.id}', 'relevant')">
+        ⭐ Relevant
+      </button>
+
+      ${
+        getReviewStatus(t.id) === "ignored"
+        ?
+        `
+        <button class="btn btn-muted" onclick="setTenderReviewStatus('${t.id}', 'new')">
+          ♻ Restore
+        </button>
+        `
+        :
+        `
+        <button class="btn btn-danger" onclick="setTenderReviewStatus('${t.id}', 'ignored')">
+          🗑 Ignore
+        </button>
+        `
+      }
+    </div>
   `;
 
   document.getElementById("tenderModal").style.display = "block";
@@ -918,6 +918,35 @@ window.onclick = function(event){
   }
 }
 
+function updateStats(){
+  const visibleActive = ALL_TENDERS.filter(t => getReviewStatus(t.id) !== "ignored");
+
+  document.getElementById("totalCount").textContent = visibleActive.length;
+
+  const today = new Date().toISOString().slice(0,10);
+
+  document.getElementById("todayCount").textContent =
+    visibleActive.filter(t => (t.date_found || "").startsWith(today)).length;
+
+  document.getElementById("reviewCount").textContent =
+    ALL_TENDERS.filter(t => getReviewStatus(t.id) === "review").length;
+
+  let budget = 0;
+
+  visibleActive.forEach(t => {
+    const p = (t.price || "")
+      .replace(/GEL/g,"")
+      .replace(/`/g,"")
+      .replace(/'/g,"")
+      .replace(/\s/g,"");
+
+    budget += parseFloat(p) || 0;
+  });
+
+  document.getElementById("budgetCount").textContent =
+    formatBudget(budget) + " GEL";
+}
+
 async function loadData(){
   const res = await fetch(CSV_FILE + "?v=" + Date.now());
   const text = await res.text();
@@ -931,29 +960,7 @@ async function loadData(){
     return obj;
   }).filter(t => t.id && t.id.trim() !== "");
 
-  document.getElementById("totalCount").textContent = ALL_TENDERS.length;
-
-  const allCpvs = new Set();
-  ALL_TENDERS.forEach(t => getCpvs(t).forEach(c => allCpvs.add(c)));
-  document.getElementById("categoryCount").textContent = allCpvs.size;
-
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById("todayCount").textContent =
-    ALL_TENDERS.filter(t => (t.date_found || "").startsWith(today)).length;
-
-  let budget = 0;
-  ALL_TENDERS.forEach(t => {
-    const p = (t.price || "")
-      .replace(/GEL/g,"")
-      .replace(/`/g,"")
-      .replace(/'/g,"")
-      .replace(/\s/g,"");
-
-    budget += parseFloat(p) || 0;
-  });
-
-  document.getElementById("budgetCount").textContent = formatBudget(budget) + " GEL";
-
+  updateStats();
   render();
 }
 
