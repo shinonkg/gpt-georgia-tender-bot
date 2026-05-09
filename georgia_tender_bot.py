@@ -235,7 +235,6 @@ def parse_tenders(html):
 
     return tenders
 
-
 def search_tenders(params):
     session = get_session()
 
@@ -265,8 +264,12 @@ def search_tenders(params):
     }
 
     try:
-        # Important: warm up session before POST
-        session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
+
+        session.get(
+            "https://tenders.procurement.gov.ge/public/?lang=ru",
+            timeout=20
+        )
+
         time.sleep(1)
 
         r = session.post(
@@ -275,30 +278,48 @@ def search_tenders(params):
             timeout=30,
         )
 
-        print(f"Search {params['label']}:", r.status_code, len(r.text))
+        print(
+            f"Search {params['label']}:",
+            r.status_code,
+            len(r.text)
+        )
 
-if r.status_code == 200:
-    tenders = parse_tenders(r.text)
+        if r.status_code == 200:
 
-    for tender in tenders:
-        tender_id = tender.get("id")
+            tenders = parse_tenders(r.text)
 
-        if tender_id:
-            attachments = get_tender_attachments(session, tender_id)
+            for tender in tenders:
 
-            tender.update(attachments)
+                tender_id = tender.get("id")
 
-            print(
-                f"  Attachments {tender.get('reg_id') or tender_id}: "
-                f"{attachments['attachment_count']} total, "
-                f"{attachments['pdf_count']} pdf, "
-                f"{attachments['excel_count']} excel, "
-                f"{attachments['image_count']} images"
-            )
+                if tender_id:
 
-            time.sleep(0.4)
+                    attachments = get_tender_attachments(
+                        session,
+                        tender_id
+                    )
 
-    return tenders
+                    tender.update(attachments)
+
+                    print(
+                        f"  Attachments "
+                        f"{tender.get('reg_id') or tender_id}: "
+                        f"{attachments['attachment_count']} total, "
+                        f"{attachments['pdf_count']} pdf, "
+                        f"{attachments['excel_count']} excel, "
+                        f"{attachments['image_count']} images"
+                    )
+
+                    time.sleep(0.4)
+
+            return tenders
+
+        print("Response preview:", r.text[:250])
+
+    except Exception as e:
+        print("Search error:", e)
+
+    return []
 
 def save_csv(data):
     with open(CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
