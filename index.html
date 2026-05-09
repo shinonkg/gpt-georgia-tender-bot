@@ -49,7 +49,8 @@ body{
 }
 
 .menu button.active{background:#2563eb}
-  .menu button:hover{
+
+.menu button:hover{
   background:#2563eb;
   transform:translateX(3px);
   transition:0.2s;
@@ -59,7 +60,8 @@ body{
   flex:1;
   padding:28px;
 }
-  .hero{
+
+.hero{
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -96,7 +98,8 @@ body{
   box-shadow:0 4px 18px rgba(0,0,0,0.06);
   margin-bottom:24px;
 }
-  .quick-filters{
+
+.quick-filters{
   display:flex;
   gap:10px;
   margin-bottom:22px;
@@ -139,6 +142,7 @@ body{
   border:1px solid #eef2f7;
   transition:0.25s;
 }
+
 .stat:hover{
   transform:translateY(-3px);
   box-shadow:0 10px 25px rgba(37,99,235,0.10);
@@ -161,7 +165,8 @@ body{
   border:1px solid #e5e7eb;
   transition:0.25s;
 }
-  .card:hover{
+
+.card:hover{
   transform:translateY(-4px);
   box-shadow:0 10px 30px rgba(0,0,0,0.10);
 }
@@ -186,7 +191,8 @@ body{
 .c45112720{background:#dbeafe;color:#1d4ed8}
 .c45112723{background:#fce7f3;color:#be185d}
 .default{background:#e5e7eb;color:#374151}
-  .status-badge{
+
+.status-badge{
   display:inline-flex;
   align-items:center;
   padding:3px 8px;
@@ -249,16 +255,19 @@ body{
   margin-top:18px;
   display:flex;
   gap:10px;
+  flex-wrap:wrap;
 }
 
 .btn{
   text-decoration:none;
+  border:none;
   background:#111827;
   color:white;
   padding:12px 16px;
   border-radius:12px;
   font-size:14px;
   font-weight:700;
+  cursor:pointer;
 }
 
 .btn:hover{background:#2563eb}
@@ -269,16 +278,6 @@ body{
   border-radius:20px;
 }
 
-@media(max-width:1000px){
-  .wrapper{flex-direction:column}
-  .sidebar{width:100%}
-  .stats{grid-template-columns:1fr 1fr}
-}
-
-@media(max-width:650px){
-  .stats{grid-template-columns:1fr}
-  .grid{grid-template-columns:1fr}
-}
 .modal{
   display:none;
   position:fixed;
@@ -311,6 +310,7 @@ body{
     opacity:1;
   }
 }
+
 .modal-header{
   display:flex;
   justify-content:space-between;
@@ -341,9 +341,9 @@ body{
 .modal-body{
   color:#374151;
   line-height:1.8;
-  
-}  
-  .modal-grid{
+}
+
+.modal-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:18px;
@@ -375,6 +375,19 @@ body{
   margin-top:26px;
   display:flex;
   gap:12px;
+  flex-wrap:wrap;
+}
+
+@media(max-width:1000px){
+  .wrapper{flex-direction:column}
+  .sidebar{width:100%}
+  .stats{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:650px){
+  .stats{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+  .modal-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -396,16 +409,17 @@ body{
   </div>
 
   <div class="main">
-    <div class="hero">
-  <div>
-    <h1>🇬🇪 Georgia Procurement Intelligence</h1>
-    <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
-  </div>
 
-  <div class="hero-status">
-    ● LIVE MONITORING
-  </div>
-</div>
+    <div class="hero">
+      <div>
+        <h1>🇬🇪 Georgia Procurement Intelligence</h1>
+        <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
+      </div>
+
+      <div class="hero-status">
+        ● LIVE MONITORING
+      </div>
+    </div>
 
     <div class="search">
       <input
@@ -414,34 +428,15 @@ body{
         placeholder="Поиск: Rustavi, NAT2600, 45112723..."
       />
     </div>
-    
-<div class="quick-filters">
 
-  <button onclick="setQuickFilter('all')" class="qf active-qf">
-    ALL
-  </button>
+    <div class="quick-filters">
+      <button onclick="setQuickFilter('all')" class="qf active-qf">ALL</button>
+      <button onclick="setQuickFilter('high')" class="qf">HIGH VALUE</button>
+      <button onclick="setQuickFilter('playground')" class="qf">PLAYGROUND</button>
+      <button onclick="setQuickFilter('landscape')" class="qf">LANDSCAPE</button>
+      <button onclick="setQuickFilter('soon')" class="qf">DEADLINE SOON</button>
+    </div>
 
-  <button onclick="setQuickFilter('high')"
-  class="qf">
-    HIGH VALUE
-  </button>
-
-  <button onclick="setQuickFilter('playground')"
-  class="qf">
-    PLAYGROUND
-  </button>
-
-  <button onclick="setQuickFilter('landscape')"
-  class="qf">
-    LANDSCAPE
-  </button>
-
-  <button onclick="setQuickFilter('soon')"
-  class="qf">
-    DEADLINE SOON
-  </button>
-
-</div>
     <div class="stats">
       <div class="stat">
         <span>ACTIVE TENDERS</span>
@@ -469,11 +464,27 @@ body{
   </div>
 </div>
 
+<div id="tenderModal" class="modal">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2 id="modalTitle">Tender</h2>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body" id="modalBody"></div>
+
+  </div>
+</div>
+
 <script>
 const CSV_FILE = "tenders.csv";
 
 let ALL_TENDERS = [];
 let CURRENT_FILTER = "all";
+let QUICK_FILTER = "all";
+let IGNORED_TENDERS =
+  JSON.parse(localStorage.getItem("ignoredTenders") || "[]");
 
 const CPV_NAMES = {
   "45100000": "Подготовка стройплощадки",
@@ -556,6 +567,7 @@ function renderBadges(t){
     </span>
   `).join("");
 }
+
 function getStatusClass(status){
   const s = (status || "").toLowerCase();
 
@@ -566,6 +578,7 @@ function getStatusClass(status){
 
   return "status-ended";
 }
+
 function getPriority(price){
   const p = (price || "")
     .replace(/GEL/g,"")
@@ -585,11 +598,8 @@ function formatBudget(num){
   if(num >= 1000) return Math.round(num/1000) + "K";
   return Math.round(num);
 }
-  
-let QUICK_FILTER = "all";
 
 function setQuickFilter(type){
-
   QUICK_FILTER = type;
 
   document.querySelectorAll(".qf").forEach(x=>{
@@ -606,41 +616,56 @@ function setQuickFilter(type){
 
   render();
 }
-function render(){
-  const search = document.getElementById("searchInput").value.toLowerCase();
 
-  const filtered = ALL_TENDERS.filter(t => {
-    const cpvs = getCpvs(t);
-    const text = JSON.stringify(t).toLowerCase();
+function setFilter(filter, button){
+  CURRENT_FILTER = filter;
 
-    const matchesSearch = text.includes(search);
-    const matchesFilter = CURRENT_FILTER === "all" || cpvs.includes(CURRENT_FILTER);
-if(QUICK_FILTER === "high"){
-  const p = (t.price || "")
-    .replace(/GEL/g,"")
-    .replace(/`/g,"")
-    .replace(/'/g,"")
-    .replace(/\s/g,"");
+  document.querySelectorAll(".menu button")
+    .forEach(btn => btn.classList.remove("active"));
 
-  if((parseFloat(p) || 0) < 1000000) return false;
+  button.classList.add("active");
+  render();
 }
 
-if(QUICK_FILTER === "playground"){
-  if(!getCpvs(t).includes("45112723")) return false;
-}
+function shouldShowTender(t){
+  if(CURRENT_FILTER !== "ignored" && IGNORED_TENDERS.includes(t.id)){
+    return false;
+  }
 
-if(QUICK_FILTER === "landscape"){
   const cpvs = getCpvs(t);
+  const text = JSON.stringify(t).toLowerCase();
 
-  if(!cpvs.some(c => c.startsWith("451127"))) return false;
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const matchesSearch = text.includes(search);
+  const matchesFilter = CURRENT_FILTER === "all" || cpvs.includes(CURRENT_FILTER);
+
+  if(QUICK_FILTER === "high"){
+    const p = (t.price || "")
+      .replace(/GEL/g,"")
+      .replace(/`/g,"")
+      .replace(/'/g,"")
+      .replace(/\s/g,"");
+
+    if((parseFloat(p) || 0) < 1000000) return false;
+  }
+
+  if(QUICK_FILTER === "playground"){
+    if(!cpvs.includes("45112723")) return false;
+  }
+
+  if(QUICK_FILTER === "landscape"){
+    if(!cpvs.some(c => c.startsWith("451127"))) return false;
+  }
+
+  if(QUICK_FILTER === "soon"){
+    if(!t.deadline) return false;
+  }
+
+  return matchesSearch && matchesFilter;
 }
 
-if(QUICK_FILTER === "soon"){
-  if(!t.deadline) return false;
-}
-    return matchesSearch && matchesFilter;
-  });
-
+function render(){
+  const filtered = ALL_TENDERS.filter(shouldShowTender);
   const grid = document.getElementById("tenderGrid");
 
   if(!filtered.length){
@@ -660,23 +685,38 @@ if(QUICK_FILTER === "soon"){
 
         <div class="title">${t.name || "Без названия"}</div>
 
-<div class="meta">
-  📋 ${t.reg_id || "N/A"}<br>
-  📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span><br>
-  🏢 ${t.org || "—"}<br>
-  💰 ${t.price || "—"}<br>
-  📅 ${t.deadline || "—"}<br>
-  🕒 ${t.last_seen || "—"}
-</div>
+        <div class="meta">
+          📋 ${t.reg_id || "N/A"}<br>
+          📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span><br>
+          🏢 ${t.org || "—"}<br>
+          💰 ${t.price || "—"}<br>
+          📅 ${t.deadline || "—"}<br>
+          🕒 ${t.last_seen || "—"}
+        </div>
 
         <div class="actions">
           <button class="btn" onclick="openModal('${t.id}')">Детали</button>
-<a class="btn" href="${t.link}" target="_blank">Официальный сайт ↗</a>
+          <a class="btn" href="${t.link}" target="_blank">Официальный сайт ↗</a>
         </div>
       </div>
     `;
   }).join("");
 }
+
+function ignoreTender(tenderId){
+  if(!IGNORED_TENDERS.includes(tenderId)){
+    IGNORED_TENDERS.push(tenderId);
+  }
+
+  localStorage.setItem(
+    "ignoredTenders",
+    JSON.stringify(IGNORED_TENDERS)
+  );
+
+  closeModal();
+  render();
+}
+
 function openModal(tenderId){
   const t = ALL_TENDERS.find(x => x.id === tenderId);
 
@@ -685,55 +725,58 @@ function openModal(tenderId){
   document.getElementById("modalTitle").textContent =
     t.reg_id || "Tender";
 
-document.getElementById("modalBody").innerHTML = `
+  document.getElementById("modalBody").innerHTML = `
+    <div class="modal-grid">
 
-<div class="modal-grid">
+      <div class="modal-item">
+        <div class="modal-label">Название</div>
+        <div class="modal-value">${t.name || "—"}</div>
+      </div>
 
-  <div class="modal-item">
-    <div class="modal-label">Название</div>
-    <div class="modal-value">${t.name || "—"}</div>
-  </div>
+      <div class="modal-item">
+        <div class="modal-label">Статус</div>
+        <div class="modal-value">
+          <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span>
+        </div>
+      </div>
 
-  <div class="modal-item">
-    <div class="modal-label">Статус</div>
-    <div class="modal-value">
-      <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span>
+      <div class="modal-item">
+        <div class="modal-label">Организация</div>
+        <div class="modal-value">${t.org || "—"}</div>
+      </div>
+
+      <div class="modal-item">
+        <div class="modal-label">Бюджет</div>
+        <div class="modal-value">${t.price || "—"}</div>
+      </div>
+
+      <div class="modal-item">
+        <div class="modal-label">Deadline</div>
+        <div class="modal-value">${t.deadline || "—"}</div>
+      </div>
+
+      <div class="modal-item">
+        <div class="modal-label">Последняя проверка</div>
+        <div class="modal-value">${t.last_seen || "—"}</div>
+      </div>
+
     </div>
-  </div>
 
-  <div class="modal-item">
-    <div class="modal-label">Организация</div>
-    <div class="modal-value">${t.org || "—"}</div>
-  </div>
+    <div style="margin-top:22px">
+      <div class="modal-label">CPV Categories</div>
+      ${renderBadges(t)}
+    </div>
 
-  <div class="modal-item">
-    <div class="modal-label">Бюджет</div>
-    <div class="modal-value">${t.price || "—"}</div>
-  </div>
+    <div class="modal-actions">
+      <a class="btn" href="${t.link}" target="_blank">
+        Официальный тендер ↗
+      </a>
 
-  <div class="modal-item">
-    <div class="modal-label">Deadline</div>
-    <div class="modal-value">${t.deadline || "—"}</div>
-  </div>
-
-  <div class="modal-item">
-    <div class="modal-label">Последняя проверка</div>
-    <div class="modal-value">${t.last_seen || "—"}</div>
-  </div>
-
-</div>
-
-<div style="margin-top:22px">
-  <div class="modal-label">CPV Categories</div>
-  ${renderBadges(t)}
-</div>
-
-<div class="modal-actions">
-  <a class="btn" href="${t.link}" target="_blank">
-    Официальный тендер ↗
-  </a>
-</div>
-`;
+      <button class="btn" onclick="ignoreTender('${t.id}')">
+        🗑 Ignore tender
+      </button>
+    </div>
+  `;
 
   document.getElementById("tenderModal").style.display = "block";
 }
@@ -744,19 +787,10 @@ function closeModal(){
 
 window.onclick = function(event){
   const modal = document.getElementById("tenderModal");
+
   if(event.target === modal){
     closeModal();
   }
-}
-  
-function setFilter(filter, button){
-  CURRENT_FILTER = filter;
-
-  document.querySelectorAll(".menu button")
-    .forEach(btn => btn.classList.remove("active"));
-
-  button.classList.add("active");
-  render();
 }
 
 async function loadData(){
@@ -801,22 +835,7 @@ async function loadData(){
 document.getElementById("searchInput").addEventListener("input", render);
 
 loadData();
-setInterval(loadData, 5 * 60 * 1000);  
+setInterval(loadData, 5 * 60 * 1000);
 </script>
- <div id="tenderModal" class="modal">
-  <div class="modal-content">
-
-    <div class="modal-header">
-      <h2 id="modalTitle">Tender</h2>
-
-      <button class="close-btn" onclick="closeModal()">
-        ✕
-      </button>
-    </div>
-
-    <div class="modal-body" id="modalBody"></div>
-
-  </div>
-</div> 
 </body>
 </html>
