@@ -131,6 +131,8 @@ def get_tender_attachments(session, tender_id):
 
         soup = BeautifulSoup(r.text, "html.parser")
 
+        print("DETAIL PREVIEW", tender_id, r.text[:1000])
+
         links = soup.find_all("a", href=True)
 
         attachment_links = []
