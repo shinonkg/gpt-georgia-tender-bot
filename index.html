@@ -4,472 +4,250 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>GPT Georgia Tender Monitor</title>
-
 <style>
 *{box-sizing:border-box}
 
-body{
-  margin:0;
+/* ── SPLASH ── */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:#f8f9fc;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
   font-family:Arial,sans-serif;
-  background:#f3f5f7;
-  color:#1f2937;
+  transition:opacity 0.7s ease,transform 0.7s ease;
+}
+#splash.hide{opacity:0;transform:scale(1.03);pointer-events:none}
+
+.sp-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 16px;border-radius:20px;
+  border:1px solid #c7d2fe;background:#eef1fd;
+  font-size:12px;color:#4f6ef7;margin-bottom:24px;
+  font-weight:600;
+}
+.sp-dot{width:6px;height:6px;border-radius:50%;background:#4f6ef7;animation:sp-pulse 1.5s infinite}
+@keyframes sp-pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.sp-title{
+  font-size:36px;font-weight:800;color:#111827;
+  text-align:center;line-height:1.15;margin-bottom:6px;
+}
+.sp-title span{color:#4f6ef7}
+.sp-sub{font-size:14px;color:#6b7280;margin-bottom:36px;text-align:center}
+
+.sp-stats{display:flex;gap:40px;margin-bottom:36px}
+.sp-stat{text-align:center}
+.sp-stat-val{font-size:28px;font-weight:800;color:#4f6ef7;display:block}
+.sp-stat-label{font-size:11px;color:#9ca3af;margin-top:3px;text-transform:uppercase;letter-spacing:0.05em}
+
+.sp-bar-wrap{width:260px}
+.sp-bar-label{display:flex;justify-content:space-between;font-size:11px;color:#9ca3af;margin-bottom:7px}
+.sp-bar{height:3px;background:#e5e7eb;border-radius:2px;overflow:hidden}
+.sp-bar-fill{height:100%;width:0%;background:#4f6ef7;border-radius:2px;transition:width 0.15s linear}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:500;
+  display:none;font-family:Arial,sans-serif;
+}
+#loginScreen.show{display:grid;grid-template-columns:1fr 420px}
+
+.ls-left{
+  background:#f8f9fc;
+  border-right:1px solid #e5e7eb;
+  padding:48px;display:flex;flex-direction:column;justify-content:space-between;
+}
+.ls-logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:#111827;margin-bottom:0}
+.ls-logo-icon{
+  width:36px;height:36px;background:#4f6ef7;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.ls-content{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0}
+.ls-title{font-size:36px;font-weight:800;color:#111827;line-height:1.15;margin-bottom:12px}
+.ls-title span{color:#4f6ef7}
+.ls-desc{font-size:14px;color:#6b7280;line-height:1.7;max-width:380px;margin-bottom:28px}
+.ls-features{display:flex;flex-direction:column;gap:10px}
+.ls-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:#4b5563}
+.ls-feat-dot{width:5px;height:5px;border-radius:50%;background:#4f6ef7;flex-shrink:0}
+.ls-footer{font-size:11px;color:#9ca3af}
+
+.ls-right{
+  background:white;padding:48px;
+  display:flex;flex-direction:column;justify-content:center;
+  border-left:1px solid #e5e7eb;
+}
+.ls-indicators{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.ls-ind{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;background:#f8f9fc;
+  border:1px solid #e5e7eb;border-radius:10px;
+  font-size:12px;color:#6b7280;
+}
+.ls-ind-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.ls-ind-dot.green{background:#22c55e}
+.ls-ind-dot.blue{background:#4f6ef7}
+
+.ls-form-title{font-size:20px;font-weight:700;color:#111827;margin-bottom:4px}
+.ls-form-sub{font-size:13px;color:#6b7280;margin-bottom:24px}
+.ls-label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:6px;margin-top:14px;display:block}
+.ls-input{
+  width:100%;padding:12px 14px;
+  background:#f8f9fc;border:1px solid #d1d5db;
+  border-radius:10px;color:#111827;font-size:14px;
+  font-family:Arial,sans-serif;outline:none;
+  transition:border-color 0.2s;
+}
+.ls-input:focus{border-color:#4f6ef7;background:white}
+.ls-btn{
+  width:100%;padding:13px;margin-top:16px;
+  background:#4f6ef7;border:none;border-radius:10px;
+  color:white;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:Arial,sans-serif;
+  transition:background 0.2s,transform 0.1s;
+}
+.ls-btn:hover{background:#4338ca}
+.ls-btn:active{transform:scale(0.99)}
+.ls-error{color:#dc2626;font-size:12px;margin-top:10px;text-align:center}
+
+@media(max-width:900px){
+  #loginScreen.show{grid-template-columns:1fr}
+  .ls-left{display:none}
 }
 
+/* ── MAIN APP (orijinal) ── */
+body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#1f2937}
 .wrapper{display:flex;min-height:100vh}
-
-.sidebar{
-  width:290px;
-  background:#111827;
-  color:white;
-  padding:24px;
-}
-
-.logo{
-  font-size:22px;
-  font-weight:700;
-  margin-bottom:26px;
-}
-
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.menu button{
-  background:rgba(255,255,255,0.04);
-  border:none;
-  color:white;
-  padding:13px;
-  border-radius:12px;
-  cursor:pointer;
-  text-align:left;
-  font-size:14px;
-  line-height:1.35;
-}
-
+.sidebar{width:290px;background:#111827;color:white;padding:24px}
+.logo{font-size:22px;font-weight:700;margin-bottom:26px}
+.menu{display:flex;flex-direction:column;gap:10px}
+.menu button{background:rgba(255,255,255,0.04);border:none;color:white;padding:13px;border-radius:12px;cursor:pointer;text-align:left;font-size:14px;line-height:1.35}
 .menu button.active{background:#2563eb}
-
-.menu button:hover{
-  background:#2563eb;
-  transform:translateX(3px);
-  transition:0.2s;
-}
-
-.main{
-  flex:1;
-  padding:28px;
-}
-
-.hero{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:24px;
-}
-
-.hero h1{
-  margin:0;
-  font-size:32px;
-  font-weight:800;
-}
-
-.hero p{
-  margin-top:8px;
-  color:#6b7280;
-  font-size:15px;
-}
-
-.hero-status{
-  background:#dcfce7;
-  color:#166534;
-  padding:10px 16px;
-  border-radius:999px;
-  font-weight:700;
-  font-size:13px;
-}
-
-.search input{
-  width:100%;
-  padding:16px;
-  border:none;
-  border-radius:16px;
-  font-size:16px;
-  box-shadow:0 4px 18px rgba(0,0,0,0.06);
-  margin-bottom:24px;
-}
-
-.quick-filters{
-  display:flex;
-  gap:10px;
-  margin-bottom:22px;
-  flex-wrap:wrap;
-}
-
-.qf{
-  border:none;
-  background:white;
-  border:1px solid #e5e7eb;
-  padding:10px 16px;
-  border-radius:999px;
-  font-weight:700;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.qf:hover{
-  transform:translateY(-2px);
-  box-shadow:0 5px 15px rgba(0,0,0,0.08);
-}
-
-.active-qf{
-  background:#2563eb;
-  color:white;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
-  margin-bottom:28px;
-}
-
-.stat{
-  background:white;
-  padding:20px;
-  border-radius:20px;
-  box-shadow:0 4px 18px rgba(0,0,0,0.06);
-  border:1px solid #eef2f7;
-  transition:0.25s;
-}
-
-.stat:hover{
-  transform:translateY(-3px);
-  box-shadow:0 10px 25px rgba(37,99,235,0.10);
-}
-
+.menu button:hover{background:#2563eb;transform:translateX(3px);transition:0.2s}
+.main{flex:1;padding:28px}
+.hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.hero h1{margin:0;font-size:32px;font-weight:800}
+.hero p{margin-top:8px;color:#6b7280;font-size:15px}
+.hero-status{background:#dcfce7;color:#166534;padding:10px 16px;border-radius:999px;font-weight:700;font-size:13px}
+.search input{width:100%;padding:16px;border:none;border-radius:16px;font-size:16px;box-shadow:0 4px 18px rgba(0,0,0,0.06);margin-bottom:24px}
+.quick-filters{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+.qf{border:none;background:white;border:1px solid #e5e7eb;padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer;transition:0.2s}
+.qf:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.08)}
+.active-qf{background:#2563eb;color:white}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat{background:white;padding:20px;border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,0.06);border:1px solid #eef2f7;transition:0.25s}
+.stat:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(37,99,235,0.10)}
 .stat span{color:#6b7280;font-size:14px}
 .stat strong{display:block;margin-top:10px;font-size:28px}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
-  gap:20px;
-}
-
-.card{
-  background:white;
-  border-radius:22px;
-  padding:22px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.06);
-  border:1px solid #e5e7eb;
-  transition:0.25s;
-}
-
-.card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 10px 30px rgba(0,0,0,0.10);
-}
-
-.badges{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-bottom:14px;
-}
-
-.badge{
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-}
-
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px}
+.card{background:white;border-radius:22px;padding:22px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e5e7eb;transition:0.25s}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,0.10)}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
 .c45100000{background:#fef3c7;color:#92400e}
 .c45112700{background:#dcfce7;color:#166534}
 .c45112710{background:#d1fae5;color:#047857}
 .c45112720{background:#dbeafe;color:#1d4ed8}
 .c45112723{background:#fce7f3;color:#be185d}
 .default{background:#e5e7eb;color:#374151}
-
-.status-badge,
-.review-badge{
-  display:inline-flex;
-  align-items:center;
-  padding:3px 8px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:700;
-  margin:2px 0;
-}
-
+.status-badge,.review-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;margin:2px 0}
 .status-active{background:#dbeafe;color:#1d4ed8}
 .status-warning{background:#fef3c7;color:#92400e}
 .status-success{background:#dcfce7;color:#166534}
 .status-ended{background:#e5e7eb;color:#374151}
-
 .review-new{background:#e5e7eb;color:#374151}
 .review-review{background:#fef3c7;color:#92400e}
 .review-relevant{background:#dcfce7;color:#166534}
 .review-ignored{background:#fee2e2;color:#991b1b}
-
-.card-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-
-.priority{
-  font-size:13px;
-  font-weight:700;
-}
-
-.high{color:#dc2626}
-.medium{color:#d97706}
-.low{color:#6b7280}
-
-.title{
-  font-size:18px;
-  font-weight:700;
-  line-height:1.4;
-  margin-bottom:14px;
-}
-
-.meta{
-  color:#4b5563;
-  line-height:1.8;
-  font-size:15px;
-}
-
-.actions{
-  margin-top:18px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.btn{
-  text-decoration:none;
-  border:none;
-  background:#111827;
-  color:white;
-  padding:12px 16px;
-  border-radius:12px;
-  font-size:14px;
-  font-weight:700;
-  cursor:pointer;
-}
-
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.priority{font-size:13px;font-weight:700}
+.high{color:#dc2626}.medium{color:#d97706}.low{color:#6b7280}
+.title{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.meta{color:#4b5563;line-height:1.8;font-size:15px}
+.actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{text-decoration:none;border:none;background:#111827;color:white;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
 .btn:hover{background:#2563eb}
-
 .btn-warning{background:#92400e}
 .btn-success{background:#166534}
 .btn-danger{background:#991b1b}
 .btn-muted{background:#374151}
-
-.empty{
-  background:white;
-  padding:30px;
-  border-radius:20px;
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  z-index:9999;
-  left:0;
-  top:0;
-  width:100%;
-  height:100%;
-  background:rgba(17,24,39,0.65);
-  backdrop-filter:blur(4px);
-}
-
-.modal-content{
-  background:white;
-  width:min(1100px,94%);
-  max-height:86vh;
-  overflow-y:auto;
-  margin:40px auto;
-  border-radius:24px;
-  padding:28px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.25);
-  animation:modalShow 0.2s ease;
-}
-
-@keyframes modalShow{
-  from{transform:translateY(15px);opacity:0}
-  to{transform:translateY(0);opacity:1}
-}
-
-.modal-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:22px;
-}
-
-.modal-header h2{
-  margin:0;
-  font-size:24px;
-}
-
-.close-btn{
-  border:none;
-  background:#f3f4f6;
-  width:38px;
-  height:38px;
-  border-radius:999px;
-  cursor:pointer;
-  font-size:16px;
-  font-weight:700;
-}
-
+.empty{background:white;padding:30px;border-radius:20px}
+.modal{display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;background:rgba(17,24,39,0.65);backdrop-filter:blur(4px)}
+.modal-content{background:white;width:min(1100px,94%);max-height:86vh;overflow-y:auto;margin:40px auto;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:modalShow 0.2s ease}
+@keyframes modalShow{from{transform:translateY(15px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-header h2{margin:0;font-size:24px}
+.close-btn{border:none;background:#f3f4f6;width:38px;height:38px;border-radius:999px;cursor:pointer;font-size:16px;font-weight:700}
 .close-btn:hover{background:#e5e7eb}
-
-.modal-body{
-  color:#374151;
-  line-height:1.8;
-}
-
-.modal-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:18px;
-  margin-top:20px;
-}
-
-.modal-item{
-  background:#f9fafb;
-  border:1px solid #eef2f7;
-  border-radius:16px;
-  padding:14px;
-}
-
-.modal-label{
-  font-size:12px;
-  font-weight:700;
-  color:#6b7280;
-  text-transform:uppercase;
-  margin-bottom:8px;
-}
-
-.modal-value{
-  font-size:15px;
-  font-weight:600;
-  color:#111827;
-}
-
-.modal-actions{
-  margin-top:26px;
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
+.modal-body{color:#374151;line-height:1.8}
+.modal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:20px}
+.modal-item{background:#f9fafb;border:1px solid #eef2f7;border-radius:16px;padding:14px}
+.modal-label{font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px}
+.modal-value{font-size:15px;font-weight:600;color:#111827}
+.modal-actions{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
 .count-danger{color:#ef4444;font-weight:800}
 .count-warning{color:#f59e0b;font-weight:800}
 .count-safe{color:#22c55e;font-weight:800}
 .count-closed{color:#94a3b8;font-weight:800}
 .count-normal{color:#6b7280;font-weight:800}
-  .login-screen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#111827;
-  padding:24px;
-}
-
-.login-card{
-  width:min(420px,100%);
-  background:white;
-  border-radius:24px;
-  padding:32px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.25);
-}
-
-.login-card h1{
-  margin:0 0 8px;
-  font-size:28px;
-}
-
-.login-card p{
-  margin:0 0 24px;
-  color:#6b7280;
-}
-
-.login-card input{
-  width:100%;
-  padding:14px;
-  border:1px solid #d1d5db;
-  border-radius:12px;
-  margin-bottom:12px;
-  font-size:15px;
-}
-
-.login-error{
-  color:#dc2626;
-  font-size:14px;
-  margin-top:12px;
-}
-
-.logout-btn{
-  border:none;
-  background:#111827;
-  color:white;
-  padding:10px 14px;
-  border-radius:999px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-@media(max-width:1000px){
-  .wrapper{flex-direction:column}
-  .sidebar{width:100%}
-  .stats{grid-template-columns:1fr 1fr}
-}
-
-@media(max-width:650px){
-  .stats{grid-template-columns:1fr}
-  .grid{grid-template-columns:1fr}
-  .modal-grid{grid-template-columns:1fr}
-}
+.logout-btn{border:none;background:#111827;color:white;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}
+@media(max-width:1000px){.wrapper{flex-direction:column}.sidebar{width:100%}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}}
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
-
 <body>
-<div id="loginScreen" class="login-screen">
-  <div class="login-card">
-    <h1>🇬🇪 Tender Monitor</h1>
-    <p>Login to access procurement dashboard</p>
 
-    <input
-      type="email"
-      id="loginEmail"
-      placeholder="Email"
-    />
-
-    <input
-      type="password"
-      id="loginPassword"
-      placeholder="Password"
-    />
-
-    <button class="btn" onclick="loginUser()">
-      Login
-    </button>
-
-    <div id="loginError" class="login-error"></div>
+<!-- ── SPLASH ── -->
+<div id="splash">
+  <div class="sp-badge"><span class="sp-dot"></span> System initializing</div>
+  <div class="sp-title">Georgia<br><span>Tender Monitor</span></div>
+  <div class="sp-sub">AI-powered CPV monitoring · Real-time tracking</div>
+  <div class="sp-stats">
+    <div class="sp-stat"><span class="sp-stat-val" id="s1">0</span><div class="sp-stat-label">Active tenders</div></div>
+    <div class="sp-stat"><span class="sp-stat-val" id="s2">0</span><div class="sp-stat-label">CPV categories</div></div>
+    <div class="sp-stat"><span class="sp-stat-val" id="s3">0M</span><div class="sp-stat-label">Total GEL</div></div>
+  </div>
+  <div class="sp-bar-wrap">
+    <div class="sp-bar-label"><span id="spLabel">Loading system...</span><span id="spPct">0%</span></div>
+    <div class="sp-bar"><div class="sp-bar-fill" id="spFill"></div></div>
   </div>
 </div>
-<div class="wrapper" id="appWrapper" style="display:none">
 
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="ls-left">
+    <div class="ls-logo"><div class="ls-logo-icon">🏛️</div> GE Tender</div>
+    <div class="ls-content">
+      <div class="ls-title">Procurement<br><span>Intelligence</span><br>Platform</div>
+      <div class="ls-desc">Gürcistan devlet ihale sistemini gerçek zamanlı izleyin. CPV kodlarına göre otomatik filtreleme ve yaşam döngüsü takibi.</div>
+      <div class="ls-features">
+        <div class="ls-feat"><div class="ls-feat-dot"></div>Otomatik CPV kod takibi</div>
+        <div class="ls-feat"><div class="ls-feat-dot"></div>Durum değişikliği bildirimleri</div>
+        <div class="ls-feat"><div class="ls-feat-dot"></div>Her gün 09:00'da güncelleme</div>
+      </div>
+    </div>
+    <div class="ls-footer">GE TENDER MONITOR · v2.0 · 2026</div>
+  </div>
+  <div class="ls-right">
+    <div class="ls-indicators">
+      <div class="ls-ind"><div class="ls-ind-dot green"></div>Bot active · Last run: today 09:00</div>
+      <div class="ls-ind"><div class="ls-ind-dot blue"></div>Monitoring · 7 CPV categories</div>
+    </div>
+    <div class="ls-form-title">Giriş yap</div>
+    <div class="ls-form-sub">Yetkili erişim gereklidir</div>
+    <label class="ls-label">Email</label>
+    <input class="ls-input" type="email" id="loginEmail" placeholder="email@example.com" autocomplete="email"/>
+    <label class="ls-label">Şifre</label>
+    <input class="ls-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/>
+    <button class="ls-btn" onclick="loginUser()">Giriş yap →</button>
+    <div class="ls-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div class="wrapper" id="appWrapper" style="display:none">
   <div class="sidebar">
     <div class="logo">🇬🇪 Tender Monitor</div>
-
     <div class="menu">
       <button class="active" onclick="setFilter('all', this)">Все тендеры</button>
       <button onclick="setFilter('review', this)">🔍 Need Review</button>
@@ -482,29 +260,18 @@ body{
       <button onclick="setFilter('ignored', this)">🗑 Ignored tenders</button>
     </div>
   </div>
-
   <div class="main">
-
     <div class="hero">
       <div>
         <h1>🇬🇪 Georgia Procurement Intelligence</h1>
         <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
       </div>
-
-<div style="display:flex;gap:10px;align-items:center">
-  <div class="hero-status">● LIVE MONITORING</div>
-  <button class="logout-btn" onclick="logoutUser()">Logout</button>
-</div>
-      
-</div>
-    <div class="search">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Поиск: Rustavi, NAT2600, 45112723..."
-      />
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="hero-status">● LIVE MONITORING</div>
+        <button class="logout-btn" onclick="logoutUser()">Logout</button>
+      </div>
     </div>
-
+    <div class="search"><input type="text" id="searchInput" placeholder="Поиск: Rustavi, NAT2600, 45112723..."/></div>
     <div class="quick-filters">
       <button onclick="setQuickFilter('all')" class="qf active-qf">ALL</button>
       <button onclick="setQuickFilter('high')" class="qf">HIGH VALUE</button>
@@ -512,97 +279,92 @@ body{
       <button onclick="setQuickFilter('landscape')" class="qf">LANDSCAPE</button>
       <button onclick="setQuickFilter('soon')" class="qf">DEADLINE SOON</button>
     </div>
-
     <div class="stats">
-      <div class="stat">
-        <span>ACTIVE TENDERS</span>
-        <strong id="totalCount">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>NEW TODAY</span>
-        <strong id="todayCount">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>NEED REVIEW</span>
-        <strong id="reviewCount">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>TOTAL VALUE</span>
-        <strong id="budgetCount">—</strong>
-      </div>
+      <div class="stat"><span>ACTIVE TENDERS</span><strong id="totalCount">0</strong></div>
+      <div class="stat"><span>NEW TODAY</span><strong id="todayCount">0</strong></div>
+      <div class="stat"><span>NEED REVIEW</span><strong id="reviewCount">0</strong></div>
+      <div class="stat"><span>TOTAL VALUE</span><strong id="budgetCount">—</strong></div>
     </div>
-
     <div class="grid" id="tenderGrid"></div>
-
   </div>
 </div>
 
 <div id="tenderModal" class="modal">
   <div class="modal-content">
-
     <div class="modal-header">
       <h2 id="modalTitle">Tender</h2>
       <button class="close-btn" onclick="closeModal()">✕</button>
     </div>
-
     <div class="modal-body" id="modalBody"></div>
-
   </div>
 </div>
 
 <script>
-const SUPABASE_URL =
-  "https://pibdlregqkpgwapdikdc.supabase.co";
+// ── SPLASH ──
+const STEPS=["Connecting to database...","Loading CPV categories...","Fetching tender data...","Initializing monitors...","System ready"];
+let pct=0,stepIdx=0;
+const spFill=document.getElementById('spFill');
+const spLabel=document.getElementById('spLabel');
+const spPct=document.getElementById('spPct');
 
-const SUPABASE_KEY =
-  "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
+function countUp(el,target,suffix,dur){
+  dur=dur||1000;const start=Date.now();
+  (function tick(){
+    const p=Math.min((Date.now()-start)/dur,1);
+    el.textContent=Math.round(p*target)+(suffix||'');
+    if(p<1)requestAnimationFrame(tick);
+  })();
+}
+setTimeout(()=>countUp(document.getElementById('s1'),9),400);
+setTimeout(()=>countUp(document.getElementById('s2'),7),600);
+setTimeout(()=>countUp(document.getElementById('s3'),4,'M'),800);
 
-const supabaseClient =
-  supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
-const CSV_FILE = "tenders.csv";
+const spInterval=setInterval(()=>{
+  pct+=20;spFill.style.width=pct+'%';spPct.textContent=pct+'%';
+  spLabel.textContent=STEPS[stepIdx++]||'System ready';
+  if(pct>=100){
+    clearInterval(spInterval);
+    setTimeout(()=>{
+      const sp=document.getElementById('splash');
+      sp.classList.add('hide');
+      setTimeout(()=>{
+        sp.style.display='none';
+        checkAuth();
+      },700);
+    },400);
+  }
+},380);
+
+// ── SUPABASE ──
+const SUPABASE_URL="https://pibdlregqkpgwapdikdc.supabase.co";
+const SUPABASE_KEY="sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
+const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const CSV_FILE="tenders.csv";
+
 async function checkAuth(){
-
-  const { data } =
-    await supabaseClient.auth.getSession();
-
+  const{data}=await supabaseClient.auth.getSession();
   if(data.session){
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appWrapper").style.display = "flex";
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appWrapper').style.display='flex';
     loadData();
   }else{
-    document.getElementById("loginScreen").style.display = "flex";
-    document.getElementById("appWrapper").style.display = "none";
+    document.getElementById('loginScreen').classList.add('show');
   }
 }
 
 async function loginUser(){
-
-  const email =
-    document.getElementById("loginEmail").value;
-
-  const password =
-    document.getElementById("loginPassword").value;
-
-  const { error } =
-    await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
+  const email=document.getElementById('loginEmail').value;
+  const password=document.getElementById('loginPassword').value;
+  const{error}=await supabaseClient.auth.signInWithPassword({email,password});
   if(error){
-    document.getElementById("loginError").textContent =
-      "Login failed. Check email or password.";
+    document.getElementById('loginError').textContent='Login failed. Check email or password.';
     return;
   }
-
-  document.getElementById("loginError").textContent = "";
-  checkAuth();
+  document.getElementById('loginError').textContent='';
+  document.getElementById('loginScreen').classList.remove('show');
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appWrapper').style.display='flex';
+  loadData();
 }
 
 async function logoutUser(){
@@ -610,608 +372,201 @@ async function logoutUser(){
   location.reload();
 }
 
-let ALL_TENDERS = [];
-let CURRENT_FILTER = "all";
-let QUICK_FILTER = "all";
-
-let REVIEW_STATUSES =
-  JSON.parse(localStorage.getItem("tenderReviewStatuses") || "{}");
-  
-let TENDER_NOTES =
-  JSON.parse(localStorage.getItem("tenderNotes") || "{}");
-
-let IGNORED_TENDERS =
-  JSON.parse(localStorage.getItem("ignoredTenders") || "[]");
-
-IGNORED_TENDERS.forEach(id=>{
-  if(!REVIEW_STATUSES[id]){
-    REVIEW_STATUSES[id] = "ignored";
-  }
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('loginScreen').classList.contains('show'))loginUser();
 });
 
-localStorage.setItem(
-  "tenderReviewStatuses",
-  JSON.stringify(REVIEW_STATUSES)
-);
-
-const CPV_NAMES = {
-  "45100000": "Подготовка стройплощадки",
-  "45112720": "Спорт / зоны отдыха",
-  "45112700": "Ландшафт",
-  "45112723": "Игровые площадки",
-  "45112710": "Зелёные зоны"
-};
+// ── APP (orijinal kod aynen) ──
+let ALL_TENDERS=[];
+let CURRENT_FILTER="all";
+let QUICK_FILTER="all";
+let REVIEW_STATUSES=JSON.parse(localStorage.getItem("tenderReviewStatuses")||"{}");
+let TENDER_NOTES=JSON.parse(localStorage.getItem("tenderNotes")||"{}");
+let IGNORED_TENDERS=JSON.parse(localStorage.getItem("ignoredTenders")||"[]");
+IGNORED_TENDERS.forEach(id=>{if(!REVIEW_STATUSES[id])REVIEW_STATUSES[id]="ignored";});
+localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
+const CPV_NAMES={"45100000":"Подготовка стройплощадки","45112720":"Спорт / зоны отдыха","45112700":"Ландшафт","45112723":"Игровые площадки","45112710":"Зелёные зоны"};
 
 function parseCSV(text){
-  const rows = [];
-  let current = "";
-  let row = [];
-  let insideQuotes = false;
-
+  const rows=[];let current="";let row=[];let insideQuotes=false;
   for(let i=0;i<text.length;i++){
-    const char = text[i];
-    const next = text[i+1];
-
-    if(char === '"' && next === '"'){
-      current += '"';
-      i++;
-    } else if(char === '"'){
-      insideQuotes = !insideQuotes;
-    } else if(char === "," && !insideQuotes){
-      row.push(current);
-      current = "";
-    } else if((char === "\n" || char === "\r") && !insideQuotes){
-      if(current || row.length){
-        row.push(current);
-        rows.push(row);
-        row = [];
-        current = "";
-      }
-    } else {
-      current += char;
-    }
+    const char=text[i];const next=text[i+1];
+    if(char==='"'&&next==='"'){current+='"';i++;}
+    else if(char==='"'){insideQuotes=!insideQuotes;}
+    else if(char===","&&!insideQuotes){row.push(current);current="";}
+    else if((char==="\n"||char==="\r")&&!insideQuotes){if(current||row.length){row.push(current);rows.push(row);row=[];current="";}}
+    else{current+=char;}
   }
-
-  if(current || row.length){
-    row.push(current);
-    rows.push(row);
-  }
-
+  if(current||row.length){row.push(current);rows.push(row);}
   return rows;
 }
 
-function getReviewStatus(id){
-  return REVIEW_STATUSES[id] || "new";
-}
+function getReviewStatus(id){return REVIEW_STATUSES[id]||"new"}
+function getReviewLabel(id){const s=getReviewStatus(id);if(s==="review")return"🔍 Need Review";if(s==="relevant")return"⭐ Relevant";if(s==="ignored")return"🗑 Ignored";return"🆕 New"}
+function getReviewClass(id){const s=getReviewStatus(id);if(s==="review")return"review-review";if(s==="relevant")return"review-relevant";if(s==="ignored")return"review-ignored";return"review-new"}
 
-function getReviewLabel(id){
-  const status = getReviewStatus(id);
-
-  if(status === "review") return "🔍 Need Review";
-  if(status === "relevant") return "⭐ Relevant";
-  if(status === "ignored") return "🗑 Ignored";
-
-  return "🆕 New";
-}
-
-function getReviewClass(id){
-  const status = getReviewStatus(id);
-
-  if(status === "review") return "review-review";
-  if(status === "relevant") return "review-relevant";
-  if(status === "ignored") return "review-ignored";
-
-  return "review-new";
-}
 async function saveTenderNote(tenderId){
-
-  const note =
-    document.getElementById("tenderNote")?.value || "";
-
-  TENDER_NOTES[tenderId] = note;
-
-  localStorage.setItem(
-    "tenderNotes",
-    JSON.stringify(TENDER_NOTES)
-  );
-
-  try{
-
-    await supabaseClient
-      .from("tender_reviews")
-      .upsert({
-        tender_id: tenderId,
-        review_status: REVIEW_STATUSES[tenderId] || "new",
-        note: note
-      });
-
-  }catch(e){
-    console.log("Supabase note save error", e);
-  }
-
-  closeModal();
-  render();
-  updateStats();
+  const note=document.getElementById("tenderNote")?.value||"";
+  TENDER_NOTES[tenderId]=note;
+  localStorage.setItem("tenderNotes",JSON.stringify(TENDER_NOTES));
+  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:REVIEW_STATUSES[tenderId]||"new",note});}catch(e){console.log("note save error",e);}
+  closeModal();render();updateStats();
 }
-async function setTenderReviewStatus(tenderId, status){
 
-  REVIEW_STATUSES[tenderId] = status;
-
-  if(status === "ignored"){
-    if(!IGNORED_TENDERS.includes(tenderId)){
-      IGNORED_TENDERS.push(tenderId);
-    }
-  }else{
-    IGNORED_TENDERS =
-      IGNORED_TENDERS.filter(x => x !== tenderId);
-  }
-
-  localStorage.setItem(
-    "tenderReviewStatuses",
-    JSON.stringify(REVIEW_STATUSES)
-  );
-
-  localStorage.setItem(
-    "ignoredTenders",
-    JSON.stringify(IGNORED_TENDERS)
-  );
-
-  try{
-
-    await supabaseClient
-      .from("tender_reviews")
-      .upsert({
-        tender_id: tenderId,
-        review_status: status,
-        note: TENDER_NOTES[tenderId] || ""
-      });
-
-  }catch(e){
-    console.log("Supabase save error", e);
-  }
-
-  closeModal();
-  render();
-  updateStats();
+async function setTenderReviewStatus(tenderId,status){
+  REVIEW_STATUSES[tenderId]=status;
+  if(status==="ignored"){if(!IGNORED_TENDERS.includes(tenderId))IGNORED_TENDERS.push(tenderId);}
+  else{IGNORED_TENDERS=IGNORED_TENDERS.filter(x=>x!==tenderId);}
+  localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
+  localStorage.setItem("ignoredTenders",JSON.stringify(IGNORED_TENDERS));
+  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:status,note:TENDER_NOTES[tenderId]||""});}catch(e){console.log("save error",e);}
+  closeModal();render();updateStats();
 }
 
 function getCpvs(t){
-  if(t.cpvs){
-    return t.cpvs
-      .split("|")
-      .map(x => x.trim())
-      .filter(Boolean);
-  }
-
-  const text = ((t.label || "") + " " + (t.name || "")).toLowerCase();
-  const found = [];
-
-  Object.keys(CPV_NAMES).forEach(code => {
-    if(text.includes(code)) found.push(code);
-  });
-
-  return found;
+  if(t.cpvs)return t.cpvs.split("|").map(x=>x.trim()).filter(Boolean);
+  const text=((t.label||"")+" "+(t.name||"")).toLowerCase();
+  return Object.keys(CPV_NAMES).filter(code=>text.includes(code));
 }
-
-function badgeClass(code){
-  return "c" + code;
-}
-
+function badgeClass(code){return"c"+code}
 function renderBadges(t){
-  const cpvs = getCpvs(t);
-
-  if(!cpvs.length){
-    return `<span class="badge default">Другое</span>`;
-  }
-
-  return cpvs.map(code => `
-    <span class="badge ${badgeClass(code)}">
-      ${code} — ${CPV_NAMES[code] || "CPV"}
-    </span>
-  `).join("");
+  const cpvs=getCpvs(t);
+  if(!cpvs.length)return`<span class="badge default">Другое</span>`;
+  return cpvs.map(code=>`<span class="badge ${badgeClass(code)}">${code} — ${CPV_NAMES[code]||"CPV"}</span>`).join("");
 }
-
 function getStatusClass(status){
-  const s = (status || "").toLowerCase();
-
-  if(s.includes("объявлен") || s.includes("приём")) return "status-active";
-  if(s.includes("оценка") || s.includes("подготовка")) return "status-warning";
-  if(s.includes("победитель") || s.includes("договор")) return "status-success";
-  if(s.includes("не найден") || s.includes("заверш") || s.includes("прекращ")) return "status-ended";
-
-  return "status-ended";
+  const s=(status||"").toLowerCase();
+  if(s.includes("объявлен")||s.includes("приём"))return"status-active";
+  if(s.includes("оценка")||s.includes("подготовка"))return"status-warning";
+  if(s.includes("победитель")||s.includes("договор"))return"status-success";
+  return"status-ended";
 }
-
 function getDeadlineCountdown(deadline){
-  if(!deadline){
-    return { text:"—", class:"count-normal" };
-  }
-
-  const parts = deadline.split(".");
-
-  if(parts.length !== 3){
-    return { text:deadline, class:"count-normal" };
-  }
-
-  const d = parseInt(parts[0]);
-  const m = parseInt(parts[1]) - 1;
-  const y = parseInt(parts[2]);
-
-  const endDate = new Date(y,m,d);
-  const now = new Date();
-
-  const diff = endDate.getTime() - now.getTime();
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-  if(days < 0) return { text:"CLOSED", class:"count-closed" };
-  if(days <= 2) return { text:days + " DAYS LEFT", class:"count-danger" };
-  if(days <= 7) return { text:days + " DAYS LEFT", class:"count-warning" };
-
-  return { text:days + " DAYS LEFT", class:"count-safe" };
+  if(!deadline)return{text:"—",class:"count-normal"};
+  const parts=deadline.split(".");
+  if(parts.length!==3)return{text:deadline,class:"count-normal"};
+  const endDate=new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));
+  const days=Math.ceil((endDate-new Date())/(1000*60*60*24));
+  if(days<0)return{text:"CLOSED",class:"count-closed"};
+  if(days<=2)return{text:days+" DAYS LEFT",class:"count-danger"};
+  if(days<=7)return{text:days+" DAYS LEFT",class:"count-warning"};
+  return{text:days+" DAYS LEFT",class:"count-safe"};
 }
-
 function getPriority(price){
-  const p = (price || "")
-    .replace(/GEL/g,"")
-    .replace(/`/g,"")
-    .replace(/'/g,"")
-    .replace(/\s/g,"");
-
-  const n = parseFloat(p);
-
-  if(n >= 1000000) return ["HIGH","high"];
-  if(n >= 300000) return ["MEDIUM","medium"];
-
-  return ["LOW","low"];
+  const n=parseFloat((price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));
+  if(n>=1000000)return["HIGH","high"];if(n>=300000)return["MEDIUM","medium"];return["LOW","low"];
 }
-
-function formatBudget(num){
-  if(num >= 1000000) return (num/1000000).toFixed(1) + "M";
-  if(num >= 1000) return Math.round(num/1000) + "K";
-  return Math.round(num);
-}
-
+function formatBudget(num){if(num>=1000000)return(num/1000000).toFixed(1)+"M";if(num>=1000)return Math.round(num/1000)+"K";return Math.round(num);}
 function setQuickFilter(type){
-  QUICK_FILTER = type;
-
-  document.querySelectorAll(".qf").forEach(x=>{
-    x.classList.remove("active-qf");
-  });
-
-  const btn = document.querySelector(
-    `.qf[onclick="setQuickFilter('${type}')"]`
-  );
-
-  if(btn){
-    btn.classList.add("active-qf");
-  }
-
+  QUICK_FILTER=type;
+  document.querySelectorAll(".qf").forEach(x=>x.classList.remove("active-qf"));
+  const btn=document.querySelector(`.qf[onclick="setQuickFilter('${type}')"]`);
+  if(btn)btn.classList.add("active-qf");
   render();
 }
-
-function setFilter(filter, button){
-  CURRENT_FILTER = filter;
-
-  document.querySelectorAll(".menu button")
-    .forEach(btn => btn.classList.remove("active"));
-
-  button.classList.add("active");
-  render();
+function setFilter(filter,button){
+  CURRENT_FILTER=filter;
+  document.querySelectorAll(".menu button").forEach(btn=>btn.classList.remove("active"));
+  button.classList.add("active");render();
 }
-
 function shouldShowTender(t){
-  const reviewStatus = getReviewStatus(t.id);
-
-  if(CURRENT_FILTER === "review"){
-    if(reviewStatus !== "review") return false;
-  }else if(CURRENT_FILTER === "relevant"){
-    if(reviewStatus !== "relevant") return false;
-  }else if(CURRENT_FILTER === "ignored"){
-    if(reviewStatus !== "ignored") return false;
-  }else{
-    if(reviewStatus === "ignored") return false;
-  }
-
-  const cpvs = getCpvs(t);
-  const text = JSON.stringify(t).toLowerCase();
-
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const matchesSearch = text.includes(search);
-
-  const matchesFilter =
-    CURRENT_FILTER === "all" ||
-    CURRENT_FILTER === "review" ||
-    CURRENT_FILTER === "relevant" ||
-    CURRENT_FILTER === "ignored" ||
-    cpvs.includes(CURRENT_FILTER);
-
-  if(QUICK_FILTER === "high"){
-    const p = (t.price || "")
-      .replace(/GEL/g,"")
-      .replace(/`/g,"")
-      .replace(/'/g,"")
-      .replace(/\s/g,"");
-
-    if((parseFloat(p) || 0) < 1000000) return false;
-  }
-
-  if(QUICK_FILTER === "playground"){
-    if(!cpvs.includes("45112723")) return false;
-  }
-
-  if(QUICK_FILTER === "landscape"){
-    if(!cpvs.some(c => c.startsWith("451127"))) return false;
-  }
-
-  if(QUICK_FILTER === "soon"){
-    if(!t.deadline) return false;
-  }
-
-  return matchesSearch && matchesFilter;
+  const rs=getReviewStatus(t.id);
+  if(CURRENT_FILTER==="review"&&rs!=="review")return false;
+  if(CURRENT_FILTER==="relevant"&&rs!=="relevant")return false;
+  if(CURRENT_FILTER==="ignored"&&rs!=="ignored")return false;
+  if(!["all","review","relevant","ignored"].includes(CURRENT_FILTER)&&rs==="ignored")return false;
+  if(CURRENT_FILTER==="all"&&rs==="ignored")return false;
+  const cpvs=getCpvs(t);
+  const text=JSON.stringify(t).toLowerCase();
+  const search=document.getElementById("searchInput").value.toLowerCase();
+  if(!text.includes(search))return false;
+  if(!["all","review","relevant","ignored"].includes(CURRENT_FILTER)&&!cpvs.includes(CURRENT_FILTER))return false;
+  if(QUICK_FILTER==="high"){const n=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));if((n||0)<1000000)return false;}
+  if(QUICK_FILTER==="playground"&&!cpvs.includes("45112723"))return false;
+  if(QUICK_FILTER==="landscape"&&!cpvs.some(c=>c.startsWith("451127")))return false;
+  return true;
 }
-
 function render(){
-  const filtered = ALL_TENDERS.filter(shouldShowTender);
-  const grid = document.getElementById("tenderGrid");
-
-  if(!filtered.length){
-    grid.innerHTML = `<div class="empty">Тендеры не найдены</div>`;
-    return;
-  }
-
-  grid.innerHTML = filtered.slice().reverse().map(t => {
-    const [priority, priorityClass] = getPriority(t.price);
-    const c = getDeadlineCountdown(t.deadline);
-
-    return `
-      <div class="card">
-        <div class="card-top">
-          <div class="badges">${renderBadges(t)}</div>
-          <div class="priority ${priorityClass}">${priority}</div>
-        </div>
-
-        <div class="title">${t.name || "Без названия"}</div>
-
-        <div class="meta">
-          📋 ${t.reg_id || "N/A"}<br>
-          🧭 <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span><br>
-          ${
-  TENDER_NOTES[t.id]
-  ?
-  `📝 <span style="color:#2563eb;font-weight:700">Note added</span><br>`
-  :
-  ""
-}
-          📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span><br>
-          🏢 ${t.org || "—"}<br>
-          💰 ${t.price || "—"}<br>
-          📅 ${t.deadline || "—"}<br>
-          <span class="${c.class}">⏳ ${c.text}</span><br>
-          🕒 ${t.last_seen || "—"}
-        </div>
-
-        <div class="actions">
-          <button class="btn" onclick="openModal('${t.id}')">Детали</button>
-          <a class="btn" href="${t.link}" target="_blank">Официальный сайт ↗</a>
-        </div>
+  const filtered=ALL_TENDERS.filter(shouldShowTender);
+  const grid=document.getElementById("tenderGrid");
+  if(!filtered.length){grid.innerHTML=`<div class="empty">Тендеры не найдены</div>`;return;}
+  grid.innerHTML=filtered.slice().reverse().map(t=>{
+    const[priority,priorityClass]=getPriority(t.price);
+    const c=getDeadlineCountdown(t.deadline);
+    return`<div class="card">
+      <div class="card-top"><div class="badges">${renderBadges(t)}</div><div class="priority ${priorityClass}">${priority}</div></div>
+      <div class="title">${t.name||"Без названия"}</div>
+      <div class="meta">
+        📋 ${t.reg_id||"N/A"}<br>
+        🧭 <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span><br>
+        ${TENDER_NOTES[t.id]?`📝 <span style="color:#2563eb;font-weight:700">Note added</span><br>`:""}
+        📌 <span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span><br>
+        🏢 ${t.org||"—"}<br>💰 ${t.price||"—"}<br>📅 ${t.deadline||"—"}<br>
+        <span class="${c.class}">⏳ ${c.text}</span><br>🕒 ${t.last_seen||"—"}
       </div>
-    `;
+      <div class="actions">
+        <button class="btn" onclick="openModal('${t.id}')">Детали</button>
+        <a class="btn" href="${t.link}" target="_blank">Официальный сайт ↗</a>
+      </div>
+    </div>`;
   }).join("");
 }
-
 function openModal(tenderId){
-  const t = ALL_TENDERS.find(x => x.id === tenderId);
-
-  if(!t) return;
-
-  document.getElementById("modalTitle").textContent =
-    t.reg_id || "Tender";
-
-  document.getElementById("modalBody").innerHTML = `
+  const t=ALL_TENDERS.find(x=>x.id===tenderId);if(!t)return;
+  document.getElementById("modalTitle").textContent=t.reg_id||"Tender";
+  document.getElementById("modalBody").innerHTML=`
     <div class="modal-grid">
-
-      <div class="modal-item">
-        <div class="modal-label">Название</div>
-        <div class="modal-value">${t.name || "—"}</div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Review status</div>
-        <div class="modal-value">
-          <span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span>
-        </div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Статус закупки</div>
-        <div class="modal-value">
-          <span class="status-badge ${getStatusClass(t.status)}">${t.status || "—"}</span>
-        </div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Организация</div>
-        <div class="modal-value">${t.org || "—"}</div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Бюджет</div>
-        <div class="modal-value">${t.price || "—"}</div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Deadline</div>
-        <div class="modal-value">${t.deadline || "—"}</div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Найден</div>
-        <div class="modal-value">${t.date_found || "—"}</div>
-      </div>
-
-      <div class="modal-item">
-        <div class="modal-label">Последняя проверка</div>
-        <div class="modal-value">${t.last_seen || "—"}</div>
-      </div>
-
+      <div class="modal-item"><div class="modal-label">Название</div><div class="modal-value">${t.name||"—"}</div></div>
+      <div class="modal-item"><div class="modal-label">Review status</div><div class="modal-value"><span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span></div></div>
+      <div class="modal-item"><div class="modal-label">Статус закупки</div><div class="modal-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
+      <div class="modal-item"><div class="modal-label">Организация</div><div class="modal-value">${t.org||"—"}</div></div>
+      <div class="modal-item"><div class="modal-label">Бюджет</div><div class="modal-value">${t.price||"—"}</div></div>
+      <div class="modal-item"><div class="modal-label">Deadline</div><div class="modal-value">${t.deadline||"—"}</div></div>
+      <div class="modal-item"><div class="modal-label">Найден</div><div class="modal-value">${t.date_found||"—"}</div></div>
+      <div class="modal-item"><div class="modal-label">Последняя проверка</div><div class="modal-value">${t.last_seen||"—"}</div></div>
     </div>
-
+    <div style="margin-top:22px"><div class="modal-label">CPV Categories</div>${renderBadges(t)}</div>
     <div style="margin-top:22px">
-      <div class="modal-label">CPV Categories</div>
-      ${renderBadges(t)}
+      <div class="modal-label">Tender Notes</div>
+      <textarea id="tenderNote" style="width:100%;min-height:120px;border:1px solid #d1d5db;border-radius:14px;padding:14px;font-size:14px;resize:vertical;font-family:Arial" placeholder="Write your tender notes here...">${TENDER_NOTES[t.id]||""}</textarea>
     </div>
-    <div style="margin-top:22px">
-
-  <div class="modal-label">
-    Tender Notes
-  </div>
-
-  <textarea
-    id="tenderNote"
-    style="
-      width:100%;
-      min-height:120px;
-      border:1px solid #d1d5db;
-      border-radius:14px;
-      padding:14px;
-      font-size:14px;
-      resize:vertical;
-      font-family:Arial;
-    "
-    placeholder="Write your tender notes here..."
-  >${TENDER_NOTES[t.id] || ""}</textarea>
-
-</div>
-
     <div class="modal-actions">
-      <a class="btn" href="${t.link}" target="_blank">
-        Официальный тендер ↗
-      </a>
-      
-      <button class="btn btn-muted" onclick="saveTenderNote('${t.id}')">
-  💾 Save Note
-      </button>
-
-      <button class="btn btn-warning" onclick="setTenderReviewStatus('${t.id}', 'review')">
-        🔍 Need Review
-      </button>
-
-      <button class="btn btn-success" onclick="setTenderReviewStatus('${t.id}', 'relevant')">
-        ⭐ Relevant
-      </button>
-
-      ${
-        getReviewStatus(t.id) === "ignored"
-        ?
-        `
-        <button class="btn btn-muted" onclick="setTenderReviewStatus('${t.id}', 'new')">
-          ♻ Restore
-        </button>
-        `
-        :
-        `
-        <button class="btn btn-danger" onclick="setTenderReviewStatus('${t.id}', 'ignored')">
-          🗑 Ignore
-        </button>
-        `
-      }
-    </div>
-  `;
-
-  document.getElementById("tenderModal").style.display = "block";
+      <a class="btn" href="${t.link}" target="_blank">Официальный тендер ↗</a>
+      <button class="btn btn-muted" onclick="saveTenderNote('${t.id}')">💾 Save Note</button>
+      <button class="btn btn-warning" onclick="setTenderReviewStatus('${t.id}','review')">🔍 Need Review</button>
+      <button class="btn btn-success" onclick="setTenderReviewStatus('${t.id}','relevant')">⭐ Relevant</button>
+      ${getReviewStatus(t.id)==="ignored"
+        ?`<button class="btn btn-muted" onclick="setTenderReviewStatus('${t.id}','new')">♻ Restore</button>`
+        :`<button class="btn btn-danger" onclick="setTenderReviewStatus('${t.id}','ignored')">🗑 Ignore</button>`}
+    </div>`;
+  document.getElementById("tenderModal").style.display="block";
 }
-
-function closeModal(){
-  document.getElementById("tenderModal").style.display = "none";
-}
-
-window.onclick = function(event){
-  const modal = document.getElementById("tenderModal");
-
-  if(event.target === modal){
-    closeModal();
-  }
-}
-
+function closeModal(){document.getElementById("tenderModal").style.display="none"}
+window.onclick=function(e){if(e.target===document.getElementById("tenderModal"))closeModal()}
 function updateStats(){
-  const visibleActive = ALL_TENDERS.filter(t => getReviewStatus(t.id) !== "ignored");
-
-  document.getElementById("totalCount").textContent = visibleActive.length;
-
-  const today = new Date().toISOString().slice(0,10);
-
-  document.getElementById("todayCount").textContent =
-    visibleActive.filter(t => (t.date_found || "").startsWith(today)).length;
-
-  document.getElementById("reviewCount").textContent =
-    ALL_TENDERS.filter(t => getReviewStatus(t.id) === "review").length;
-
-  let budget = 0;
-
-  visibleActive.forEach(t => {
-    const p = (t.price || "")
-      .replace(/GEL/g,"")
-      .replace(/`/g,"")
-      .replace(/'/g,"")
-      .replace(/\s/g,"");
-
-    budget += parseFloat(p) || 0;
-  });
-
-  document.getElementById("budgetCount").textContent =
-    formatBudget(budget) + " GEL";
+  const active=ALL_TENDERS.filter(t=>getReviewStatus(t.id)!=="ignored");
+  document.getElementById("totalCount").textContent=active.length;
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById("todayCount").textContent=active.filter(t=>(t.date_found||"").startsWith(today)).length;
+  document.getElementById("reviewCount").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="review").length;
+  let budget=0;
+  active.forEach(t=>{budget+=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""))||0;});
+  document.getElementById("budgetCount").textContent=formatBudget(budget)+" GEL";
 }
-
 async function loadData(){
-  const res = await fetch(CSV_FILE + "?v=" + Date.now());
-  const text = await res.text();
-
-  const rows = parseCSV(text);
-  const headers = rows.shift().map(h => h.replace(/\uFEFF/g, "").trim());
-
-  ALL_TENDERS = rows.map(r => {
-    const obj = {};
-    headers.forEach((h,i) => obj[h] = r[i] || "");
-    return obj;
-  }).filter(t => t.id && t.id.trim() !== "");
-try{
-
-  const { data, error } =
-    await supabaseClient
-      .from("tender_reviews")
-      .select("*");
-
-  if(!error && data){
-
-    data.forEach(row => {
-
-      REVIEW_STATUSES[row.tender_id] =
-        row.review_status || "new";
-
-      TENDER_NOTES[row.tender_id] =
-        row.note || "";
-
-    });
-
-  }
-
-}catch(e){
-  console.log("Supabase load error", e);
+  const res=await fetch(CSV_FILE+"?v="+Date.now());
+  const text=await res.text();
+  const rows=parseCSV(text);
+  const headers=rows.shift().map(h=>h.replace(/\uFEFF/g,"").trim());
+  ALL_TENDERS=rows.map(r=>{const obj={};headers.forEach((h,i)=>obj[h]=r[i]||"");return obj;}).filter(t=>t.id&&t.id.trim()!=="");
+  try{
+    const{data,error}=await supabaseClient.from("tender_reviews").select("*");
+    if(!error&&data){data.forEach(row=>{REVIEW_STATUSES[row.tender_id]=row.review_status||"new";TENDER_NOTES[row.tender_id]=row.note||"";});}
+  }catch(e){console.log("load error",e);}
+  updateStats();render();
 }
-  updateStats();
-  render();
-}
-
-document.getElementById("searchInput").addEventListener("input", render);
-
-checkAuth();
-setInterval(() => {
-  supabaseClient.auth.getSession().then(({ data }) => {
-    if(data.session){
-      loadData();
-    }
-  });
-}, 5 * 60 * 1000);
+document.getElementById("searchInput").addEventListener("input",render);
+setInterval(()=>{supabaseClient.auth.getSession().then(({data})=>{if(data.session)loadData();});},5*60*1000);
 </script>
 </body>
 </html>
