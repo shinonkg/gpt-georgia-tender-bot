@@ -581,7 +581,43 @@ function getStatusClass(status){
 
   return "status-ended";
 }
+  
+function getDeadlineCountdown(deadline){
 
+  if(!deadline) return "—";
+
+  const parts = deadline.split(".");
+
+  if(parts.length !== 3) return deadline;
+
+  const d = parseInt(parts[0]);
+  const m = parseInt(parts[1]) - 1;
+  const y = parseInt(parts[2]);
+
+  const endDate = new Date(y,m,d);
+  const now = new Date();
+
+  const diff =
+    endDate.getTime() - now.getTime();
+
+  const days =
+    Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+  if(days < 0){
+    return "CLOSED";
+  }
+
+  if(days === 0){
+    return "TODAY";
+  }
+
+  if(days === 1){
+    return "1 DAY LEFT";
+  }
+
+  return days + " DAYS LEFT";
+}
+  
 function getPriority(price){
   const p = (price || "")
     .replace(/GEL/g,"")
@@ -703,6 +739,7 @@ function render(){
           🏢 ${t.org || "—"}<br>
           💰 ${t.price || "—"}<br>
           📅 ${t.deadline || "—"}<br>
+          ⏳ ${getDeadlineCountdown(t.deadline)}<br>
           🕒 ${t.last_seen || "—"}
         </div>
 
