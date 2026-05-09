@@ -373,6 +373,57 @@ body{
 .count-safe{color:#22c55e;font-weight:800}
 .count-closed{color:#94a3b8;font-weight:800}
 .count-normal{color:#6b7280;font-weight:800}
+  .login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#111827;
+  padding:24px;
+}
+
+.login-card{
+  width:min(420px,100%);
+  background:white;
+  border-radius:24px;
+  padding:32px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+}
+
+.login-card h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+.login-card p{
+  margin:0 0 24px;
+  color:#6b7280;
+}
+
+.login-card input{
+  width:100%;
+  padding:14px;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  margin-bottom:12px;
+  font-size:15px;
+}
+
+.login-error{
+  color:#dc2626;
+  font-size:14px;
+  margin-top:12px;
+}
+
+.logout-btn{
+  border:none;
+  background:#111827;
+  color:white;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+}
 
 @media(max-width:1000px){
   .wrapper{flex-direction:column}
@@ -390,7 +441,31 @@ body{
 </head>
 
 <body>
-<div class="wrapper">
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <h1>🇬🇪 Tender Monitor</h1>
+    <p>Login to access procurement dashboard</p>
+
+    <input
+      type="email"
+      id="loginEmail"
+      placeholder="Email"
+    />
+
+    <input
+      type="password"
+      id="loginPassword"
+      placeholder="Password"
+    />
+
+    <button class="btn" onclick="loginUser()">
+      Login
+    </button>
+
+    <div id="loginError" class="login-error"></div>
+  </div>
+</div>
+<div class="wrapper" id="appWrapper" style="display:none">
 
   <div class="sidebar">
     <div class="logo">🇬🇪 Tender Monitor</div>
@@ -416,8 +491,10 @@ body{
         <p>AI-powered CPV monitoring & tender lifecycle tracking</p>
       </div>
 
-      <div class="hero-status">● LIVE MONITORING</div>
-    </div>
+<div style="display:flex;gap:10px;align-items:center">
+  <div class="hero-status">● LIVE MONITORING</div>
+  <button class="logout-btn" onclick="logoutUser()">Logout</button>
+</div>
 
     <div class="search">
       <input
@@ -488,6 +565,49 @@ const supabaseClient =
     SUPABASE_KEY
   );
 const CSV_FILE = "tenders.csv";
+async function checkAuth(){
+
+  const { data } =
+    await supabaseClient.auth.getSession();
+
+  if(data.session){
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appWrapper").style.display = "flex";
+    loadData();
+  }else{
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("appWrapper").style.display = "none";
+  }
+}
+
+async function loginUser(){
+
+  const email =
+    document.getElementById("loginEmail").value;
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const { error } =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if(error){
+    document.getElementById("loginError").textContent =
+      "Login failed. Check email or password.";
+    return;
+  }
+
+  document.getElementById("loginError").textContent = "";
+  checkAuth();
+}
+
+async function logoutUser(){
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
 
 let ALL_TENDERS = [];
 let CURRENT_FILTER = "all";
@@ -1083,8 +1203,14 @@ try{
 
 document.getElementById("searchInput").addEventListener("input", render);
 
-loadData();
-setInterval(loadData, 5 * 60 * 1000);
+checkAuth();
+setInterval(() => {
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if(data.session){
+      loadData();
+    }
+  });
+}, 5 * 60 * 1000);
 </script>
 </body>
 </html>
