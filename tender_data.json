@@ -12,7 +12,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:07"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "686141": {
     "id": "686141",
@@ -27,7 +31,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:07"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "685480": {
     "id": "685480",
@@ -42,7 +50,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:07"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "684290": {
     "id": "684290",
@@ -57,7 +69,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:08"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "685304": {
     "id": "685304",
@@ -72,7 +88,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:07"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "683429": {
     "id": "683429",
@@ -88,7 +108,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:08"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "684516": {
     "id": "684516",
@@ -103,7 +127,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:08"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "683758": {
     "id": "683758",
@@ -118,7 +146,11 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:08"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   },
   "682669": {
     "id": "682669",
@@ -133,6 +165,10 @@
     ],
     "status": "Объявлен",
     "date_found": "2026-05-08 21:56",
-    "last_seen": "2026-05-09 11:08"
+    "last_seen": "2026-05-09 11:46",
+    "attachment_count": 0,
+    "pdf_count": 0,
+    "excel_count": 0,
+    "image_count": 0
   }
 }
