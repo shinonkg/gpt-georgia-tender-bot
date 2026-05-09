@@ -108,7 +108,73 @@ def merge_cpvs(*lists):
 
     return merged
 
+def get_tender_attachments(session, tender_id):
 
+    result = {
+        "attachment_count": 0,
+        "pdf_count": 0,
+        "excel_count": 0,
+        "image_count": 0,
+    }
+
+    try:
+
+        url = (
+            f"https://tenders.procurement.gov.ge/public/"
+            f"?lang=ru&go={tender_id}"
+        )
+
+        r = session.get(url, timeout=20)
+
+        if r.status_code != 200:
+            return result
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        links = soup.find_all("a", href=True)
+
+        attachment_links = []
+
+        for a in links:
+
+            href = a.get("href", "").lower()
+
+            if any(x in href for x in [
+                ".pdf",
+                ".xls",
+                ".xlsx",
+                ".doc",
+                ".docx",
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".zip",
+                "download"
+            ]):
+                attachment_links.append(href)
+
+        result["attachment_count"] = len(attachment_links)
+
+        for href in attachment_links:
+
+            if ".pdf" in href:
+                result["pdf_count"] += 1
+
+            elif ".xls" in href or ".xlsx" in href:
+                result["excel_count"] += 1
+
+            elif any(x in href for x in [
+                ".jpg",
+                ".jpeg",
+                ".png"
+            ]):
+                result["image_count"] += 1
+
+    except Exception as e:
+        print("Attachment parse error:", e)
+
+    return result
+    
 def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
     tenders = []
@@ -211,16 +277,28 @@ def search_tenders(params):
 
         print(f"Search {params['label']}:", r.status_code, len(r.text))
 
-        if r.status_code == 200:
-            return parse_tenders(r.text)
+if r.status_code == 200:
+    tenders = parse_tenders(r.text)
 
-        print("Response preview:", r.text[:250])
+    for tender in tenders:
+        tender_id = tender.get("id")
 
-    except Exception as e:
-        print("Search error:", e)
+        if tender_id:
+            attachments = get_tender_attachments(session, tender_id)
 
-    return []
+            tender.update(attachments)
 
+            print(
+                f"  Attachments {tender.get('reg_id') or tender_id}: "
+                f"{attachments['attachment_count']} total, "
+                f"{attachments['pdf_count']} pdf, "
+                f"{attachments['excel_count']} excel, "
+                f"{attachments['image_count']} images"
+            )
+
+            time.sleep(0.4)
+
+    return tenders
 
 def save_csv(data):
     with open(CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
@@ -238,6 +316,10 @@ def save_csv(data):
             "status",
             "cpvs",
             "label",
+            "attachment_count",
+"pdf_count",
+"excel_count",
+"image_count",
             "link",
         ])
 
@@ -256,9 +338,12 @@ def save_csv(data):
                 t.get("status", ""),
                 "|".join(t.get("cpvs", [])),
                 " | ".join(cpv_labels),
-                f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
+t.get("attachment_count", 0),
+t.get("pdf_count", 0),
+t.get("excel_count", 0),
+t.get("image_count", 0),
+f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
             ])
-
 
 def format_new_message(t):
     cpv_lines = "\n".join(
@@ -332,6 +417,11 @@ def main():
                     "status": "Объявлен",
                     "date_found": now_str(),
                     "last_seen": now_str(),
+                    "attachment_count": t.get("attachment_count", 0),
+"pdf_count": t.get("pdf_count", 0),
+"excel_count": t.get("excel_count", 0),
+"image_count": t.get("image_count", 0),
+                    
                 }
 
                 new_count += 1
