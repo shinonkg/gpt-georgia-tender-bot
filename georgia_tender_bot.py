@@ -458,6 +458,10 @@ def main():
                 db[tid]["deadline"] = t.get("deadline") or db[tid].get("deadline", "")
                 db[tid]["cpvs"] = merged_cpvs
                 db[tid]["last_seen"] = now_str()
+                db[tid]["attachment_count"] = t.get("attachment_count", db[tid].get("attachment_count", 0))
+db[tid]["pdf_count"] = t.get("pdf_count", db[tid].get("pdf_count", 0))
+db[tid]["excel_count"] = t.get("excel_count", db[tid].get("excel_count", 0))
+db[tid]["image_count"] = t.get("image_count", db[tid].get("image_count", 0))
 
                 if old_status != "Объявлен":
                     db[tid]["status"] = "Объявлен"
