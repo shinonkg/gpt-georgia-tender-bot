@@ -643,7 +643,10 @@ function shouldShowTender(t){
 
   const search = document.getElementById("searchInput").value.toLowerCase();
   const matchesSearch = text.includes(search);
-  const matchesFilter = CURRENT_FILTER === "all" || cpvs.includes(CURRENT_FILTER);
+  const matchesFilter =
+  CURRENT_FILTER === "all" ||
+  CURRENT_FILTER === "ignored" ||
+  cpvs.includes(CURRENT_FILTER);
 
   if(QUICK_FILTER === "high"){
     const p = (t.price || "")
