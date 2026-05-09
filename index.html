@@ -493,6 +493,9 @@ let QUICK_FILTER = "all";
 
 let REVIEW_STATUSES =
   JSON.parse(localStorage.getItem("tenderReviewStatuses") || "{}");
+  
+let TENDER_NOTES =
+  JSON.parse(localStorage.getItem("tenderNotes") || "{}");
 
 let IGNORED_TENDERS =
   JSON.parse(localStorage.getItem("ignoredTenders") || "[]");
@@ -578,7 +581,8 @@ function getReviewClass(id){
   return "review-new";
 }
 
-function setTenderReviewStatus(tenderId, status){
+async function setTenderReviewStatus(tenderId, status){
+
   REVIEW_STATUSES[tenderId] = status;
 
   if(status === "ignored"){
@@ -599,6 +603,20 @@ function setTenderReviewStatus(tenderId, status){
     "ignoredTenders",
     JSON.stringify(IGNORED_TENDERS)
   );
+
+  try{
+
+    await supabaseClient
+      .from("tender_reviews")
+      .upsert({
+        tender_id: tenderId,
+        review_status: status,
+        note: TENDER_NOTES[tenderId] || ""
+      });
+
+  }catch(e){
+    console.log("Supabase save error", e);
+  }
 
   closeModal();
   render();
@@ -971,7 +989,30 @@ async function loadData(){
     headers.forEach((h,i) => obj[h] = r[i] || "");
     return obj;
   }).filter(t => t.id && t.id.trim() !== "");
+try{
 
+  const { data, error } =
+    await supabaseClient
+      .from("tender_reviews")
+      .select("*");
+
+  if(!error && data){
+
+    data.forEach(row => {
+
+      REVIEW_STATUSES[row.tender_id] =
+        row.review_status || "new";
+
+      TENDER_NOTES[row.tender_id] =
+        row.note || "";
+
+    });
+
+  }
+
+}catch(e){
+  console.log("Supabase load error", e);
+}
   updateStats();
   render();
 }
