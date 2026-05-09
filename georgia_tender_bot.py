@@ -108,8 +108,8 @@ def merge_cpvs(*lists):
 
     return merged
 
-def get_tender_attachments(session, tender_id):
 
+def get_tender_attachments(session, tender_id):
     result = {
         "attachment_count": 0,
         "pdf_count": 0,
@@ -118,7 +118,6 @@ def get_tender_attachments(session, tender_id):
     }
 
     try:
-
         url = (
             f"https://tenders.procurement.gov.ge/public/"
             f"?lang=ru&go={tender_id}"
@@ -130,13 +129,11 @@ def get_tender_attachments(session, tender_id):
             return result
 
         soup = BeautifulSoup(r.text, "html.parser")
-
         links = soup.find_all("a", href=True)
 
         attachment_links = []
 
         for a in links:
-
             href = a.get("href", "").lower()
 
             if any(x in href for x in [
@@ -149,32 +146,26 @@ def get_tender_attachments(session, tender_id):
                 ".jpeg",
                 ".png",
                 ".zip",
-                "download"
+                "download",
             ]):
                 attachment_links.append(href)
 
         result["attachment_count"] = len(attachment_links)
 
         for href in attachment_links:
-
             if ".pdf" in href:
                 result["pdf_count"] += 1
-
             elif ".xls" in href or ".xlsx" in href:
                 result["excel_count"] += 1
-
-            elif any(x in href for x in [
-                ".jpg",
-                ".jpeg",
-                ".png"
-            ]):
+            elif any(x in href for x in [".jpg", ".jpeg", ".png"]):
                 result["image_count"] += 1
 
     except Exception as e:
         print("Attachment parse error:", e)
 
     return result
-    
+
+
 def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
     tenders = []
@@ -235,6 +226,7 @@ def parse_tenders(html):
 
     return tenders
 
+
 def search_tenders(params):
     session = get_session()
 
@@ -264,10 +256,9 @@ def search_tenders(params):
     }
 
     try:
-
         session.get(
             "https://tenders.procurement.gov.ge/public/?lang=ru",
-            timeout=20
+            timeout=20,
         )
 
         time.sleep(1)
@@ -278,32 +269,20 @@ def search_tenders(params):
             timeout=30,
         )
 
-        print(
-            f"Search {params['label']}:",
-            r.status_code,
-            len(r.text)
-        )
+        print(f"Search {params['label']}:", r.status_code, len(r.text))
 
         if r.status_code == 200:
-
             tenders = parse_tenders(r.text)
 
             for tender in tenders:
-
                 tender_id = tender.get("id")
 
                 if tender_id:
-
-                    attachments = get_tender_attachments(
-                        session,
-                        tender_id
-                    )
-
+                    attachments = get_tender_attachments(session, tender_id)
                     tender.update(attachments)
 
                     print(
-                        f"  Attachments "
-                        f"{tender.get('reg_id') or tender_id}: "
+                        f"  Attachments {tender.get('reg_id') or tender_id}: "
                         f"{attachments['attachment_count']} total, "
                         f"{attachments['pdf_count']} pdf, "
                         f"{attachments['excel_count']} excel, "
@@ -320,6 +299,7 @@ def search_tenders(params):
         print("Search error:", e)
 
     return []
+
 
 def save_csv(data):
     with open(CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
@@ -338,14 +318,17 @@ def save_csv(data):
             "cpvs",
             "label",
             "attachment_count",
-"pdf_count",
-"excel_count",
-"image_count",
+            "pdf_count",
+            "excel_count",
+            "image_count",
             "link",
         ])
 
         for tender_id, t in data.items():
-            cpv_labels = [ALLOWED_CPVS.get(cpv, cpv) for cpv in t.get("cpvs", [])]
+            cpv_labels = [
+                ALLOWED_CPVS.get(cpv, cpv)
+                for cpv in t.get("cpvs", [])
+            ]
 
             writer.writerow([
                 t.get("date_found", ""),
@@ -359,12 +342,13 @@ def save_csv(data):
                 t.get("status", ""),
                 "|".join(t.get("cpvs", [])),
                 " | ".join(cpv_labels),
-t.get("attachment_count", 0),
-t.get("pdf_count", 0),
-t.get("excel_count", 0),
-t.get("image_count", 0),
-f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
+                t.get("attachment_count", 0),
+                t.get("pdf_count", 0),
+                t.get("excel_count", 0),
+                t.get("image_count", 0),
+                f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
             ])
+
 
 def format_new_message(t):
     cpv_lines = "\n".join(
@@ -439,10 +423,9 @@ def main():
                     "date_found": now_str(),
                     "last_seen": now_str(),
                     "attachment_count": t.get("attachment_count", 0),
-"pdf_count": t.get("pdf_count", 0),
-"excel_count": t.get("excel_count", 0),
-"image_count": t.get("image_count", 0),
-                    
+                    "pdf_count": t.get("pdf_count", 0),
+                    "excel_count": t.get("excel_count", 0),
+                    "image_count": t.get("image_count", 0),
                 }
 
                 new_count += 1
@@ -457,33 +440,38 @@ def main():
                 db[tid]["price"] = t.get("price") or db[tid].get("price", "")
                 db[tid]["deadline"] = t.get("deadline") or db[tid].get("deadline", "")
                 db[tid]["cpvs"] = merged_cpvs
-db[tid]["last_seen"] = now_str()
+                db[tid]["last_seen"] = now_str()
 
-db[tid]["attachment_count"] = t.get(
-    "attachment_count",
-    db[tid].get("attachment_count", 0)
-)
+                db[tid]["attachment_count"] = t.get(
+                    "attachment_count",
+                    db[tid].get("attachment_count", 0),
+                )
 
-db[tid]["pdf_count"] = t.get(
-    "pdf_count",
-    db[tid].get("pdf_count", 0)
-)
+                db[tid]["pdf_count"] = t.get(
+                    "pdf_count",
+                    db[tid].get("pdf_count", 0),
+                )
 
-db[tid]["excel_count"] = t.get(
-    "excel_count",
-    db[tid].get("excel_count", 0)
-)
+                db[tid]["excel_count"] = t.get(
+                    "excel_count",
+                    db[tid].get("excel_count", 0),
+                )
 
-db[tid]["image_count"] = t.get(
-    "image_count",
-    db[tid].get("image_count", 0)
-)
+                db[tid]["image_count"] = t.get(
+                    "image_count",
+                    db[tid].get("image_count", 0),
+                )
 
-if old_status != "Объявлен":
                 if old_status != "Объявлен":
                     db[tid]["status"] = "Объявлен"
                     updated_count += 1
-                    send_telegram(format_status_message(db[tid], old_status, "Объявлен"))
+                    send_telegram(
+                        format_status_message(
+                            db[tid],
+                            old_status,
+                            "Объявлен",
+                        )
+                    )
 
         time.sleep(2)
 
@@ -492,7 +480,13 @@ if old_status != "Объявлен":
             old_status = tender.get("status")
             tender["status"] = "Не найден в активном поиске"
             updated_count += 1
-            send_telegram(format_status_message(tender, old_status, tender["status"]))
+            send_telegram(
+                format_status_message(
+                    tender,
+                    old_status,
+                    tender["status"],
+                )
+            )
 
     save_data(db)
     save_csv(db)
