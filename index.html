@@ -384,6 +384,7 @@ body{
   .modal-grid{grid-template-columns:1fr}
 }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 
 <body>
@@ -473,6 +474,17 @@ body{
 </div>
 
 <script>
+const SUPABASE_URL =
+  "https://pibdlregqkpgwapdikdc.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 const CSV_FILE = "tenders.csv";
 
 let ALL_TENDERS = [];
