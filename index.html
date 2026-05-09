@@ -405,6 +405,9 @@ body{
       <button onclick="setFilter('45112700', this)">45112700<br>Ландшафтные работы</button>
       <button onclick="setFilter('45112723', this)">45112723<br>Игровые площадки</button>
       <button onclick="setFilter('45112710', this)">45112710<br>Зелёные зоны</button>
+      <button onclick="setFilter('ignored', this)">
+  🗑 Ignored tenders
+</button>
     </div>
   </div>
 
@@ -628,6 +631,9 @@ function setFilter(filter, button){
 }
 
 function shouldShowTender(t){
+  const isIgnored =
+  IGNORED_TENDERS.includes(t.id);
+  
   if(CURRENT_FILTER !== "ignored" && IGNORED_TENDERS.includes(t.id)){
     return false;
   }
@@ -707,7 +713,7 @@ function ignoreTender(tenderId){
   if(!IGNORED_TENDERS.includes(tenderId)){
     IGNORED_TENDERS.push(tenderId);
   }
-
+  
   localStorage.setItem(
     "ignoredTenders",
     JSON.stringify(IGNORED_TENDERS)
@@ -717,6 +723,19 @@ function ignoreTender(tenderId){
   render();
 }
 
+function restoreTender(tenderId){
+
+  IGNORED_TENDERS =
+    IGNORED_TENDERS.filter(x => x !== tenderId);
+
+  localStorage.setItem(
+    "ignoredTenders",
+    JSON.stringify(IGNORED_TENDERS)
+  );
+
+  closeModal();
+  render();
+}
 function openModal(tenderId){
   const t = ALL_TENDERS.find(x => x.id === tenderId);
 
@@ -772,10 +791,22 @@ function openModal(tenderId){
         Официальный тендер ↗
       </a>
 
-      <button class="btn" onclick="ignoreTender('${t.id}')">
-        🗑 Ignore tender
-      </button>
-    </div>
+${
+  IGNORED_TENDERS.includes(t.id)
+  ?
+  `
+  <button class="btn" onclick="restoreTender('${t.id}')">
+    ♻ Restore tender
+  </button>
+  `
+  :
+  `
+  <button class="btn" onclick="ignoreTender('${t.id}')">
+    🗑 Ignore tender
+  </button>
+  `
+}
+</div>
   `;
 
   document.getElementById("tenderModal").style.display = "block";
