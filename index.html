@@ -17,8 +17,6 @@
   --amber:#d97706;--amber2:#fef3c7;--red:#dc2626;--red2:#fee2e2;--purple:#7c3aed;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
-/* LOGIN */
 #loginScreen{position:fixed;inset:0;z-index:500;display:grid;grid-template-columns:1fr 420px}
 #loginScreen.hidden{display:none}
 .ls-left{background:#eef1f8;border-right:1px solid var(--border);padding:40px 48px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
@@ -29,18 +27,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ls-title span{color:var(--blue)}
 .ls-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px}
 .ls-mockup{background:white;border-radius:14px;padding:14px;box-shadow:0 8px 32px rgba(79,110,247,0.12);border:1px solid #e2e8f0;max-width:440px;margin-bottom:18px;position:relative}
-.ls-mockup-dots{display:flex;gap:4px;margin-bottom:10px}
-.ls-mockup-dot{width:8px;height:8px;border-radius:50%}
-.ls-mockup-inner{display:flex;gap:10px}
-.ls-mockup-sb{display:flex;flex-direction:column;gap:6px;align-items:center;padding:4px 0}
-.ls-mockup-icon{width:24px;height:24px;border-radius:7px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;font-size:11px}
-.ls-mockup-icon.act{background:var(--blue)}
-.ls-mockup-body{flex:1}
-.ls-mockup-chart{background:#f8f9fc;border-radius:8px;padding:8px;margin-bottom:8px;height:60px;position:relative;overflow:hidden}
-.ls-mockup-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
-.ls-mockup-stat{background:#f8f9fc;border-radius:6px;padding:6px 8px}
-.ls-mockup-stat div:first-child{font-size:9px;color:#9ca3af}
-.ls-mockup-stat div:last-child{font-size:13px;font-weight:700}
 .ls-feat-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:440px;margin-bottom:14px}
 .ls-feat-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:flex;align-items:flex-start;gap:10px}
 .ls-feat-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
@@ -64,12 +50,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ls-btn{width:100%;padding:13px;margin-top:16px;background:var(--blue);border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.2s}
 .ls-btn:hover{background:#4338ca}
 .ls-error{color:var(--red);font-size:12px;margin-top:10px;text-align:center}
-
-/* LAYOUT */
 .wrapper{display:none;flex-direction:row;min-height:100vh}
 .wrapper.show{display:flex}
-
-/* SIDEBAR */
 .sidebar{width:260px;background:linear-gradient(180deg,#1c2331 0%,#161c28 100%);border-right:1px solid rgba(255,255,255,0.05);color:white;padding:0;display:flex;flex-direction:column;flex-shrink:0}
 .sb-header{padding:20px;border-bottom:1px solid rgba(255,255,255,0.06)}
 .logo{font-size:17px;font-weight:700;color:white;display:flex;align-items:center;gap:8px}
@@ -84,8 +66,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .sb-status{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px}
 .sb-status-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
 .sb-update{font-size:11px;color:rgba(255,255,255,0.3)}
-
-/* MAIN */
 .main{flex:1;padding:24px;overflow-x:hidden}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 12px rgba(0,0,0,0.06);padding:12px 0;margin-left:-24px;margin-right:-24px;padding-left:24px;padding-right:24px;border-bottom:1px solid rgba(0,0,0,0.06)}
 .topbar-title{font-size:22px;font-weight:800;color:var(--text)}
@@ -94,16 +74,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .live-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:var(--green2);color:var(--green);font-size:12px;font-weight:700;border:1px solid #bbf7d0}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 .logout-btn{background:#1c2331;color:white;border:none;padding:8px 16px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer}
-
 .search-wrap{position:relative;margin-bottom:16px}
 .search-wrap input{width:100%;padding:12px 16px 12px 42px;border:1px solid var(--border);border-radius:12px;font-size:14px;background:var(--card);color:var(--text);outline:none;transition:border-color 0.2s}
 .search-wrap input:focus{border-color:var(--blue)}
 .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px}
-
 .quick-filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
 .qf{border:1px solid var(--border);background:var(--card);padding:7px 16px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;transition:0.15s;color:var(--text2)}
 .qf:hover,.active-qf{background:var(--blue);color:white;border-color:var(--blue)}
-
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 .stat{background:var(--card);padding:18px 20px;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden}
 .stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
@@ -114,9 +91,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .stat.green{border-top:3px solid var(--green)}.stat.green .stat-label{color:var(--green)}.stat.green .stat-val{color:var(--text)}
 .stat.amber{border-top:3px solid var(--amber)}.stat.amber .stat-label{color:var(--amber)}.stat.amber .stat-val{color:var(--text)}
 .stat.purple{border-top:3px solid var(--purple)}.stat.purple .stat-label{color:var(--purple)}.stat.purple .stat-val{color:var(--text)}
-
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px}
-
 .card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border);transition:0.2s}
 .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:#c7d2fe}
 .card.card-high{border-color:#fca5a5;box-shadow:0 0 0 2px rgba(239,68,68,0.06),0 2px 12px rgba(239,68,68,0.08)}
@@ -141,11 +116,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .status-badge,.review-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;margin:1px 0}
 .status-active{background:#dbeafe;color:#1d4ed8}
 .status-warning{background:#fef3c7;color:#92400e}
-.status-success{background:#dcfce7;color:#166534}
+.status-success{background:#dcfce7;color:#166634}
 .status-ended{background:var(--bg2);color:var(--text2)}
 .review-new{background:var(--bg2);color:var(--text2)}
 .review-review{background:#fef3c7;color:#92400e}
-.review-relevant{background:#dcfce7;color:#166534}
+.review-relevant{background:#dcfce7;color:#166634}
 .review-ignored{background:#fee2e2;color:#991b1b}
 .count-danger{color:#ef4444;font-weight:800}
 .count-warning{color:#f59e0b;font-weight:800}
@@ -161,11 +136,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
 .btn-outline:hover{border-color:var(--blue);color:var(--blue);background:var(--blue2)}
 .btn-warning{background:#92400e}
-.btn-success{background:#166534}
+.btn-success{background:#166634}
 .btn-danger{background:#991b1b}
 .btn-muted{background:#374151}
 .empty{background:var(--card);padding:30px;border-radius:16px;text-align:center;color:var(--text2)}
-
 .analytics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 .an-card{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--border)}
 .an-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:14px}
@@ -185,8 +159,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .att-link{color:var(--blue);font-size:11px;font-weight:700;cursor:pointer}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 .blink{animation:blink 1.2s infinite}
-
-/* DRAWER */
 .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,0.3);backdrop-filter:blur(2px);z-index:8000}
 .drawer-overlay.show{display:block}
 .drawer{position:fixed;top:0;right:-540px;width:520px;height:100vh;background:var(--card);border-left:1px solid var(--border);z-index:8001;display:flex;flex-direction:column;transition:right 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.1)}
@@ -202,13 +174,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .drawer-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px}
 .drawer-label{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
 .drawer-value{font-size:14px;font-weight:600;color:var(--text)}
-.doc-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.doc-box{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
-.doc-box-icon{font-size:22px;margin-bottom:4px}
-.doc-box-num{font-size:20px;font-weight:800}
-.doc-box-label{font-size:11px;color:var(--text3)}
 .drawer-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
-
 @media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}#loginScreen{grid-template-columns:1fr}}
 @media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}.ls-left{display:none}.drawer{width:100%;right:-100%}}
@@ -216,7 +182,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <div class="ls-left">
     <div class="ls-logo"><div class="ls-logo-icon">🏛️</div> GE Tender</div>
@@ -284,7 +249,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<!-- APP -->
 <div class="wrapper" id="appWrapper">
   <div class="sidebar">
     <div class="sb-header"><div class="logo">🇬🇪 Tender Monitor</div></div>
@@ -307,7 +271,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="sb-update" id="lastUpdate">—</div>
     </div>
   </div>
-
   <div class="main">
     <div class="topbar">
       <div><div class="topbar-title">🇬🇪 Georgia Procurement Intelligence</div><div class="topbar-sub">AI-powered CPV monitoring & tender lifecycle tracking</div></div>
@@ -316,12 +279,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <button class="logout-btn" onclick="logoutUser()">Logout</button>
       </div>
     </div>
-
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Поиск: Rustavi, NAT26000, 45112723..."/>
     </div>
-
     <div class="quick-filters">
       <button onclick="setQuickFilter('all')" class="qf active-qf">ALL</button>
       <button onclick="setQuickFilter('high')" class="qf">HIGH VALUE</button>
@@ -329,17 +290,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button onclick="setQuickFilter('landscape')" class="qf">LANDSCAPE</button>
       <button onclick="setQuickFilter('soon')" class="qf">DEADLINE SOON</button>
     </div>
-
     <div class="stats">
       <div class="stat blue"><div class="stat-label">ACTIVE TENDERS</div><div class="stat-val" id="totalCount">0</div><div class="stat-sub">Объявлен</div><div class="stat-icon">📋</div></div>
       <div class="stat green"><div class="stat-label">NEW TODAY</div><div class="stat-val" id="todayCount">0</div><div class="stat-sub">Новых</div><div class="stat-icon">✨</div></div>
       <div class="stat amber"><div class="stat-label">NEED REVIEW</div><div class="stat-val" id="reviewCount">0</div><div class="stat-sub">На проверку</div><div class="stat-icon">👁️</div></div>
       <div class="stat purple"><div class="stat-label">TOTAL VALUE</div><div class="stat-val" id="budgetCount">—</div><div class="stat-sub">Общая сумма</div><div class="stat-icon">💰</div></div>
     </div>
-
     <div class="grid" id="tenderGrid"></div>
-
-<div class="analytics">
+    <div class="analytics">
       <div class="an-card"><div class="an-title">ТОП МУНИЦИПАЛИТЕТОВ</div><div id="topOrgs"></div></div>
       <div class="an-card"><div class="an-title">РАСПРЕДЕЛЕНИЕ ПО CPV</div><div class="donut-wrap"><canvas id="cpvChart" width="70" height="70" style="flex-shrink:0;width:70px!important;height:70px!important"></canvas><div class="donut-legend" id="cpvLegend"></div></div></div>
       <div class="an-card"><div class="an-title">ДЕДЛАЙНЫ</div><div id="deadlineStats"></div></div>
@@ -348,13 +306,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<!-- DRAWER -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="sideDrawer">
-  <div class="drawer-header">
-    <h2 id="drawerTitle">Tender</h2>
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
-  </div>
+  <div class="drawer-header"><h2 id="drawerTitle">Tender</h2><button class="drawer-close" onclick="closeDrawer()">✕</button></div>
   <div class="drawer-body" id="drawerBody"></div>
   <div class="drawer-actions" id="drawerActions"></div>
 </div>
@@ -370,17 +324,14 @@ async function checkAuth(){
   if(data.session){showApp();loadData();}
   else{showLogin();}
 }
-
 function showLogin(){
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('appWrapper').classList.remove('show');
 }
-
 function showApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appWrapper').classList.add('show');
 }
-
 async function loginUser(){
   const email=document.getElementById('loginEmail').value;
   const password=document.getElementById('loginPassword').value;
@@ -389,9 +340,7 @@ async function loginUser(){
   document.getElementById('loginError').textContent='';
   showApp();loadData();
 }
-
 async function logoutUser(){await supabaseClient.auth.signOut();location.reload();}
-
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!document.getElementById('loginScreen').classList.contains('hidden'))loginUser();
   if(e.key==='Escape')closeDrawer();
@@ -400,11 +349,9 @@ document.addEventListener('keydown',e=>{
 let ALL_TENDERS=[];
 let CURRENT_FILTER="all";
 let QUICK_FILTER="all";
-let REVIEW_STATUSES=JSON.parse(localStorage.getItem("tenderReviewStatuses")||"{}");
-let TENDER_NOTES=JSON.parse(localStorage.getItem("tenderNotes")||"{}");
-let IGNORED_TENDERS=JSON.parse(localStorage.getItem("ignoredTenders")||"[]");
-IGNORED_TENDERS.forEach(id=>{if(!REVIEW_STATUSES[id])REVIEW_STATUSES[id]="ignored";});
-localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
+let REVIEW_STATUSES={};
+let TENDER_NOTES={};
+let IGNORED_TENDERS=[];
 
 const CPV_NAMES={"45100000":"Подготовка стройплощадки","45112720":"Спорт / зоны отдыха","45112700":"Ландшафт","45112723":"Игровые площадки","45112710":"Зелёные зоны"};
 const CPV_COLORS={"45100000":"#f59e0b","45112720":"#3b82f6","45112700":"#10b981","45112723":"#ec4899","45112710":"#8b5cf6"};
@@ -416,7 +363,9 @@ function parseCSV(text){
     if(char==='"'&&next==='"'){current+='"';i++;}
     else if(char==='"'){insideQuotes=!insideQuotes;}
     else if(char===","&&!insideQuotes){row.push(current);current="";}
-    else if((char==="\n"||char==="\r")&&!insideQuotes){if(current||row.length){row.push(current);rows.push(row);row=[];current="";}}
+    else if((char==="
+"||char==="
+")&&!insideQuotes){if(current||row.length){row.push(current);rows.push(row);row=[];current="";}}
     else{current+=char;}
   }
   if(current||row.length){row.push(current);rows.push(row);}
@@ -431,18 +380,14 @@ async function saveTenderNote(tenderId){
   if(!tenderId)return;
   const note=document.getElementById("tenderNote")?.value||"";
   TENDER_NOTES[tenderId]=note;
-  localStorage.setItem("tenderNotes",JSON.stringify(TENDER_NOTES));
   try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:REVIEW_STATUSES[tenderId]||"new",note});}catch(e){}
   closeDrawer();render();updateStats();
 }
-
 async function setTenderReviewStatus(tenderId,status){
   if(!tenderId)return;
   REVIEW_STATUSES[tenderId]=status;
   if(status==="ignored"){if(!IGNORED_TENDERS.includes(tenderId))IGNORED_TENDERS.push(tenderId);}
   else{IGNORED_TENDERS=IGNORED_TENDERS.filter(x=>x!==tenderId);}
-  localStorage.setItem("tenderReviewStatuses",JSON.stringify(REVIEW_STATUSES));
-  localStorage.setItem("ignoredTenders",JSON.stringify(IGNORED_TENDERS));
   try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:status,note:TENDER_NOTES[tenderId]||""});}catch(e){}
   closeDrawer();render();updateStats();
 }
@@ -452,13 +397,11 @@ function getCpvs(t){
   const text=((t.label||"")+" "+(t.name||"")).toLowerCase();
   return Object.keys(CPV_NAMES).filter(code=>text.includes(code));
 }
-
 function renderBadges(t){
   const cpvs=getCpvs(t);
   if(!cpvs.length)return`<span class="badge default">Другое</span>`;
   return cpvs.map(code=>`<span class="badge c${code}">${code} — ${CPV_NAMES[code]||"CPV"}</span>`).join("");
 }
-
 function getStatusClass(status){
   const s=(status||"").toLowerCase();
   if(s.includes("объявлен")||s.includes("приём"))return"status-active";
@@ -466,7 +409,6 @@ function getStatusClass(status){
   if(s.includes("победитель")||s.includes("договор"))return"status-success";
   return"status-ended";
 }
-
 function getDeadlineCountdown(deadline){
   if(!deadline)return{text:"—",class:"count-normal"};
   const parts=deadline.split(".");
@@ -478,14 +420,11 @@ function getDeadlineCountdown(deadline){
   if(days<=7)return{text:days+" DAYS LEFT",class:"count-warning"};
   return{text:days+" DAYS LEFT",class:"count-safe"};
 }
-
 function getPriority(price){
   const n=parseFloat((price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));
   if(n>=1000000)return["HIGH","high"];if(n>=300000)return["MEDIUM","medium"];return["LOW","low"];
 }
-
 function formatBudget(num){if(num>=1000000)return(num/1000000).toFixed(1)+" M";if(num>=1000)return Math.round(num/1000)+"K";return Math.round(num);}
-
 function setQuickFilter(type){
   QUICK_FILTER=type;
   document.querySelectorAll(".qf").forEach(x=>x.classList.remove("active-qf"));
@@ -493,13 +432,11 @@ function setQuickFilter(type){
   if(btn)btn.classList.add("active-qf");
   render();
 }
-
 function setFilter(filter,button){
   CURRENT_FILTER=filter;
   document.querySelectorAll(".menu-btn").forEach(btn=>btn.classList.remove("active"));
   button.classList.add("active");render();
 }
-
 function shouldShowTender(t){
   const rs=getReviewStatus(t.id);
   if(CURRENT_FILTER==="review"&&rs!=="review")return false;
@@ -517,7 +454,6 @@ function shouldShowTender(t){
   if(QUICK_FILTER==="landscape"&&!cpvs.some(c=>c.startsWith("451127")))return false;
   return true;
 }
-
 function render(){
   const filtered=ALL_TENDERS.filter(shouldShowTender);
   const grid=document.getElementById("tenderGrid");
@@ -531,15 +467,10 @@ function render(){
     if(rs==="review")cardClass+=" card-review";
     if(rs==="relevant")cardClass+=" card-relevant";
     const pdfN=parseInt(t.pdf_count||0)||0;
-    const xlsN=parseInt(t.xls_count||0)||0;
-    const imgN=parseInt(t.img_count||0)||0;
+    const xlsN=parseInt(t.excel_count||0)||0;
+    const imgN=parseInt(t.image_count||0)||0;
     const totalN=pdfN+xlsN+imgN;
-    const docHtml=totalN>0?`<div class="doc-counts">
-      <div class="doc-item">📄 <strong>${pdfN}</strong> PDF</div>
-      <div class="doc-item">📊 <strong>${xlsN}</strong> Excel</div>
-      <div class="doc-item">🖼 <strong>${imgN}</strong> Images</div>
-      <div class="doc-item" style="margin-left:auto">📎 <strong>${totalN}</strong> Всего</div>
-    </div>`:"";
+    const docHtml=totalN>0?`<div class="doc-counts"><div class="doc-item">📄 <strong>${pdfN}</strong> PDF</div><div class="doc-item">📊 <strong>${xlsN}</strong> Excel</div><div class="doc-item">🖼 <strong>${imgN}</strong> Images</div><div class="doc-item" style="margin-left:auto">📎 <strong>${totalN}</strong> Всего</div></div>`:"";
     return`<div class="${cardClass}">
       <div class="card-top"><div class="badges">${renderBadges(t)}</div><span class="priority ${priorityClass}">${priority}</span></div>
       <div class="card-title">${t.name||"Без названия"}</div>
@@ -568,9 +499,7 @@ function render(){
     </div>`;
   }).join("");
 }
-
 let currentDrawerTenderId=null;
-
 function openDrawer(tenderId){
   const t=ALL_TENDERS.find(x=>x.id===tenderId);if(!t)return;
   currentDrawerTenderId=tenderId;
@@ -578,8 +507,7 @@ function openDrawer(tenderId){
   const c=getDeadlineCountdown(t.deadline);
   document.getElementById("drawerTitle").textContent=t.reg_id||"Tender";
   document.getElementById("drawerBody").innerHTML=`
-    <div class="drawer-section">
-      <div class="drawer-section-title">Основная информация</div>
+    <div class="drawer-section"><div class="drawer-section-title">Основная информация</div>
       <div class="drawer-grid">
         <div class="drawer-item"><div class="drawer-label">Статус</div><div class="drawer-value"><span class="status-badge ${getStatusClass(t.status)}">${t.status||"—"}</span></div></div>
         <div class="drawer-item"><div class="drawer-label">Review</div><div class="drawer-value"><span class="review-badge ${getReviewClass(t.id)}">${getReviewLabel(t.id)}</span></div></div>
@@ -591,12 +519,8 @@ function openDrawer(tenderId){
         <div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Название</div><div class="drawer-value" style="font-size:13px">${t.name||"—"}</div></div>
       </div>
     </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">CPV Categories</div>
-      <div style="margin-bottom:4px">${renderBadges(t)}</div>
-    </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">Заметки</div>
+    <div class="drawer-section"><div class="drawer-section-title">CPV Categories</div><div style="margin-bottom:4px">${renderBadges(t)}</div></div>
+    <div class="drawer-section"><div class="drawer-section-title">Заметки</div>
       <textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:'Inter',sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">${TENDER_NOTES[t.id]||""}</textarea>
     </div>`;
   document.getElementById("drawerActions").innerHTML=`
@@ -610,14 +534,11 @@ function openDrawer(tenderId){
   document.getElementById("sideDrawer").classList.add("open");
   document.getElementById("drawerOverlay").classList.add("show");
 }
-
 function closeDrawer(){
   document.getElementById("sideDrawer").classList.remove("open");
   document.getElementById("drawerOverlay").classList.remove("show");
 }
-
 let cpvChartInstance=null;
-
 function updateStats(){
   const active=ALL_TENDERS.filter(t=>getReviewStatus(t.id)!=="ignored");
   const today=new Date().toISOString().slice(0,10);
@@ -636,19 +557,13 @@ function updateStats(){
   document.getElementById("lastUpdate").textContent="Обновлено: "+new Date().toLocaleString("ru-RU");
   updateAnalytics(active,reviewN);
 }
-
 function updateAnalytics(active,reviewN){
   const orgMap={};
   active.forEach(t=>{if(t.org)orgMap[t.org]=(orgMap[t.org]||0)+1;});
   const topOrgs=Object.entries(orgMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const maxOrg=topOrgs[0]?topOrgs[0][1]:1;
   document.getElementById("topOrgs").innerHTML=topOrgs.map(([org,count])=>`
-    <div class="an-row">
-      <div class="an-label" title="${org}">${org.length>16?org.slice(0,16)+"...":org}</div>
-      <div class="an-bar-bg"><div class="an-bar-fill" style="width:${Math.round(count/maxOrg*100)}%"></div></div>
-      <div class="an-num">${count}</div>
-    </div>`).join("");
-
+    <div class="an-row"><div class="an-label" title="${org}">${org.length>16?org.slice(0,16)+"...":org}</div><div class="an-bar-bg"><div class="an-bar-fill" style="width:${Math.round(count/maxOrg*100)}%"></div></div><div class="an-num">${count}</div></div>`).join("");
   const cpvMap={};
   active.forEach(t=>getCpvs(t).forEach(c=>{cpvMap[c]=(cpvMap[c]||0)+1;}));
   const cpvEntries=Object.entries(cpvMap).sort((a,b)=>b[1]-a[1]);
@@ -658,7 +573,6 @@ function updateAnalytics(active,reviewN){
   cpvChartInstance=new Chart(ctx,{type:"doughnut",data:{labels:cpvEntries.map(([c])=>c),datasets:[{data:cpvEntries.map(([,n])=>n),backgroundColor:cpvEntries.map(([c])=>CPV_COLORS[c]||"#94a3b8"),borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:"65%",animation:{duration:500}}});
   document.getElementById("cpvLegend").innerHTML=cpvEntries.slice(0,5).map(([code,count])=>`
     <div class="dl-item"><div class="dl-dot" style="background:${CPV_COLORS[code]||'#94a3b8'}"></div><span>${code}</span><span style="margin-left:auto;font-weight:700;color:var(--text)">${count}(${Math.round(count/total*100)}%)</span></div>`).join("");
-
   const now=new Date();
   let d3=0,d7=0,d14=0,dMore=0;
   active.forEach(t=>{
@@ -670,12 +584,7 @@ function updateAnalytics(active,reviewN){
   });
   const dl=[{l:"0–3 дня",n:d3,c:"#ef4444"},{l:"4–7 дней",n:d7,c:"#f59e0b"},{l:"8–14 дней",n:d14,c:"#3b82f6"},{l:"14+ дней",n:dMore,c:"#22c55e"}];
   document.getElementById("deadlineStats").innerHTML=dl.map(r=>`
-    <div class="an-row">
-      <div class="an-label" style="color:${r.c}">⭐ ${r.l}</div>
-      <div class="an-bar-bg"><div class="an-bar-fill" style="width:${active.length?Math.round(r.n/active.length*100):0}%;background:${r.c}"></div></div>
-      <div class="an-num">${r.n}</div>
-    </div>`).join("");
-
+    <div class="an-row"><div class="an-label" style="color:${r.c}">⭐ ${r.l}</div><div class="an-bar-bg"><div class="an-bar-fill" style="width:${active.length?Math.round(r.n/active.length*100):0}%;background:${r.c}"></div></div><div class="an-num">${r.n}</div></div>`).join("");
   const urgent=active.filter(t=>{if(!t.deadline)return false;const p=t.deadline.split(".");if(p.length!==3)return false;return Math.ceil((new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]))-now)/(1000*60*60*24))<=3;}).length;
   const highVal=active.filter(t=>{const n=parseFloat((t.price||"").replace(/GEL/g,"").replace(/`/g,"").replace(/'/g,"").replace(/\s/g,""));return n>=500000;}).length;
   document.getElementById("attentionItems").innerHTML=`
@@ -686,23 +595,40 @@ function updateAnalytics(active,reviewN){
 }
 
 async function loadData(){
+  // ✅ FIX 1: Her yüklemede temizle
+  ALL_TENDERS=[];
+  REVIEW_STATUSES={};
+  TENDER_NOTES={};
+  IGNORED_TENDERS=[];
+
+  // ✅ FIX 2: Önce Supabase'den review durumlarını al (ignored dahil)
+  try{
+    const{data,error}=await supabaseClient.from("tender_reviews").select("*");
+    if(!error&&data){
+      data.forEach(row=>{
+        REVIEW_STATUSES[row.tender_id]=row.review_status||"new";
+        TENDER_NOTES[row.tender_id]=row.note||"";
+        if(row.review_status==="ignored"){
+          IGNORED_TENDERS.push(row.tender_id);
+        }
+      });
+    }
+  }catch(e){console.log("Supabase error",e);}
+
+  // Sonra CSV'yi yükle
   try{
     const res=await fetch(CSV_FILE+"?v="+Date.now());
     const text=await res.text();
     const rows=parseCSV(text);
-    const headers=rows.shift().map(h=>h.replace(/\uFEFF/g,"").trim());
+    const headers=rows.shift().map(h=>h.replace(/﻿/g,"").trim());
     ALL_TENDERS=rows.map(r=>{const obj={};headers.forEach((h,i)=>obj[h]=r[i]||"");return obj;}).filter(t=>t.id&&t.id.trim()!=="");
   }catch(e){console.log("CSV error",e);}
-  try{
-    const{data,error}=await supabaseClient.from("tender_reviews").select("*");
-    if(!error&&data){data.forEach(row=>{REVIEW_STATUSES[row.tender_id]=row.review_status||"new";TENDER_NOTES[row.tender_id]=row.note||"";});}
-  }catch(e){console.log("Supabase error",e);}
+
   updateStats();render();
 }
 
 document.getElementById("searchInput").addEventListener("input",render);
 setInterval(()=>{supabaseClient.auth.getSession().then(({data})=>{if(data.session)loadData();});},5*60*1000);
-
 checkAuth();
 </script>
 </body>
