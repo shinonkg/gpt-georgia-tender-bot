@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://pibdlregqkpgwapdikdc.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv")
 
 DATA_FILE = "tender_data.json"
 CSV_FILE = "tenders.csv"
@@ -20,6 +22,20 @@ ALLOWED_CPVS = {
     "45112723": "45112723 - Ландшафтные работы на игровых площадках",
     "45112710": "45112710 - Ландшафтные работы в зеленых зонах",
 }
+
+# Реальные статусы с сайта
+REAL_STATUSES = [
+    "Объявлен",
+    "Приём предложений начался",
+    "Приём предложений завершён",
+    "Отбор/оценка",
+    "Победитель выявлен",
+    "Завершён с отрицательным результатом",
+    "Не состоялся",
+    "Прекращён",
+    "Идёт подготовка договора",
+    "Договор подписан",
+]
 
 SEARCH_PARAMS = [
     {"app_basecode": "18999", "app_codes": "", "label": ALLOWED_CPVS["45100000"]},
@@ -46,11 +62,32 @@ def save_data(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def get_ignored_tenders():
+    """Supabase'den ignored tender listesini çek"""
+    ignored = set()
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/tender_reviews?review_status=eq.ignored&select=tender_id",
+            headers={
+                "apikey": SUPABASE_KEY,
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+            },
+            timeout=15,
+        )
+        if r.status_code == 200:
+            data = r.json()
+            for row in data:
+                ignored.add(str(row.get("tender_id", "")))
+            print(f"Ignored tenders from Supabase: {len(ignored)}")
+    except Exception as e:
+        print(f"Supabase error: {e}")
+    return ignored
+
+
 def send_telegram(message):
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("Telegram secrets missing")
         return
-
     try:
         r = requests.post(
             f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
@@ -62,7 +99,7 @@ def send_telegram(message):
             },
             timeout=20,
         )
-        print("Telegram:", r.status_code, r.text[:120])
+        print("Telegram:", r.status_code)
     except Exception as e:
         print("Telegram error:", e)
 
@@ -77,81 +114,76 @@ def get_session():
         "Origin": "https://tenders.procurement.gov.ge",
         "Content-Type": "application/x-www-form-urlencoded",
     })
-
     try:
         session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
         time.sleep(1)
     except Exception as e:
         print("Session init error:", e)
-
     return session
+
+
+def get_tender_status(session, tender_id):
+    """Tender detay sayfasından gerçek statüyü çek"""
+    try:
+        r = session.get(
+            f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
+            timeout=20,
+        )
+        if r.status_code != 200:
+            return None
+
+        html = r.text
+
+        # Gerçek statülerden birini ara
+        for status in REAL_STATUSES:
+            if status in html:
+                return status
+
+        return None
+
+    except Exception as e:
+        print(f"Status fetch error for {tender_id}: {e}")
+        return None
 
 
 def extract_cpvs(text):
     matches = re.findall(r"\b\d{8}\b", text)
     cpvs = []
-
     for cpv in matches:
         if cpv in ALLOWED_CPVS and cpv not in cpvs:
             cpvs.append(cpv)
-
     return cpvs
 
 
 def merge_cpvs(*lists):
     merged = []
-
     for cpv_list in lists:
         for cpv in cpv_list or []:
             if cpv in ALLOWED_CPVS and cpv not in merged:
                 merged.append(cpv)
-
     return merged
 
 
 def get_tender_attachments(session, tender_id):
-    result = {
-        "attachment_count": 0,
-        "pdf_count": 0,
-        "excel_count": 0,
-        "image_count": 0,
-    }
-
+    result = {"attachment_count": 0, "pdf_count": 0, "excel_count": 0, "image_count": 0}
     try:
-        url = (
-            f"https://tenders.procurement.gov.ge/public/"
-            f"?lang=ru&go={tender_id}"
+        r = session.get(
+            f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
+            timeout=20,
         )
-
-        r = session.get(url, timeout=20)
-
         if r.status_code != 200:
             return result
 
         soup = BeautifulSoup(r.text, "html.parser")
         links = soup.find_all("a", href=True)
-
         attachment_links = []
 
         for a in links:
             href = a.get("href", "").lower()
-
-            if any(x in href for x in [
-                ".pdf",
-                ".xls",
-                ".xlsx",
-                ".doc",
-                ".docx",
-                ".jpg",
-                ".jpeg",
-                ".png",
-                ".zip",
-                "download",
-            ]):
+            if any(x in href for x in [".pdf", ".xls", ".xlsx", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip", "download"]):
                 attachment_links.append(href)
 
         result["attachment_count"] = len(attachment_links)
-
         for href in attachment_links:
             if ".pdf" in href:
                 result["pdf_count"] += 1
@@ -162,19 +194,16 @@ def get_tender_attachments(session, tender_id):
 
     except Exception as e:
         print("Attachment parse error:", e)
-
     return result
 
 
 def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
     tenders = []
-
     rows = soup.find_all("tr", id=re.compile(r"^A\d+"))
 
     for row in rows:
         row_text = row.get_text(" ", strip=True)
-
         tender_id = ""
 
         row_id = row.get("id", "")
@@ -229,46 +258,27 @@ def parse_tenders(html):
 
 def search_tenders(params):
     session = get_session()
-
     data = {
-        "action": "search_app",
-        "app_t": "0",
-        "search": "1",
-        "app_reg_id": "",
-        "app_shems_id": "0",
-        "org_a": "",
-        "app_monac_id": "0",
-        "org_b": "",
-        "app_particip_status_id": "0",
-        "app_donor_id": "0",
-        "app_status": "10",
-        "app_agr_status": "0",
+        "action": "search_app", "app_t": "0", "search": "1",
+        "app_reg_id": "", "app_shems_id": "0", "org_a": "",
+        "app_monac_id": "0", "org_b": "", "app_particip_status_id": "0",
+        "app_donor_id": "0", "app_status": "10", "app_agr_status": "0",
         "app_type": "0",
         "app_basecode": params.get("app_basecode", "0"),
         "app_codes": params.get("app_codes", ""),
-        "app_date_type": "1",
-        "app_date_from": "",
-        "app_date_tlll": "",
-        "app_amount_from": "",
-        "app_amount_to": "",
-        "app_currency": "2",
-        "app_pricelist": "0",
+        "app_date_type": "1", "app_date_from": "", "app_date_tlll": "",
+        "app_amount_from": "", "app_amount_to": "",
+        "app_currency": "2", "app_pricelist": "0",
     }
 
     try:
-        session.get(
-            "https://tenders.procurement.gov.ge/public/?lang=ru",
-            timeout=20,
-        )
-
+        session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
         time.sleep(1)
 
         r = session.post(
             "https://tenders.procurement.gov.ge/public/library/controller.php",
-            data=data,
-            timeout=30,
+            data=data, timeout=30,
         )
-
         print(f"Search {params['label']}:", r.status_code, len(r.text))
 
         if r.status_code == 200:
@@ -276,24 +286,13 @@ def search_tenders(params):
 
             for tender in tenders:
                 tender_id = tender.get("id")
-
                 if tender_id:
                     attachments = get_tender_attachments(session, tender_id)
                     tender.update(attachments)
-
-                    print(
-                        f"  Attachments {tender.get('reg_id') or tender_id}: "
-                        f"{attachments['attachment_count']} total, "
-                        f"{attachments['pdf_count']} pdf, "
-                        f"{attachments['excel_count']} excel, "
-                        f"{attachments['image_count']} images"
-                    )
-
+                    print(f"  {tender.get('reg_id') or tender_id}: {attachments['attachment_count']} attachments")
                     time.sleep(0.4)
 
             return tenders
-
-        print("Response preview:", r.text[:250])
 
     except Exception as e:
         print("Search error:", e)
@@ -304,58 +303,27 @@ def search_tenders(params):
 def save_csv(data):
     with open(CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
-
         writer.writerow([
-            "date_found",
-            "last_seen",
-            "id",
-            "reg_id",
-            "name",
-            "org",
-            "price",
-            "deadline",
-            "status",
-            "cpvs",
-            "label",
-            "attachment_count",
-            "pdf_count",
-            "excel_count",
-            "image_count",
-            "link",
+            "date_found", "last_seen", "id", "reg_id", "name", "org",
+            "price", "deadline", "status", "cpvs", "label",
+            "attachment_count", "pdf_count", "excel_count", "image_count", "link",
         ])
-
         for tender_id, t in data.items():
-            cpv_labels = [
-                ALLOWED_CPVS.get(cpv, cpv)
-                for cpv in t.get("cpvs", [])
-            ]
-
+            cpv_labels = [ALLOWED_CPVS.get(cpv, cpv) for cpv in t.get("cpvs", [])]
             writer.writerow([
-                t.get("date_found", ""),
-                t.get("last_seen", ""),
-                tender_id,
-                t.get("reg_id", ""),
-                t.get("name", ""),
-                t.get("org", ""),
-                t.get("price", ""),
-                t.get("deadline", ""),
-                t.get("status", ""),
-                "|".join(t.get("cpvs", [])),
+                t.get("date_found", ""), t.get("last_seen", ""),
+                tender_id, t.get("reg_id", ""), t.get("name", ""),
+                t.get("org", ""), t.get("price", ""), t.get("deadline", ""),
+                t.get("status", ""), "|".join(t.get("cpvs", [])),
                 " | ".join(cpv_labels),
-                t.get("attachment_count", 0),
-                t.get("pdf_count", 0),
-                t.get("excel_count", 0),
-                t.get("image_count", 0),
+                t.get("attachment_count", 0), t.get("pdf_count", 0),
+                t.get("excel_count", 0), t.get("image_count", 0),
                 f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
             ])
 
 
 def format_new_message(t):
-    cpv_lines = "\n".join(
-        f"🏷 {ALLOWED_CPVS.get(cpv, cpv)}"
-        for cpv in t.get("cpvs", [])
-    )
-
+    cpv_lines = "\n".join(f"🏷 {ALLOWED_CPVS.get(cpv, cpv)}" for cpv in t.get("cpvs", []))
     return (
         f"🆕 <b>НОВЫЙ ТЕНДЕР</b>\n"
         f"━━━━━━━━━━━━━━━\n"
@@ -386,6 +354,10 @@ def main():
     db = load_data()
     active_now = set()
 
+    # Supabase'den ignored listesini al
+    ignored_tenders = get_ignored_tenders()
+    print(f"Total ignored: {len(ignored_tenders)}")
+
     new_count = 0
     updated_count = 0
 
@@ -402,8 +374,15 @@ def main():
 
             active_now.add(tid)
 
-            existing = db.get(tid, {})
+            # Ignored tender ise atla - Telegram'a gönderme
+            if tid in ignored_tenders:
+                print(f"  Skipping ignored tender: {t.get('reg_id') or tid}")
+                # DB'yi güncelle ama bildirim gönderme
+                if tid in db:
+                    db[tid]["last_seen"] = now_str()
+                continue
 
+            existing = db.get(tid, {})
             merged_cpvs = merge_cpvs(
                 existing.get("cpvs", []),
                 t.get("cpvs", []),
@@ -427,13 +406,10 @@ def main():
                     "excel_count": t.get("excel_count", 0),
                     "image_count": t.get("image_count", 0),
                 }
-
                 new_count += 1
                 send_telegram(format_new_message(db[tid]))
 
             else:
-                old_status = existing.get("status", "Неизвестно")
-
                 db[tid]["reg_id"] = t.get("reg_id") or db[tid].get("reg_id", "")
                 db[tid]["name"] = t.get("name") or db[tid].get("name", "")
                 db[tid]["org"] = t.get("org") or db[tid].get("org", "")
@@ -441,52 +417,36 @@ def main():
                 db[tid]["deadline"] = t.get("deadline") or db[tid].get("deadline", "")
                 db[tid]["cpvs"] = merged_cpvs
                 db[tid]["last_seen"] = now_str()
-
-                db[tid]["attachment_count"] = t.get(
-                    "attachment_count",
-                    db[tid].get("attachment_count", 0),
-                )
-
-                db[tid]["pdf_count"] = t.get(
-                    "pdf_count",
-                    db[tid].get("pdf_count", 0),
-                )
-
-                db[tid]["excel_count"] = t.get(
-                    "excel_count",
-                    db[tid].get("excel_count", 0),
-                )
-
-                db[tid]["image_count"] = t.get(
-                    "image_count",
-                    db[tid].get("image_count", 0),
-                )
-
-                if old_status != "Объявлен":
-                    db[tid]["status"] = "Объявлен"
-                    updated_count += 1
-                    send_telegram(
-                        format_status_message(
-                            db[tid],
-                            old_status,
-                            "Объявлен",
-                        )
-                    )
+                db[tid]["attachment_count"] = t.get("attachment_count", db[tid].get("attachment_count", 0))
+                db[tid]["pdf_count"] = t.get("pdf_count", db[tid].get("pdf_count", 0))
+                db[tid]["excel_count"] = t.get("excel_count", db[tid].get("excel_count", 0))
+                db[tid]["image_count"] = t.get("image_count", db[tid].get("image_count", 0))
 
         time.sleep(2)
 
+    # Statü kontrolü — aktif olmayan tenderler için gerçek statüyü çek
+    session = get_session()
     for tid, tender in db.items():
-        if tid not in active_now and tender.get("status") == "Объявлен":
-            old_status = tender.get("status")
-            tender["status"] = "Не найден в активном поиске"
-            updated_count += 1
-            send_telegram(
-                format_status_message(
-                    tender,
-                    old_status,
-                    tender["status"],
-                )
-            )
+        if tid in ignored_tenders:
+            continue  # Ignored olanları kontrol etme
+
+        if tid not in active_now:
+            old_status = tender.get("status", "Объявлен")
+
+            # Sadece aktif statüdeyse kontrol et
+            if old_status in ["Объявлен", "Приём предложений начался"]:
+                print(f"Checking status for {tender.get('reg_id') or tid}...")
+                real_status = get_tender_status(session, tid)
+
+                if real_status and real_status != old_status:
+                    tender["status"] = real_status
+                    updated_count += 1
+                    send_telegram(format_status_message(tender, old_status, real_status))
+                    print(f"  Status changed: {old_status} → {real_status}")
+                else:
+                    print(f"  Status unchanged: {old_status}")
+
+                time.sleep(1)
 
     save_data(db)
     save_csv(db)
@@ -498,10 +458,7 @@ def main():
         f"📌 Всего: <b>{len(db)}</b>"
     )
 
-    print("Done.")
-    print("New:", new_count)
-    print("Updated:", updated_count)
-    print("Total:", len(db))
+    print("Done. New:", new_count, "Updated:", updated_count, "Total:", len(db))
 
 
 if __name__ == "__main__":
