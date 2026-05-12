@@ -607,7 +607,7 @@ async function loadData(){
         if(row.review_status==="ignored")IGNORED_TENDERS.push(row.tender_id);
       });
     }
-  }catch(e){console.log("Supabase error",e);}
+  }catch(e){console.error("Supabase error",e);alert("Supabase error: "+e.message);}
   try{
     const res=await fetch(CSV_FILE+"?v="+Date.now());
     const text=await res.text();
