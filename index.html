@@ -45,6 +45,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ls-btn{width:100%;padding:13px;margin-top:16px;background:var(--blue);border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.2s}
 .ls-btn:hover{background:#4338ca}
 .ls-error{color:var(--red);font-size:12px;margin-top:10px;text-align:center}
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.15);opacity:0;transform:translateY(8px);transition:0.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:#166534}
+.toast.error{background:#991b1b}
 .wrapper{display:none;flex-direction:row;min-height:100vh}
 .wrapper.show{display:flex}
 .sidebar{width:260px;background:linear-gradient(180deg,#1c2331 0%,#161c28 100%);border-right:1px solid rgba(255,255,255,0.05);color:white;padding:0;display:flex;flex-direction:column;flex-shrink:0}
@@ -301,6 +305,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<div id="toastEl" class="toast"></div>
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="sideDrawer">
   <div class="drawer-header"><h2 id="drawerTitle">Tender</h2><button class="drawer-close" onclick="closeDrawer()">✕</button></div>
@@ -359,6 +364,15 @@ let REVIEW_STATUSES = {};
 let TENDER_NOTES = {};
 let IGNORED_TENDERS = [];
 
+let toastTimer = null;
+function showToast(msg, type = "success") {
+  const el = document.getElementById("toastEl");
+  el.textContent = msg;
+  el.className = "toast " + type + " show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.classList.remove("show"); }, 3500);
+}
+
 const CPV_NAMES = {
   "45100000": "Подготовка стройплощадки",
   "45112720": "Спорт / зоны отдыха",
@@ -413,10 +427,19 @@ function getReviewClass(id) {
 async function saveTenderNote(tenderId) {
   if (!tenderId) return;
   const note = document.getElementById("tenderNote")?.value || "";
+  const { error } = await supabaseClient
+    .from("tender_reviews")
+    .upsert(
+      { tender_id: tenderId, review_status: REVIEW_STATUSES[tenderId] || "new", note },
+      { onConflict: "tender_id" }
+    );
+  if (error) {
+    console.error("Supabase saveTenderNote error:", error);
+    showToast("❌ Kayıt başarısız: " + error.message, "error");
+    return;
+  }
   TENDER_NOTES[tenderId] = note;
-  try {
-    await supabaseClient.from("tender_reviews").upsert({ tender_id: tenderId, review_status: REVIEW_STATUSES[tenderId] || "new", note });
-  } catch (e) { console.error(e); }
+  showToast("✅ Not kaydedildi");
   closeDrawer();
   render();
   updateStats();
@@ -424,15 +447,24 @@ async function saveTenderNote(tenderId) {
 
 async function setTenderReviewStatus(tenderId, status) {
   if (!tenderId) return;
+  const { error } = await supabaseClient
+    .from("tender_reviews")
+    .upsert(
+      { tender_id: tenderId, review_status: status, note: TENDER_NOTES[tenderId] || "" },
+      { onConflict: "tender_id" }
+    );
+  if (error) {
+    console.error("Supabase setTenderReviewStatus error:", error);
+    showToast("❌ Kayıt başarısız: " + error.message, "error");
+    return;
+  }
   REVIEW_STATUSES[tenderId] = status;
   if (status === "ignored") {
     if (!IGNORED_TENDERS.includes(tenderId)) IGNORED_TENDERS.push(tenderId);
   } else {
     IGNORED_TENDERS = IGNORED_TENDERS.filter(x => x !== tenderId);
   }
-  try {
-    await supabaseClient.from("tender_reviews").upsert({ tender_id: tenderId, review_status: status, note: TENDER_NOTES[tenderId] || "" });
-  } catch (e) { console.error(e); }
+  showToast("✅ Durum kaydedildi");
   closeDrawer();
   render();
   updateStats();
@@ -482,7 +514,6 @@ function formatBudget(num) {
   return Math.round(num);
 }
 
-/* FIX: data-qf attribute ile güvenli seçim */
 function setQuickFilter(type) {
   QUICK_FILTER = type;
   document.querySelectorAll(".qf").forEach(x => x.classList.remove("active-qf"));
@@ -491,7 +522,6 @@ function setQuickFilter(type) {
   render();
 }
 
-/* FIX: data-filter attribute ile güvenli seçim */
 function setFilter(filter, button) {
   CURRENT_FILTER = filter;
   document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
@@ -501,33 +531,21 @@ function setFilter(filter, button) {
 
 function shouldShowTender(t) {
   const rs = getReviewStatus(t.id);
-
-  // Review-status filtreleri
   if (CURRENT_FILTER === "review" && rs !== "review") return false;
   if (CURRENT_FILTER === "relevant" && rs !== "relevant") return false;
   if (CURRENT_FILTER === "ignored" && rs !== "ignored") return false;
-  // "all" görünümünde ignored olanları gizle
   if (CURRENT_FILTER === "all" && rs === "ignored") return false;
-  // CPV filtrelerinde ignored olanları gizle
   if (!["all", "review", "relevant", "ignored"].includes(CURRENT_FILTER) && rs === "ignored") return false;
-
-  // CPV filtresi
   const cpvs = getCpvs(t);
   if (!["all", "review", "relevant", "ignored"].includes(CURRENT_FILTER) && !cpvs.includes(CURRENT_FILTER)) return false;
-
-  // Arama filtresi
   const search = document.getElementById("searchInput").value.toLowerCase();
   if (search && !JSON.stringify(t).toLowerCase().includes(search)) return false;
-
-  // Quick filtreler
   if (QUICK_FILTER === "high") {
     const n = parseFloat((t.price || "").replace(/GEL/g, "").replace(/[`'\s]/g, ""));
     if ((n || 0) < 1000000) return false;
   }
   if (QUICK_FILTER === "playground" && !cpvs.includes("45112723")) return false;
   if (QUICK_FILTER === "landscape" && !cpvs.some(c => c.startsWith("451127"))) return false;
-
-  /* FIX: DEADLINE SOON filtresi — 7 gün veya daha az kalan tenderlar */
   if (QUICK_FILTER === "soon") {
     if (!t.deadline) return false;
     const p = t.deadline.split(".");
@@ -535,7 +553,6 @@ function shouldShowTender(t) {
     const days = Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - new Date()) / 864e5);
     if (days < 0 || days > 7) return false;
   }
-
   return true;
 }
 
@@ -665,7 +682,6 @@ function updateAnalytics(active, reviewN) {
     '<div class="an-row"><div class="an-label" title="' + org + '">' + (org.length > 16 ? org.slice(0, 16) + "..." : org) + '</div>'
     + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + Math.round(count / maxOrg * 100) + '%"></div></div>'
     + '<div class="an-num">' + count + '</div></div>').join("");
-
   const cpvMap = {};
   active.forEach(t => getCpvs(t).forEach(c => { cpvMap[c] = (cpvMap[c] || 0) + 1; }));
   const cpvEntries = Object.entries(cpvMap).sort((a, b) => b[1] - a[1]);
@@ -682,7 +698,6 @@ function updateAnalytics(active, reviewN) {
   });
   document.getElementById("cpvLegend").innerHTML = cpvEntries.slice(0, 5).map(([code, count]) =>
     '<div class="dl-item"><div class="dl-dot" style="background:' + (CPV_COLORS[code] || '#94a3b8') + '"></div><span>' + code + '</span><span style="margin-left:auto;font-weight:700;color:var(--text)">' + count + ' (' + Math.round(count / total * 100) + '%)</span></div>').join("");
-
   const now = new Date();
   let d3 = 0, d7 = 0, d14 = 0, dMore = 0;
   active.forEach(t => {
@@ -706,7 +721,6 @@ function updateAnalytics(active, reviewN) {
     '<div class="an-row"><div class="an-label" style="color:' + r.c + '">⭐ ' + r.l + '</div>'
     + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + (active.length ? Math.round(r.n / active.length * 100) : 0) + '%;background:' + r.c + '"></div></div>'
     + '<div class="an-num">' + r.n + '</div></div>').join("");
-
   const urgent = active.filter(t => {
     if (!t.deadline) return false;
     const p = t.deadline.split(".");
@@ -714,7 +728,6 @@ function updateAnalytics(active, reviewN) {
     return Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - now) / 864e5) <= 3;
   }).length;
   const highVal = active.filter(t => parseFloat((t.price || "").replace(/GEL/g, "").replace(/[`'\s]/g, "")) >= 500000).length;
-
   document.getElementById("attentionItems").innerHTML =
     '<div class="attention-item"><div class="att-label">' + (urgent > 0 ? '<span class="blink">🔴</span>' : "⚪") + ' Истекают в 3 дня</div><span class="att-count" style="color:' + (urgent > 0 ? "#ef4444" : "var(--text2)") + '">' + urgent + '</span></div>'
     + '<div class="attention-item"><div class="att-label">🟡 Стоимость 500K+</div><span class="att-count" style="color:#d97706">' + highVal + '</span></div>'
@@ -727,18 +740,16 @@ async function loadData() {
   REVIEW_STATUSES = {};
   TENDER_NOTES = {};
   IGNORED_TENDERS = [];
-  try {
-    const { data, error } = await supabaseClient.from("tender_reviews").select("*");
-    if (!error && data) {
-      data.forEach(row => {
-        REVIEW_STATUSES[row.tender_id] = row.review_status || "new";
-        TENDER_NOTES[row.tender_id] = row.note || "";
-        if (row.review_status === "ignored") IGNORED_TENDERS.push(row.tender_id);
-      });
-    }
-  } catch (e) {
-    console.error("Supabase error", e);
-    alert("Supabase error: " + e.message);
+  const { data, error } = await supabaseClient.from("tender_reviews").select("*");
+  if (error) {
+    console.error("Supabase read error:", error);
+    showToast("❌ Supabase bağlantı hatası: " + error.message, "error");
+  } else if (data) {
+    data.forEach(row => {
+      REVIEW_STATUSES[row.tender_id] = row.review_status || "new";
+      TENDER_NOTES[row.tender_id] = row.note || "";
+      if (row.review_status === "ignored") IGNORED_TENDERS.push(row.tender_id);
+    });
   }
   try {
     const res = await fetch(CSV_FILE + "?v=" + Date.now());
@@ -759,7 +770,6 @@ async function loadData() {
 
 document.getElementById("searchInput").addEventListener("input", render);
 
-// Her 5 dakikada bir otomatik yenile
 setInterval(() => {
   supabaseClient.auth.getSession().then(({ data }) => {
     if (data.session) loadData();
