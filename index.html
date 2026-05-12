@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>GE Tender Monitor</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -249,17 +249,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="sb-header"><div class="logo">🇬🇪 Tender Monitor</div></div>
     <div class="sb-menu">
       <div class="sb-section">Menü</div>
-      <button class="menu-btn active" onclick="setFilter('all',this)"><span>📋 Все тендеры</span><span class="menu-count" id="cnt-all">0</span></button>
-      <button class="menu-btn" onclick="setFilter('review',this)"><span>🔍 Need Review</span><span class="menu-count" id="cnt-review">0</span></button>
-      <button class="menu-btn" onclick="setFilter('relevant',this)"><span>⭐ Relevant</span><span class="menu-count" id="cnt-relevant">0</span></button>
+      <button class="menu-btn active" data-filter="all" onclick="setFilter('all',this)"><span>📋 Все тендеры</span><span class="menu-count" id="cnt-all">0</span></button>
+      <button class="menu-btn" data-filter="review" onclick="setFilter('review',this)"><span>🔍 Need Review</span><span class="menu-count" id="cnt-review">0</span></button>
+      <button class="menu-btn" data-filter="relevant" onclick="setFilter('relevant',this)"><span>⭐ Relevant</span><span class="menu-count" id="cnt-relevant">0</span></button>
       <div class="sb-section">CPV</div>
-      <button class="menu-btn" onclick="setFilter('45100000',this)"><span>🏗️ 45100000</span><span class="menu-count" id="cnt-45100000">0</span></button>
-      <button class="menu-btn" onclick="setFilter('45112720',this)"><span>⚽ 45112720</span><span class="menu-count" id="cnt-45112720">0</span></button>
-      <button class="menu-btn" onclick="setFilter('45112700',this)"><span>🌿 45112700</span><span class="menu-count" id="cnt-45112700">0</span></button>
-      <button class="menu-btn" onclick="setFilter('45112723',this)"><span>🎠 45112723</span><span class="menu-count" id="cnt-45112723">0</span></button>
-      <button class="menu-btn" onclick="setFilter('45112710',this)"><span>🌱 45112710</span><span class="menu-count" id="cnt-45112710">0</span></button>
+      <button class="menu-btn" data-filter="45100000" onclick="setFilter('45100000',this)"><span>🏗️ 45100000</span><span class="menu-count" id="cnt-45100000">0</span></button>
+      <button class="menu-btn" data-filter="45112720" onclick="setFilter('45112720',this)"><span>⚽ 45112720</span><span class="menu-count" id="cnt-45112720">0</span></button>
+      <button class="menu-btn" data-filter="45112700" onclick="setFilter('45112700',this)"><span>🌿 45112700</span><span class="menu-count" id="cnt-45112700">0</span></button>
+      <button class="menu-btn" data-filter="45112723" onclick="setFilter('45112723',this)"><span>🎠 45112723</span><span class="menu-count" id="cnt-45112723">0</span></button>
+      <button class="menu-btn" data-filter="45112710" onclick="setFilter('45112710',this)"><span>🌱 45112710</span><span class="menu-count" id="cnt-45112710">0</span></button>
       <div class="sb-section">Diğer</div>
-      <button class="menu-btn" onclick="setFilter('ignored',this)"><span>🗑 Ignored</span><span class="menu-count" id="cnt-ignored">0</span></button>
+      <button class="menu-btn" data-filter="ignored" onclick="setFilter('ignored',this)"><span>🗑 Ignored</span><span class="menu-count" id="cnt-ignored">0</span></button>
     </div>
     <div class="sb-footer">
       <div class="sb-status"><span class="sb-status-dot"></span>Мониторинг работает</div>
@@ -279,11 +279,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <input type="text" id="searchInput" placeholder="Поиск: Rustavi, NAT26000, 45112723..."/>
     </div>
     <div class="quick-filters">
-      <button onclick="setQuickFilter('all')" class="qf active-qf">ALL</button>
-      <button onclick="setQuickFilter('high')" class="qf">HIGH VALUE</button>
-      <button onclick="setQuickFilter('playground')" class="qf">PLAYGROUND</button>
-      <button onclick="setQuickFilter('landscape')" class="qf">LANDSCAPE</button>
-      <button onclick="setQuickFilter('soon')" class="qf">DEADLINE SOON</button>
+      <button class="qf active-qf" data-qf="all" onclick="setQuickFilter('all')">ALL</button>
+      <button class="qf" data-qf="high" onclick="setQuickFilter('high')">HIGH VALUE</button>
+      <button class="qf" data-qf="playground" onclick="setQuickFilter('playground')">PLAYGROUND</button>
+      <button class="qf" data-qf="landscape" onclick="setQuickFilter('landscape')">LANDSCAPE</button>
+      <button class="qf" data-qf="soon" onclick="setQuickFilter('soon')">DEADLINE SOON</button>
     </div>
     <div class="stats">
       <div class="stat blue"><div class="stat-label">ACTIVE TENDERS</div><div class="stat-val" id="totalCount">0</div><div class="stat-sub">Объявлен</div><div class="stat-icon">📋</div></div>
@@ -309,317 +309,463 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </div>
 
 <script>
-const SUPABASE_URL="https://pibdlregqkpgwapdikdc.supabase.co";
-const SUPABASE_KEY="sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
-const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const CSV_FILE="tenders.csv";
+const SUPABASE_URL = "https://pibdlregqkpgwapdikdc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const CSV_FILE = "tenders.csv";
 
-async function checkAuth(){
-  const{data}=await supabaseClient.auth.getSession();
-  if(data.session){showApp();loadData();}
-  else{showLogin();}
+async function checkAuth() {
+  const { data } = await supabaseClient.auth.getSession();
+  if (data.session) { showApp(); loadData(); }
+  else { showLogin(); }
 }
-function showLogin(){
+function showLogin() {
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('appWrapper').classList.remove('show');
 }
-function showApp(){
+function showApp() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appWrapper').classList.add('show');
 }
-async function loginUser(){
-  const email=document.getElementById('loginEmail').value;
-  const password=document.getElementById('loginPassword').value;
-  const{error}=await supabaseClient.auth.signInWithPassword({email,password});
-  if(error){document.getElementById('loginError').textContent='Login failed. Check email or password.';return;}
-  document.getElementById('loginError').textContent='';
-  showApp();loadData();
+async function loginUser() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) {
+    document.getElementById('loginError').textContent = 'Email ve şifre gereklidir.';
+    return;
+  }
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    document.getElementById('loginError').textContent = 'Login failed. Check email or password.';
+    return;
+  }
+  document.getElementById('loginError').textContent = '';
+  showApp();
+  loadData();
 }
-async function logoutUser(){await supabaseClient.auth.signOut();location.reload();}
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!document.getElementById('loginScreen').classList.contains('hidden'))loginUser();
-  if(e.key==='Escape')closeDrawer();
+async function logoutUser() {
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) loginUser();
+  if (e.key === 'Escape') closeDrawer();
 });
 
-let ALL_TENDERS=[];
-let CURRENT_FILTER="all";
-let QUICK_FILTER="all";
-let REVIEW_STATUSES={};
-let TENDER_NOTES={};
-let IGNORED_TENDERS=[];
+let ALL_TENDERS = [];
+let CURRENT_FILTER = "all";
+let QUICK_FILTER = "all";
+let REVIEW_STATUSES = {};
+let TENDER_NOTES = {};
+let IGNORED_TENDERS = [];
 
-const CPV_NAMES={"45100000":"Подготовка стройплощадки","45112720":"Спорт / зоны отдыха","45112700":"Ландшафт","45112723":"Игровые площадки","45112710":"Зелёные зоны"};
-const CPV_COLORS={"45100000":"#f59e0b","45112720":"#3b82f6","45112700":"#10b981","45112723":"#ec4899","45112710":"#8b5cf6"};
+const CPV_NAMES = {
+  "45100000": "Подготовка стройплощадки",
+  "45112720": "Спорт / зоны отдыха",
+  "45112700": "Ландшафт",
+  "45112723": "Игровые площадки",
+  "45112710": "Зелёные зоны"
+};
+const CPV_COLORS = {
+  "45100000": "#f59e0b",
+  "45112720": "#3b82f6",
+  "45112700": "#10b981",
+  "45112723": "#ec4899",
+  "45112710": "#8b5cf6"
+};
 
-function parseCSV(text){
-  const rows=[];let current="";let row=[];let insideQuotes=false;
-  for(let i=0;i<text.length;i++){
-    const char=text[i];const next=text[i+1];
-    if(char==='"'&&next==='"'){current+='"';i++;}
-    else if(char==='"'){insideQuotes=!insideQuotes;}
-    else if(char===","&&!insideQuotes){row.push(current);current="";}
-    else if((char==="\n"||char==="\r")&&!insideQuotes){if(current||row.length){row.push(current);rows.push(row);row=[];current="";}}
-    else{current+=char;}
+function parseCSV(text) {
+  const rows = [];
+  let current = "";
+  let row = [];
+  let insideQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+    if (char === '"' && next === '"') { current += '"'; i++; }
+    else if (char === '"') { insideQuotes = !insideQuotes; }
+    else if (char === ',' && !insideQuotes) { row.push(current); current = ""; }
+    else if ((char === '\n' || char === '\r') && !insideQuotes) {
+      if (current || row.length) { row.push(current); rows.push(row); row = []; current = ""; }
+    }
+    else { current += char; }
   }
-  if(current||row.length){row.push(current);rows.push(row);}
+  if (current || row.length) { row.push(current); rows.push(row); }
   return rows;
 }
 
-function getReviewStatus(id){return REVIEW_STATUSES[id]||"new"}
-function getReviewLabel(id){const s=getReviewStatus(id);if(s==="review")return"🔍 Need Review";if(s==="relevant")return"⭐ Relevant";if(s==="ignored")return"🗑 Ignored";return"🆕 New"}
-function getReviewClass(id){const s=getReviewStatus(id);if(s==="review")return"review-review";if(s==="relevant")return"review-relevant";if(s==="ignored")return"review-ignored";return"review-new"}
-
-async function saveTenderNote(tenderId){
-  if(!tenderId)return;
-  const note=document.getElementById("tenderNote")?.value||"";
-  TENDER_NOTES[tenderId]=note;
-  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:REVIEW_STATUSES[tenderId]||"new",note});}catch(e){}
-  closeDrawer();render();updateStats();
+function getReviewStatus(id) { return REVIEW_STATUSES[id] || "new"; }
+function getReviewLabel(id) {
+  const s = getReviewStatus(id);
+  if (s === "review") return "🔍 Need Review";
+  if (s === "relevant") return "⭐ Relevant";
+  if (s === "ignored") return "🗑 Ignored";
+  return "🆕 New";
 }
-async function setTenderReviewStatus(tenderId,status){
-  if(!tenderId)return;
-  REVIEW_STATUSES[tenderId]=status;
-  if(status==="ignored"){if(!IGNORED_TENDERS.includes(tenderId))IGNORED_TENDERS.push(tenderId);}
-  else{IGNORED_TENDERS=IGNORED_TENDERS.filter(x=>x!==tenderId);}
-  try{await supabaseClient.from("tender_reviews").upsert({tender_id:tenderId,review_status:status,note:TENDER_NOTES[tenderId]||""});}catch(e){}
-  closeDrawer();render();updateStats();
+function getReviewClass(id) {
+  const s = getReviewStatus(id);
+  if (s === "review") return "review-review";
+  if (s === "relevant") return "review-relevant";
+  if (s === "ignored") return "review-ignored";
+  return "review-new";
 }
 
-function getCpvs(t){
-  if(t.cpvs)return t.cpvs.split("|").map(x=>x.trim()).filter(Boolean);
-  const text=((t.label||"")+" "+(t.name||"")).toLowerCase();
-  return Object.keys(CPV_NAMES).filter(code=>text.includes(code));
+async function saveTenderNote(tenderId) {
+  if (!tenderId) return;
+  const note = document.getElementById("tenderNote")?.value || "";
+  TENDER_NOTES[tenderId] = note;
+  try {
+    await supabaseClient.from("tender_reviews").upsert({ tender_id: tenderId, review_status: REVIEW_STATUSES[tenderId] || "new", note });
+  } catch (e) { console.error(e); }
+  closeDrawer();
+  render();
+  updateStats();
 }
-function renderBadges(t){
-  const cpvs=getCpvs(t);
-  if(!cpvs.length)return'<span class="badge default">Другое</span>';
-  return cpvs.map(code=>'<span class="badge c'+code+'">'+code+' — '+(CPV_NAMES[code]||"CPV")+'</span>').join("");
-}
-function getStatusClass(status){
-  const s=(status||"").toLowerCase();
-  if(s.includes("объявлен")||s.includes("приём"))return"status-active";
-  if(s.includes("оценка")||s.includes("подготовка"))return"status-warning";
-  if(s.includes("победитель")||s.includes("договор"))return"status-success";
-  return"status-ended";
-}
-function getDeadlineCountdown(deadline){
-  if(!deadline)return{text:"—",cls:"count-normal"};
-  const p=deadline.split(".");
-  if(p.length!==3)return{text:deadline,cls:"count-normal"};
-  const days=Math.ceil((new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]))-new Date())/(864e5));
-  if(days<0)return{text:"CLOSED",cls:"count-closed"};
-  if(days<=2)return{text:days+" DAYS LEFT",cls:"count-danger"};
-  if(days<=7)return{text:days+" DAYS LEFT",cls:"count-warning"};
-  return{text:days+" DAYS LEFT",cls:"count-safe"};
-}
-function getPriority(price){
-  const n=parseFloat((price||"").replace(/GEL/g,"").replace(/[`'\s]/g,""));
-  if(n>=1000000)return["HIGH","high"];if(n>=300000)return["MEDIUM","medium"];return["LOW","low"];
-}
-function formatBudget(num){if(num>=1e6)return(num/1e6).toFixed(1)+" M";if(num>=1000)return Math.round(num/1000)+"K";return Math.round(num);}
 
-function setQuickFilter(type){
-  QUICK_FILTER=type;
-  document.querySelectorAll(".qf").forEach(x=>x.classList.remove("active-qf"));
-  const btn=document.querySelector('.qf[onclick="setQuickFilter(\''+type+'\')"]');
-  if(btn)btn.classList.add("active-qf");
+async function setTenderReviewStatus(tenderId, status) {
+  if (!tenderId) return;
+  REVIEW_STATUSES[tenderId] = status;
+  if (status === "ignored") {
+    if (!IGNORED_TENDERS.includes(tenderId)) IGNORED_TENDERS.push(tenderId);
+  } else {
+    IGNORED_TENDERS = IGNORED_TENDERS.filter(x => x !== tenderId);
+  }
+  try {
+    await supabaseClient.from("tender_reviews").upsert({ tender_id: tenderId, review_status: status, note: TENDER_NOTES[tenderId] || "" });
+  } catch (e) { console.error(e); }
+  closeDrawer();
+  render();
+  updateStats();
+}
+
+function getCpvs(t) {
+  if (t.cpvs) return t.cpvs.split("|").map(x => x.trim()).filter(Boolean);
+  const text = ((t.label || "") + " " + (t.name || "")).toLowerCase();
+  return Object.keys(CPV_NAMES).filter(code => text.includes(code));
+}
+
+function renderBadges(t) {
+  const cpvs = getCpvs(t);
+  if (!cpvs.length) return '<span class="badge default">Другое</span>';
+  return cpvs.map(code => '<span class="badge c' + code + '">' + code + ' — ' + (CPV_NAMES[code] || "CPV") + '</span>').join("");
+}
+
+function getStatusClass(status) {
+  const s = (status || "").toLowerCase();
+  if (s.includes("объявлен") || s.includes("приём")) return "status-active";
+  if (s.includes("оценка") || s.includes("подготовка")) return "status-warning";
+  if (s.includes("победитель") || s.includes("договор")) return "status-success";
+  return "status-ended";
+}
+
+function getDeadlineCountdown(deadline) {
+  if (!deadline) return { text: "—", cls: "count-normal" };
+  const p = deadline.split(".");
+  if (p.length !== 3) return { text: deadline, cls: "count-normal" };
+  const days = Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - new Date()) / 864e5);
+  if (days < 0) return { text: "CLOSED", cls: "count-closed" };
+  if (days <= 2) return { text: days + " DAYS LEFT", cls: "count-danger" };
+  if (days <= 7) return { text: days + " DAYS LEFT", cls: "count-warning" };
+  return { text: days + " DAYS LEFT", cls: "count-safe" };
+}
+
+function getPriority(price) {
+  const n = parseFloat((price || "").replace(/GEL/g, "").replace(/[`'\s]/g, ""));
+  if (n >= 1000000) return ["HIGH", "high"];
+  if (n >= 300000) return ["MEDIUM", "medium"];
+  return ["LOW", "low"];
+}
+
+function formatBudget(num) {
+  if (num >= 1e6) return (num / 1e6).toFixed(1) + " M";
+  if (num >= 1000) return Math.round(num / 1000) + "K";
+  return Math.round(num);
+}
+
+/* FIX: data-qf attribute ile güvenli seçim */
+function setQuickFilter(type) {
+  QUICK_FILTER = type;
+  document.querySelectorAll(".qf").forEach(x => x.classList.remove("active-qf"));
+  const btn = document.querySelector('.qf[data-qf="' + type + '"]');
+  if (btn) btn.classList.add("active-qf");
   render();
 }
-function setFilter(filter,button){
-  CURRENT_FILTER=filter;
-  document.querySelectorAll(".menu-btn").forEach(b=>b.classList.remove("active"));
-  button.classList.add("active");render();
+
+/* FIX: data-filter attribute ile güvenli seçim */
+function setFilter(filter, button) {
+  CURRENT_FILTER = filter;
+  document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
+  if (button) button.classList.add("active");
+  render();
 }
-function shouldShowTender(t){
-  const rs=getReviewStatus(t.id);
-  if(CURRENT_FILTER==="review"&&rs!=="review")return false;
-  if(CURRENT_FILTER==="relevant"&&rs!=="relevant")return false;
-  if(CURRENT_FILTER==="ignored"&&rs!=="ignored")return false;
-  if(!["all","review","relevant","ignored"].includes(CURRENT_FILTER)&&rs==="ignored")return false;
-  if(CURRENT_FILTER==="all"&&rs==="ignored")return false;
-  const cpvs=getCpvs(t);
-  const text=JSON.stringify(t).toLowerCase();
-  const search=document.getElementById("searchInput").value.toLowerCase();
-  if(!text.includes(search))return false;
-  if(!["all","review","relevant","ignored"].includes(CURRENT_FILTER)&&!cpvs.includes(CURRENT_FILTER))return false;
-  if(QUICK_FILTER==="high"){const n=parseFloat((t.price||"").replace(/GEL/g,"").replace(/[`'\s]/g,""));if((n||0)<1000000)return false;}
-  if(QUICK_FILTER==="playground"&&!cpvs.includes("45112723"))return false;
-  if(QUICK_FILTER==="landscape"&&!cpvs.some(c=>c.startsWith("451127")))return false;
+
+function shouldShowTender(t) {
+  const rs = getReviewStatus(t.id);
+
+  // Review-status filtreleri
+  if (CURRENT_FILTER === "review" && rs !== "review") return false;
+  if (CURRENT_FILTER === "relevant" && rs !== "relevant") return false;
+  if (CURRENT_FILTER === "ignored" && rs !== "ignored") return false;
+  // "all" görünümünde ignored olanları gizle
+  if (CURRENT_FILTER === "all" && rs === "ignored") return false;
+  // CPV filtrelerinde ignored olanları gizle
+  if (!["all", "review", "relevant", "ignored"].includes(CURRENT_FILTER) && rs === "ignored") return false;
+
+  // CPV filtresi
+  const cpvs = getCpvs(t);
+  if (!["all", "review", "relevant", "ignored"].includes(CURRENT_FILTER) && !cpvs.includes(CURRENT_FILTER)) return false;
+
+  // Arama filtresi
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  if (search && !JSON.stringify(t).toLowerCase().includes(search)) return false;
+
+  // Quick filtreler
+  if (QUICK_FILTER === "high") {
+    const n = parseFloat((t.price || "").replace(/GEL/g, "").replace(/[`'\s]/g, ""));
+    if ((n || 0) < 1000000) return false;
+  }
+  if (QUICK_FILTER === "playground" && !cpvs.includes("45112723")) return false;
+  if (QUICK_FILTER === "landscape" && !cpvs.some(c => c.startsWith("451127"))) return false;
+
+  /* FIX: DEADLINE SOON filtresi — 7 gün veya daha az kalan tenderlar */
+  if (QUICK_FILTER === "soon") {
+    if (!t.deadline) return false;
+    const p = t.deadline.split(".");
+    if (p.length !== 3) return false;
+    const days = Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - new Date()) / 864e5);
+    if (days < 0 || days > 7) return false;
+  }
+
   return true;
 }
 
-function render(){
-  const filtered=ALL_TENDERS.filter(shouldShowTender);
-  const grid=document.getElementById("tenderGrid");
-  if(!filtered.length){grid.innerHTML='<div class="empty">Тендеры не найдены</div>';return;}
-  grid.innerHTML=filtered.slice().reverse().map(t=>{
-    const[priority,pCls]=getPriority(t.price);
-    const c=getDeadlineCountdown(t.deadline);
-    const rs=getReviewStatus(t.id);
-    let cardClass="card";
-    if(pCls==="high")cardClass+=" card-high";
-    if(rs==="review")cardClass+=" card-review";
-    if(rs==="relevant")cardClass+=" card-relevant";
-    const pdfN=parseInt(t.pdf_count||0)||0;
-    const xlsN=parseInt(t.excel_count||0)||0;
-    const imgN=parseInt(t.image_count||0)||0;
-    const totalN=pdfN+xlsN+imgN;
-    const docHtml=totalN>0?'<div class="doc-counts"><div class="doc-item">📄 <strong>'+pdfN+'</strong> PDF</div><div class="doc-item">📊 <strong>'+xlsN+'</strong> Excel</div><div class="doc-item">🖼 <strong>'+imgN+'</strong> Images</div><div class="doc-item" style="margin-left:auto">📎 <strong>'+totalN+'</strong> Всего</div></div>':"";
-    const noteHtml=TENDER_NOTES[t.id]?'<span style="color:var(--blue);font-weight:600;font-size:11px">📝 Note</span>':"";
-    return '<div class="'+cardClass+'">'
-      +'<div class="card-top"><div class="badges">'+renderBadges(t)+'</div><span class="priority '+pCls+'">'+priority+'</span></div>'
-      +'<div class="card-title">'+(t.name||"Без названия")+'</div>'
-      +'<div class="card-meta">'
-        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">'
-          +'<span style="font-weight:600;color:var(--text);font-size:12px">'+(t.reg_id||"N/A")+'</span>'
-          +'<span class="review-badge '+getReviewClass(t.id)+'">'+getReviewLabel(t.id)+'</span>'
-          +'<span class="status-badge '+getStatusClass(t.status)+'">'+(t.status||"—")+'</span>'
-          +noteHtml
-        +'</div>'
-        +'<div style="font-size:13px;color:var(--text2);margin-bottom:4px">🏢 '+(t.org||"—")+'</div>'
-        +'<div style="display:flex;align-items:center;justify-content:space-between">'
-          +'<span style="font-size:14px;font-weight:700;color:var(--text)">💰 '+(t.price||"—")+'</span>'
-          +'<span style="font-size:12px;color:var(--text3)">📅 '+(t.deadline||"—")+'</span>'
-        +'</div>'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
-          +'<span class="'+c.cls+'" style="font-size:12px;font-weight:700">⏳ '+c.text+'</span>'
-          +'<span style="font-size:11px;color:var(--text3)">🕒 '+(t.last_seen||"—")+'</span>'
-        +'</div>'
-      +'</div>'
-      +docHtml
-      +'<div class="card-actions">'
-        +'<button class="btn" onclick="openDrawer(\''+t.id+'\')">Детали</button>'
-        +'<a class="btn btn-outline" href="'+(t.link||'#')+'" target="_blank">Официальный сайт ↗</a>'
-      +'</div>'
-    +'</div>';
+function render() {
+  const filtered = ALL_TENDERS.filter(shouldShowTender);
+  const grid = document.getElementById("tenderGrid");
+  if (!filtered.length) { grid.innerHTML = '<div class="empty">Тендеры не найдены</div>'; return; }
+  grid.innerHTML = filtered.slice().reverse().map(t => {
+    const [priority, pCls] = getPriority(t.price);
+    const c = getDeadlineCountdown(t.deadline);
+    const rs = getReviewStatus(t.id);
+    let cardClass = "card";
+    if (pCls === "high") cardClass += " card-high";
+    if (rs === "review") cardClass += " card-review";
+    if (rs === "relevant") cardClass += " card-relevant";
+    const pdfN = parseInt(t.pdf_count || 0) || 0;
+    const xlsN = parseInt(t.excel_count || 0) || 0;
+    const imgN = parseInt(t.image_count || 0) || 0;
+    const totalN = pdfN + xlsN + imgN;
+    const docHtml = totalN > 0
+      ? '<div class="doc-counts"><div class="doc-item">📄 <strong>' + pdfN + '</strong> PDF</div><div class="doc-item">📊 <strong>' + xlsN + '</strong> Excel</div><div class="doc-item">🖼 <strong>' + imgN + '</strong> Images</div><div class="doc-item" style="margin-left:auto">📎 <strong>' + totalN + '</strong> Всего</div></div>'
+      : "";
+    const noteHtml = TENDER_NOTES[t.id] ? '<span style="color:var(--blue);font-weight:600;font-size:11px">📝 Note</span>' : "";
+    const safeId = (t.id || "").replace(/'/g, "\\'");
+    const safeLink = (t.link || "#").replace(/"/g, "&quot;");
+    return '<div class="' + cardClass + '">'
+      + '<div class="card-top"><div class="badges">' + renderBadges(t) + '</div><span class="priority ' + pCls + '">' + priority + '</span></div>'
+      + '<div class="card-title">' + (t.name || "Без названия") + '</div>'
+      + '<div class="card-meta">'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">'
+          + '<span style="font-weight:600;color:var(--text);font-size:12px">' + (t.reg_id || "N/A") + '</span>'
+          + '<span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span>'
+          + '<span class="status-badge ' + getStatusClass(t.status) + '">' + (t.status || "—") + '</span>'
+          + noteHtml
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text2);margin-bottom:4px">🏢 ' + (t.org || "—") + '</div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between">'
+          + '<span style="font-size:14px;font-weight:700;color:var(--text)">💰 ' + (t.price || "—") + '</span>'
+          + '<span style="font-size:12px;color:var(--text3)">📅 ' + (t.deadline || "—") + '</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
+          + '<span class="' + c.cls + '" style="font-size:12px;font-weight:700">⏳ ' + c.text + '</span>'
+          + '<span style="font-size:11px;color:var(--text3)">🕒 ' + (t.last_seen || "—") + '</span>'
+        + '</div>'
+      + '</div>'
+      + docHtml
+      + '<div class="card-actions">'
+        + '<button class="btn" onclick="openDrawer(\'' + safeId + '\')">Детали</button>'
+        + '<a class="btn btn-outline" href="' + safeLink + '" target="_blank">Официальный сайт ↗</a>'
+      + '</div>'
+    + '</div>';
   }).join("");
 }
 
-function openDrawer(tenderId){
-  const t=ALL_TENDERS.find(x=>x.id===tenderId);if(!t)return;
-  const[priority,pCls]=getPriority(t.price);
-  const c=getDeadlineCountdown(t.deadline);
-  document.getElementById("drawerTitle").textContent=t.reg_id||"Tender";
-  document.getElementById("drawerBody").innerHTML=
+function openDrawer(tenderId) {
+  const t = ALL_TENDERS.find(x => x.id === tenderId);
+  if (!t) return;
+  const [priority, pCls] = getPriority(t.price);
+  const c = getDeadlineCountdown(t.deadline);
+  const safeId = (tenderId || "").replace(/'/g, "\\'");
+  const safeLink = (t.link || "#").replace(/"/g, "&quot;");
+  document.getElementById("drawerTitle").textContent = t.reg_id || "Tender";
+  document.getElementById("drawerBody").innerHTML =
     '<div class="drawer-section"><div class="drawer-section-title">Основная информация</div>'
-    +'<div class="drawer-grid">'
-    +'<div class="drawer-item"><div class="drawer-label">Статус</div><div class="drawer-value"><span class="status-badge '+getStatusClass(t.status)+'">'+(t.status||"—")+'</span></div></div>'
-    +'<div class="drawer-item"><div class="drawer-label">Review</div><div class="drawer-value"><span class="review-badge '+getReviewClass(t.id)+'">'+getReviewLabel(t.id)+'</span></div></div>'
-    +'<div class="drawer-item"><div class="drawer-label">Приоритет</div><div class="drawer-value"><span class="priority '+pCls+'">'+priority+'</span></div></div>'
-    +'<div class="drawer-item"><div class="drawer-label">Дедлайн</div><div class="drawer-value"><span class="'+c.cls+'">'+c.text+'</span></div></div>'
-    +'<div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Организация</div><div class="drawer-value">'+(t.org||"—")+'</div></div>'
-    +'<div class="drawer-item"><div class="drawer-label">Бюджет</div><div class="drawer-value" style="color:var(--blue)">'+(t.price||"—")+'</div></div>'
-    +'<div class="drawer-item"><div class="drawer-label">Найден</div><div class="drawer-value">'+(t.date_found||"—")+'</div></div>'
-    +'<div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Название</div><div class="drawer-value" style="font-size:13px">'+(t.name||"—")+'</div></div>'
-    +'</div></div>'
-    +'<div class="drawer-section"><div class="drawer-section-title">CPV Categories</div><div>'+renderBadges(t)+'</div></div>'
-    +'<div class="drawer-section"><div class="drawer-section-title">Заметки</div>'
-    +'<textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Inter,sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">'+(TENDER_NOTES[t.id]||"")+'</textarea>'
-    +'</div>';
-  const isIgnored=getReviewStatus(tenderId)==="ignored";
-  document.getElementById("drawerActions").innerHTML=
-    '<a class="btn" href="'+(t.link||'#')+'" target="_blank">Официальный ↗</a>'
-    +'<button class="btn btn-muted" onclick="saveTenderNote(\''+tenderId+'\')">💾 Сохранить</button>'
-    +'<button class="btn btn-warning" onclick="setTenderReviewStatus(\''+tenderId+'\',\'review\')">🔍 Review</button>'
-    +'<button class="btn btn-success" onclick="setTenderReviewStatus(\''+tenderId+'\',\'relevant\')">⭐ Relevant</button>'
-    +(isIgnored
-      ?'<button class="btn btn-muted" onclick="setTenderReviewStatus(\''+tenderId+'\',\'new\')">♻ Restore</button>'
-      :'<button class="btn btn-danger" onclick="setTenderReviewStatus(\''+tenderId+'\',\'ignored\')">🗑 Ignore</button>');
+    + '<div class="drawer-grid">'
+    + '<div class="drawer-item"><div class="drawer-label">Статус</div><div class="drawer-value"><span class="status-badge ' + getStatusClass(t.status) + '">' + (t.status || "—") + '</span></div></div>'
+    + '<div class="drawer-item"><div class="drawer-label">Review</div><div class="drawer-value"><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div></div>'
+    + '<div class="drawer-item"><div class="drawer-label">Приоритет</div><div class="drawer-value"><span class="priority ' + pCls + '">' + priority + '</span></div></div>'
+    + '<div class="drawer-item"><div class="drawer-label">Дедлайн</div><div class="drawer-value"><span class="' + c.cls + '">' + c.text + '</span></div></div>'
+    + '<div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Организация</div><div class="drawer-value">' + (t.org || "—") + '</div></div>'
+    + '<div class="drawer-item"><div class="drawer-label">Бюджет</div><div class="drawer-value" style="color:var(--blue)">' + (t.price || "—") + '</div></div>'
+    + '<div class="drawer-item"><div class="drawer-label">Найден</div><div class="drawer-value">' + (t.date_found || "—") + '</div></div>'
+    + '<div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Название</div><div class="drawer-value" style="font-size:13px">' + (t.name || "—") + '</div></div>'
+    + '</div></div>'
+    + '<div class="drawer-section"><div class="drawer-section-title">CPV Categories</div><div>' + renderBadges(t) + '</div></div>'
+    + '<div class="drawer-section"><div class="drawer-section-title">Заметки</div>'
+    + '<textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Inter,sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">' + (TENDER_NOTES[t.id] || "") + '</textarea>'
+    + '</div>';
+  const isIgnored = getReviewStatus(tenderId) === "ignored";
+  document.getElementById("drawerActions").innerHTML =
+    '<a class="btn" href="' + safeLink + '" target="_blank">Официальный ↗</a>'
+    + '<button class="btn btn-muted" onclick="saveTenderNote(\'' + safeId + '\')">💾 Сохранить</button>'
+    + '<button class="btn btn-warning" onclick="setTenderReviewStatus(\'' + safeId + '\',\'review\')">🔍 Review</button>'
+    + '<button class="btn btn-success" onclick="setTenderReviewStatus(\'' + safeId + '\',\'relevant\')">⭐ Relevant</button>'
+    + (isIgnored
+      ? '<button class="btn btn-muted" onclick="setTenderReviewStatus(\'' + safeId + '\',\'new\')">♻ Restore</button>'
+      : '<button class="btn btn-danger" onclick="setTenderReviewStatus(\'' + safeId + '\',\'ignored\')">🗑 Ignore</button>');
   document.getElementById("sideDrawer").classList.add("open");
   document.getElementById("drawerOverlay").classList.add("show");
 }
-function closeDrawer(){
+
+function closeDrawer() {
   document.getElementById("sideDrawer").classList.remove("open");
   document.getElementById("drawerOverlay").classList.remove("show");
 }
 
-let cpvChartInstance=null;
-function updateStats(){
-  const active=ALL_TENDERS.filter(t=>getReviewStatus(t.id)!=="ignored");
-  const today=new Date().toISOString().slice(0,10);
-  const reviewN=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="review").length;
-  document.getElementById("totalCount").textContent=active.length;
-  document.getElementById("todayCount").textContent=active.filter(t=>(t.date_found||"").startsWith(today)).length;
-  document.getElementById("reviewCount").textContent=reviewN;
-  let budget=0;
-  active.forEach(t=>{budget+=parseFloat((t.price||"").replace(/GEL/g,"").replace(/[`'\s]/g,""))||0;});
-  document.getElementById("budgetCount").textContent=formatBudget(budget)+" GEL";
-  document.getElementById("cnt-all").textContent=active.length;
-  document.getElementById("cnt-review").textContent=reviewN;
-  document.getElementById("cnt-relevant").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="relevant").length;
-  document.getElementById("cnt-ignored").textContent=ALL_TENDERS.filter(t=>getReviewStatus(t.id)==="ignored").length;
-  Object.keys(CPV_NAMES).forEach(code=>{const el=document.getElementById("cnt-"+code);if(el)el.textContent=active.filter(t=>getCpvs(t).includes(code)).length;});
-  document.getElementById("lastUpdate").textContent="Обновлено: "+new Date().toLocaleString("ru-RU");
-  updateAnalytics(active,reviewN);
-}
-function updateAnalytics(active,reviewN){
-  const orgMap={};
-  active.forEach(t=>{if(t.org)orgMap[t.org]=(orgMap[t.org]||0)+1;});
-  const topOrgs=Object.entries(orgMap).sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const maxOrg=topOrgs[0]?topOrgs[0][1]:1;
-  document.getElementById("topOrgs").innerHTML=topOrgs.map(([org,count])=>
-    '<div class="an-row"><div class="an-label" title="'+org+'">'+(org.length>16?org.slice(0,16)+"...":org)+'</div>'
-    +'<div class="an-bar-bg"><div class="an-bar-fill" style="width:'+Math.round(count/maxOrg*100)+'%"></div></div>'
-    +'<div class="an-num">'+count+'</div></div>').join("");
-  const cpvMap={};
-  active.forEach(t=>getCpvs(t).forEach(c=>{cpvMap[c]=(cpvMap[c]||0)+1;}));
-  const cpvEntries=Object.entries(cpvMap).sort((a,b)=>b[1]-a[1]);
-  const total=cpvEntries.reduce((s,[,n])=>s+n,0)||1;
-  if(cpvChartInstance)cpvChartInstance.destroy();
-  const ctx=document.getElementById("cpvChart").getContext("2d");
-  cpvChartInstance=new Chart(ctx,{type:"doughnut",data:{labels:cpvEntries.map(([c])=>c),datasets:[{data:cpvEntries.map(([,n])=>n),backgroundColor:cpvEntries.map(([c])=>CPV_COLORS[c]||"#94a3b8"),borderWidth:0}]},options:{plugins:{legend:{display:false},tooltip:{enabled:false}},cutout:"65%",animation:{duration:500}}});
-  document.getElementById("cpvLegend").innerHTML=cpvEntries.slice(0,5).map(([code,count])=>
-    '<div class="dl-item"><div class="dl-dot" style="background:'+(CPV_COLORS[code]||'#94a3b8')+'"></div><span>'+code+'</span><span style="margin-left:auto;font-weight:700;color:var(--text)">'+count+'('+Math.round(count/total*100)+'%)</span></div>').join("");
-  const now=new Date();
-  let d3=0,d7=0,d14=0,dMore=0;
-  active.forEach(t=>{
-    if(!t.deadline)return;
-    const p=t.deadline.split(".");if(p.length!==3)return;
-    const days=Math.ceil((new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]))-now)/864e5);
-    if(days<0)return;
-    if(days<=3)d3++;else if(days<=7)d7++;else if(days<=14)d14++;else dMore++;
+let cpvChartInstance = null;
+
+function updateStats() {
+  const active = ALL_TENDERS.filter(t => getReviewStatus(t.id) !== "ignored");
+  const today = new Date().toISOString().slice(0, 10);
+  const reviewN = ALL_TENDERS.filter(t => getReviewStatus(t.id) === "review").length;
+  document.getElementById("totalCount").textContent = active.length;
+  document.getElementById("todayCount").textContent = active.filter(t => (t.date_found || "").startsWith(today)).length;
+  document.getElementById("reviewCount").textContent = reviewN;
+  let budget = 0;
+  active.forEach(t => { budget += parseFloat((t.price || "").replace(/GEL/g, "").replace(/[`'\s]/g, "")) || 0; });
+  document.getElementById("budgetCount").textContent = formatBudget(budget) + " GEL";
+  document.getElementById("cnt-all").textContent = active.length;
+  document.getElementById("cnt-review").textContent = reviewN;
+  document.getElementById("cnt-relevant").textContent = ALL_TENDERS.filter(t => getReviewStatus(t.id) === "relevant").length;
+  document.getElementById("cnt-ignored").textContent = ALL_TENDERS.filter(t => getReviewStatus(t.id) === "ignored").length;
+  Object.keys(CPV_NAMES).forEach(code => {
+    const el = document.getElementById("cnt-" + code);
+    if (el) el.textContent = active.filter(t => getCpvs(t).includes(code)).length;
   });
-  const dl=[{l:"0–3 дня",n:d3,c:"#ef4444"},{l:"4–7 дней",n:d7,c:"#f59e0b"},{l:"8–14 дней",n:d14,c:"#3b82f6"},{l:"14+ дней",n:dMore,c:"#22c55e"}];
-  document.getElementById("deadlineStats").innerHTML=dl.map(r=>
-    '<div class="an-row"><div class="an-label" style="color:'+r.c+'">⭐ '+r.l+'</div>'
-    +'<div class="an-bar-bg"><div class="an-bar-fill" style="width:'+(active.length?Math.round(r.n/active.length*100):0)+'%;background:'+r.c+'"></div></div>'
-    +'<div class="an-num">'+r.n+'</div></div>').join("");
-  const urgent=active.filter(t=>{if(!t.deadline)return false;const p=t.deadline.split(".");if(p.length!==3)return false;return Math.ceil((new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]))-now)/864e5)<=3;}).length;
-  const highVal=active.filter(t=>{return parseFloat((t.price||"").replace(/GEL/g,"").replace(/[`'\s]/g,""))>=500000;}).length;
-  document.getElementById("attentionItems").innerHTML=
-    '<div class="attention-item"><div class="att-label">'+(urgent>0?'<span class="blink">🔴</span>':"⚪")+' Истекают в 3 дня</div><span class="att-count" style="color:'+(urgent>0?"#ef4444":"var(--text2)")+'">'+urgent+'</span></div>'
-    +'<div class="attention-item"><div class="att-label">🟡 Стоимость 500K+</div><span class="att-count" style="color:#d97706">'+highVal+'</span></div>'
-    +'<div class="attention-item"><div class="att-label">🔵 Need Review</div><span class="att-count" style="color:var(--blue)">'+reviewN+'</span></div>'
-    +'<div class="attention-item" style="margin-top:6px"><span class="att-link" onclick="setFilter(\'review\',document.querySelectorAll(\'.menu-btn\')[1])">Перейти к проверке →</span></div>';
+  document.getElementById("lastUpdate").textContent = "Обновлено: " + new Date().toLocaleString("ru-RU");
+  updateAnalytics(active, reviewN);
 }
 
-async function loadData(){
-  ALL_TENDERS=[];
-  REVIEW_STATUSES={};
-  TENDER_NOTES={};
-  IGNORED_TENDERS=[];
-  try{
-    const{data,error}=await supabaseClient.from("tender_reviews").select("*");
-    if(!error&&data){
-      data.forEach(row=>{
-        REVIEW_STATUSES[row.tender_id]=row.review_status||"new";
-        TENDER_NOTES[row.tender_id]=row.note||"";
-        if(row.review_status==="ignored")IGNORED_TENDERS.push(row.tender_id);
+function updateAnalytics(active, reviewN) {
+  const orgMap = {};
+  active.forEach(t => { if (t.org) orgMap[t.org] = (orgMap[t.org] || 0) + 1; });
+  const topOrgs = Object.entries(orgMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const maxOrg = topOrgs[0] ? topOrgs[0][1] : 1;
+  document.getElementById("topOrgs").innerHTML = topOrgs.map(([org, count]) =>
+    '<div class="an-row"><div class="an-label" title="' + org + '">' + (org.length > 16 ? org.slice(0, 16) + "..." : org) + '</div>'
+    + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + Math.round(count / maxOrg * 100) + '%"></div></div>'
+    + '<div class="an-num">' + count + '</div></div>').join("");
+
+  const cpvMap = {};
+  active.forEach(t => getCpvs(t).forEach(c => { cpvMap[c] = (cpvMap[c] || 0) + 1; }));
+  const cpvEntries = Object.entries(cpvMap).sort((a, b) => b[1] - a[1]);
+  const total = cpvEntries.reduce((s, [, n]) => s + n, 0) || 1;
+  if (cpvChartInstance) cpvChartInstance.destroy();
+  const ctx = document.getElementById("cpvChart").getContext("2d");
+  cpvChartInstance = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: cpvEntries.map(([c]) => c),
+      datasets: [{ data: cpvEntries.map(([, n]) => n), backgroundColor: cpvEntries.map(([c]) => CPV_COLORS[c] || "#94a3b8"), borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: "65%", animation: { duration: 500 } }
+  });
+  document.getElementById("cpvLegend").innerHTML = cpvEntries.slice(0, 5).map(([code, count]) =>
+    '<div class="dl-item"><div class="dl-dot" style="background:' + (CPV_COLORS[code] || '#94a3b8') + '"></div><span>' + code + '</span><span style="margin-left:auto;font-weight:700;color:var(--text)">' + count + ' (' + Math.round(count / total * 100) + '%)</span></div>').join("");
+
+  const now = new Date();
+  let d3 = 0, d7 = 0, d14 = 0, dMore = 0;
+  active.forEach(t => {
+    if (!t.deadline) return;
+    const p = t.deadline.split(".");
+    if (p.length !== 3) return;
+    const days = Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - now) / 864e5);
+    if (days < 0) return;
+    if (days <= 3) d3++;
+    else if (days <= 7) d7++;
+    else if (days <= 14) d14++;
+    else dMore++;
+  });
+  const dl = [
+    { l: "0–3 дня", n: d3, c: "#ef4444" },
+    { l: "4–7 дней", n: d7, c: "#f59e0b" },
+    { l: "8–14 дней", n: d14, c: "#3b82f6" },
+    { l: "14+ дней", n: dMore, c: "#22c55e" }
+  ];
+  document.getElementById("deadlineStats").innerHTML = dl.map(r =>
+    '<div class="an-row"><div class="an-label" style="color:' + r.c + '">⭐ ' + r.l + '</div>'
+    + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + (active.length ? Math.round(r.n / active.length * 100) : 0) + '%;background:' + r.c + '"></div></div>'
+    + '<div class="an-num">' + r.n + '</div></div>').join("");
+
+  const urgent = active.filter(t => {
+    if (!t.deadline) return false;
+    const p = t.deadline.split(".");
+    if (p.length !== 3) return false;
+    return Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - now) / 864e5) <= 3;
+  }).length;
+  const highVal = active.filter(t => parseFloat((t.price || "").replace(/GEL/g, "").replace(/[`'\s]/g, "")) >= 500000).length;
+
+  document.getElementById("attentionItems").innerHTML =
+    '<div class="attention-item"><div class="att-label">' + (urgent > 0 ? '<span class="blink">🔴</span>' : "⚪") + ' Истекают в 3 дня</div><span class="att-count" style="color:' + (urgent > 0 ? "#ef4444" : "var(--text2)") + '">' + urgent + '</span></div>'
+    + '<div class="attention-item"><div class="att-label">🟡 Стоимость 500K+</div><span class="att-count" style="color:#d97706">' + highVal + '</span></div>'
+    + '<div class="attention-item"><div class="att-label">🔵 Need Review</div><span class="att-count" style="color:var(--blue)">' + reviewN + '</span></div>'
+    + '<div class="attention-item" style="margin-top:6px"><span class="att-link" onclick="setFilter(\'review\',document.querySelector(\'.menu-btn[data-filter=review]\'))">Перейти к проверке →</span></div>';
+}
+
+async function loadData() {
+  ALL_TENDERS = [];
+  REVIEW_STATUSES = {};
+  TENDER_NOTES = {};
+  IGNORED_TENDERS = [];
+  try {
+    const { data, error } = await supabaseClient.from("tender_reviews").select("*");
+    if (!error && data) {
+      data.forEach(row => {
+        REVIEW_STATUSES[row.tender_id] = row.review_status || "new";
+        TENDER_NOTES[row.tender_id] = row.note || "";
+        if (row.review_status === "ignored") IGNORED_TENDERS.push(row.tender_id);
       });
     }
-  }catch(e){console.error("Supabase error",e);alert("Supabase error: "+e.message);}
-  try{
-    const res=await fetch(CSV_FILE+"?v="+Date.now());
-    const text=await res.text();
-    const rows=parseCSV(text);
-    const headers=rows.shift().map(h=>h.replace(/\uFEFF/g,"").trim());
-    ALL_TENDERS=rows.map(r=>{const obj={};headers.forEach((h,i)=>obj[h]=r[i]||"");return obj;}).filter(t=>t.id&&t.id.trim()!=="");
-  }catch(e){console.log("CSV error",e);}
-  updateStats();render();
+  } catch (e) {
+    console.error("Supabase error", e);
+    alert("Supabase error: " + e.message);
+  }
+  try {
+    const res = await fetch(CSV_FILE + "?v=" + Date.now());
+    if (!res.ok) throw new Error("CSV fetch failed: " + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) { console.warn("CSV boş veya başlık yok"); return; }
+    const headers = rows.shift().map(h => h.replace(/﻿/g, "").trim());
+    ALL_TENDERS = rows
+      .map(r => { const obj = {}; headers.forEach((h, i) => obj[h] = (r[i] || "").trim()); return obj; })
+      .filter(t => t.id && t.id.trim() !== "");
+  } catch (e) {
+    console.error("CSV error", e);
+  }
+  updateStats();
+  render();
 }
 
-document.getElementById("searchInput").addEventListener("input",render);
-setInterval(()=>{supabaseClient.auth.getSession().then(({data})=>{if(data.session)loadData();});},5*60*1000);
+document.getElementById("searchInput").addEventListener("input", render);
+
+// Her 5 dakikada bir otomatik yenile
+setInterval(() => {
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data.session) loadData();
+  });
+}, 5 * 60 * 1000);
+
 checkAuth();
 </script>
 </body>
