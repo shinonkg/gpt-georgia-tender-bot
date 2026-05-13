@@ -61,6 +61,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .menu-btn.active{background:var(--blue);color:white}
 .menu-count{background:rgba(255,255,255,0.15);padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700}
 .menu-btn.active .menu-count{background:rgba(255,255,255,0.25)}
+.menu-label{display:flex;flex-direction:column;gap:1px}
+.menu-code{font-size:13px}
+.menu-name{font-size:10px;opacity:0.5;font-weight:400}
 .sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06)}
 .sb-status{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px}
 .sb-status-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
@@ -174,6 +177,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .drawer-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px}
 .drawer-label{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
 .drawer-value{font-size:14px;font-weight:600;color:var(--text)}
+.drawer-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawer-table tr{border-bottom:1px solid var(--border)}
+.drawer-table tr:last-child{border-bottom:none}
+.drawer-table td{padding:9px 10px;vertical-align:top}
+.drawer-table td:first-child{color:var(--text3);width:45%;font-size:12px}
+.drawer-table td:last-child{color:var(--text);font-weight:600}
 .drawer-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
 @media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}#loginScreen{grid-template-columns:1fr}}
@@ -218,13 +227,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
               <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px"><div style="font-size:9px;color:#9ca3af">Tenders</div><div style="font-size:13px;font-weight:700;color:#4f6ef7">9</div></div>
               <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px"><div style="font-size:9px;color:#9ca3af">Value</div><div style="font-size:13px;font-weight:700;color:#10b981">4.3M</div></div>
-              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px"><div style="font-size:9px;color:#9ca3af">CPV</div><div style="font-size:13px;font-weight:700;color:#f59e0b">7</div></div>
+              <div style="background:#f8f9fc;border-radius:6px;padding:6px 8px"><div style="font-size:9px;color:#9ca3af">CPV</div><div style="font-size:13px;font-weight:700;color:#f59e0b">6</div></div>
             </div>
           </div>
         </div>
       </div>
       <div class="ls-feat-cards">
-        <div class="ls-feat-card"><div class="ls-feat-icon" style="background:#eef1fd">🎯</div><div><div class="ls-feat-title">7 CPV Kategori</div><div class="ls-feat-sub">Aktif olarak izleniyor</div></div></div>
+        <div class="ls-feat-card"><div class="ls-feat-icon" style="background:#eef1fd">🎯</div><div><div class="ls-feat-title">6 CPV Kategori</div><div class="ls-feat-sub">Aktif olarak izleniyor</div></div></div>
         <div class="ls-feat-card"><div class="ls-feat-icon" style="background:#f0fdf4">⚡</div><div><div class="ls-feat-title">Gerçek Zamanlı</div><div class="ls-feat-sub">Sürekli izleme</div></div></div>
         <div class="ls-feat-card"><div class="ls-feat-icon" style="background:#fef9ee">🛡️</div><div><div class="ls-feat-title">Güvenilir Veri</div><div class="ls-feat-sub">Resmi kaynaklardan</div></div></div>
         <div class="ls-feat-card"><div class="ls-feat-icon" style="background:#fdf4ff">🤖</div><div><div class="ls-feat-title">Otomatik Süreç</div><div class="ls-feat-sub">Manuel işlem yok</div></div></div>
@@ -236,7 +245,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="ls-right">
     <div class="ls-indicators">
       <div class="ls-ind"><div class="ls-ind-dot green"></div>Bot active · Last run: today 09:00</div>
-      <div class="ls-ind"><div class="ls-ind-dot blue"></div>Monitoring · 7 CPV categories</div>
+      <div class="ls-ind"><div class="ls-ind-dot blue"></div>Monitoring · 6 CPV categories</div>
     </div>
     <div class="ls-form-title">Giriş yap</div>
     <div class="ls-form-sub">Yetkili erişim gereklidir</div>
@@ -258,12 +267,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="menu-btn" data-filter="review" onclick="setFilter('review',this)"><span>🔍 Need Review</span><span class="menu-count" id="cnt-review">0</span></button>
       <button class="menu-btn" data-filter="relevant" onclick="setFilter('relevant',this)"><span>⭐ Relevant</span><span class="menu-count" id="cnt-relevant">0</span></button>
       <div class="sb-section">CPV</div>
-      <button class="menu-btn" data-filter="45100000" onclick="setFilter('45100000',this)"><span>🏗️ 45100000</span><span class="menu-count" id="cnt-45100000">0</span></button>
-      <button class="menu-btn" data-filter="45112720" onclick="setFilter('45112720',this)"><span>⚽ 45112720</span><span class="menu-count" id="cnt-45112720">0</span></button>
-      <button class="menu-btn" data-filter="45112700" onclick="setFilter('45112700',this)"><span>🌿 45112700</span><span class="menu-count" id="cnt-45112700">0</span></button>
-      <button class="menu-btn" data-filter="45112723" onclick="setFilter('45112723',this)"><span>🎠 45112723</span><span class="menu-count" id="cnt-45112723">0</span></button>
-      <button class="menu-btn" data-filter="45112710" onclick="setFilter('45112710',this)"><span>🌱 45112710</span><span class="menu-count" id="cnt-45112710">0</span></button>
-      <button class="menu-btn" data-filter="45212130" onclick="setFilter('45212130',this)"><span>🎡 45212130</span><span class="menu-count" id="cnt-45212130">0</span></button>
+      <button class="menu-btn" data-filter="45100000" onclick="setFilter('45100000',this)"><span class="menu-label"><span class="menu-code">🏗️ 45100000</span><span class="menu-name">Работы по подготовке строит. площадки</span></span><span class="menu-count" id="cnt-45100000">0</span></button>
+      <button class="menu-btn" data-filter="45112720" onclick="setFilter('45112720',this)"><span class="menu-label"><span class="menu-code">⚽ 45112720</span><span class="menu-name">Ландшафтные работы на спорт. площадках</span></span><span class="menu-count" id="cnt-45112720">0</span></button>
+      <button class="menu-btn" data-filter="45112700" onclick="setFilter('45112700',this)"><span class="menu-label"><span class="menu-code">🌿 45112700</span><span class="menu-name">Ландшафтные работы</span></span><span class="menu-count" id="cnt-45112700">0</span></button>
+      <button class="menu-btn" data-filter="45112723" onclick="setFilter('45112723',this)"><span class="menu-label"><span class="menu-code">🎠 45112723</span><span class="menu-name">Ландшафтные работы на игровых площадках</span></span><span class="menu-count" id="cnt-45112723">0</span></button>
+      <button class="menu-btn" data-filter="45112710" onclick="setFilter('45112710',this)"><span class="menu-label"><span class="menu-code">🌱 45112710</span><span class="menu-name">Ландшафтные работы в зелёных зонах</span></span><span class="menu-count" id="cnt-45112710">0</span></button>
+      <button class="menu-btn" data-filter="45212130" onclick="setFilter('45212130',this)"><span class="menu-label"><span class="menu-code">🎡 45212130</span><span class="menu-name">Строительство парков развлечения</span></span><span class="menu-count" id="cnt-45212130">0</span></button>
       <div class="sb-section">Diğer</div>
       <button class="menu-btn" data-filter="ignored" onclick="setFilter('ignored',this)"><span>🗑 Ignored</span><span class="menu-count" id="cnt-ignored">0</span></button>
     </div>
@@ -376,12 +385,12 @@ function showToast(msg, type = "success") {
 }
 
 const CPV_NAMES = {
-  "45100000": "Подготовка стройплощадки",
-  "45112720": "Спорт / зоны отдыха",
-  "45112700": "Ландшафт",
-  "45112723": "Игровые площадки",
-  "45112710": "Зелёные зоны",
-  "45212130": "Парки развлечения"
+  "45100000": "Работы по подготовке строительной площадки",
+  "45112720": "Ландшафтные работы на спортивных площадках и в зонах отдыха",
+  "45112700": "Ландшафтные работы",
+  "45112723": "Ландшафтные работы на игровых площадках",
+  "45112710": "Ландшафтные работы в зелёных зонах",
+  "45212130": "Строительство парков развлечения"
 };
 const CPV_COLORS = {
   "45100000": "#f59e0b",
@@ -391,6 +400,9 @@ const CPV_COLORS = {
   "45112710": "#8b5cf6",
   "45212130": "#f97316"
 };
+
+// Тендеры старше этой даты не показываем
+const MIN_DATE = new Date(2025, 5, 1); // 01.06.2025
 
 function parseCSV(text) {
   const rows = [];
@@ -410,6 +422,16 @@ function parseCSV(text) {
   }
   if (current || row.length) { row.push(current); rows.push(row); }
   return rows;
+}
+
+function parseDateField(val) {
+  if (!val) return null;
+  // ISO format: 2025-06-01 or 2025-06-01T...
+  if (val.includes("-") && val.length >= 10) return new Date(val);
+  // DD.MM.YYYY or DD.MM.YYYY HH:MM
+  const p = val.split(" ")[0].split(".");
+  if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+  return null;
 }
 
 function getReviewStatus(id) { return REVIEW_STATUSES[id] || "new"; }
@@ -620,18 +642,28 @@ function openDrawer(tenderId) {
   const safeLink = (t.link || "#").replace(/"/g, "&quot;");
   document.getElementById("drawerTitle").textContent = t.reg_id || "Tender";
   document.getElementById("drawerBody").innerHTML =
-    '<div class="drawer-section"><div class="drawer-section-title">Основная информация</div>'
-    + '<div class="drawer-grid">'
-    + '<div class="drawer-item"><div class="drawer-label">Статус</div><div class="drawer-value"><span class="status-badge ' + getStatusClass(t.status) + '">' + (t.status || "—") + '</span></div></div>'
-    + '<div class="drawer-item"><div class="drawer-label">Review</div><div class="drawer-value"><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div></div>'
-    + '<div class="drawer-item"><div class="drawer-label">Приоритет</div><div class="drawer-value"><span class="priority ' + pCls + '">' + priority + '</span></div></div>'
-    + '<div class="drawer-item"><div class="drawer-label">Дедлайн</div><div class="drawer-value"><span class="' + c.cls + '">' + c.text + '</span></div></div>'
-    + '<div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Организация</div><div class="drawer-value">' + (t.org || "—") + '</div></div>'
-    + '<div class="drawer-item"><div class="drawer-label">Бюджет</div><div class="drawer-value" style="color:var(--blue)">' + (t.price || "—") + '</div></div>'
-    + '<div class="drawer-item"><div class="drawer-label">Найден</div><div class="drawer-value">' + (t.date_found || "—") + '</div></div>'
-    + '<div class="drawer-item" style="grid-column:span 2"><div class="drawer-label">Название</div><div class="drawer-value" style="font-size:13px">' + (t.name || "—") + '</div></div>'
-    + '</div></div>'
-    + '<div class="drawer-section"><div class="drawer-section-title">CPV Categories</div><div>' + renderBadges(t) + '</div></div>'
+    '<div class="drawer-section"><div class="drawer-section-title">Детали закупки</div>'
+    + '<table class="drawer-table">'
+    + '<tr><td>Номер заявки</td><td>' + (t.reg_id || "—") + '</td></tr>'
+    + '<tr><td>Статус закупки</td><td><span class="status-badge ' + getStatusClass(t.status) + '">' + (t.status || "—") + '</span></td></tr>'
+    + '<tr><td>Закупщик</td><td>' + (t.org || "—") + '</td></tr>'
+    + '<tr><td>Дата объявления закупки</td><td>' + (t.published || t.date_found || "—") + '</td></tr>'
+    + '<tr><td>Начало приема предложений</td><td>' + (t.bid_start || "—") + '</td></tr>'
+    + '<tr><td>Истекает срок принятия предложений</td><td><span class="' + c.cls + '">' + (t.deadline || "—") + ' (' + c.text + ')</span></td></tr>'
+    + '<tr><td>Предполагаемая цена закупки</td><td style="color:var(--blue)">' + (t.price || "—") + '</td></tr>'
+    + '<tr><td>Приоритет</td><td><span class="priority ' + pCls + '">' + priority + '</span></td></tr>'
+    + '</table></div>'
+    + '<div class="drawer-section"><div class="drawer-section-title">Категория закупки (CPV)</div><div>' + renderBadges(t) + '</div></div>'
+    + '<div class="drawer-section"><div class="drawer-section-title">Review статус</div>'
+    + '<div><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div></div>'
+    + (parseInt(t.pdf_count || 0) + parseInt(t.excel_count || 0) + parseInt(t.image_count || 0) > 0
+      ? '<div class="drawer-section"><div class="drawer-section-title">Документы</div>'
+        + '<div style="display:flex;gap:14px;font-size:13px">'
+        + '<span>📄 <strong>' + (t.pdf_count || 0) + '</strong> PDF</span>'
+        + '<span>📊 <strong>' + (t.excel_count || 0) + '</strong> Excel</span>'
+        + '<span>🖼 <strong>' + (t.image_count || 0) + '</strong> Images</span>'
+        + '</div></div>'
+      : '')
     + '<div class="drawer-section"><div class="drawer-section-title">Заметки</div>'
     + '<textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Inter,sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">' + (TENDER_NOTES[t.id] || "") + '</textarea>'
     + '</div>';
@@ -764,7 +796,12 @@ async function loadData() {
     const headers = rows.shift().map(h => h.replace(/﻿/g, "").trim());
     ALL_TENDERS = rows
       .map(r => { const obj = {}; headers.forEach((h, i) => obj[h] = (r[i] || "").trim()); return obj; })
-      .filter(t => t.id && t.id.trim() !== "");
+      .filter(t => t.id && t.id.trim() !== "")
+      .filter(t => {
+        // Sadece 01.06.2025 tarihinden sonraki tenderlar
+        const d = parseDateField(t.published || t.date_found);
+        return !d || d >= MIN_DATE;
+      });
   } catch (e) {
     console.error("CSV error", e);
   }
