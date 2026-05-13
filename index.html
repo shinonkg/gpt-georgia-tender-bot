@@ -105,6 +105,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .c45112710{background:#f0fdf4;color:#047857;border:1px solid #a7f3d0}
 .c45112720{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
 .c45112723{background:#fdf4ff;color:#a21caf;border:1px solid #f0abfc}
+.c45212130{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
 .default{background:var(--bg2);color:var(--text2)}
 .priority{font-size:12px;font-weight:800;padding:3px 8px;border-radius:6px}
 .high{color:#dc2626;background:#fee2e2}
@@ -262,6 +263,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="menu-btn" data-filter="45112700" onclick="setFilter('45112700',this)"><span>🌿 45112700</span><span class="menu-count" id="cnt-45112700">0</span></button>
       <button class="menu-btn" data-filter="45112723" onclick="setFilter('45112723',this)"><span>🎠 45112723</span><span class="menu-count" id="cnt-45112723">0</span></button>
       <button class="menu-btn" data-filter="45112710" onclick="setFilter('45112710',this)"><span>🌱 45112710</span><span class="menu-count" id="cnt-45112710">0</span></button>
+      <button class="menu-btn" data-filter="45212130" onclick="setFilter('45212130',this)"><span>🎡 45212130</span><span class="menu-count" id="cnt-45212130">0</span></button>
       <div class="sb-section">Diğer</div>
       <button class="menu-btn" data-filter="ignored" onclick="setFilter('ignored',this)"><span>🗑 Ignored</span><span class="menu-count" id="cnt-ignored">0</span></button>
     </div>
@@ -378,14 +380,16 @@ const CPV_NAMES = {
   "45112720": "Спорт / зоны отдыха",
   "45112700": "Ландшафт",
   "45112723": "Игровые площадки",
-  "45112710": "Зелёные зоны"
+  "45112710": "Зелёные зоны",
+  "45212130": "Парки развлечения"
 };
 const CPV_COLORS = {
   "45100000": "#f59e0b",
   "45112720": "#3b82f6",
   "45112700": "#10b981",
   "45112723": "#ec4899",
-  "45112710": "#8b5cf6"
+  "45112710": "#8b5cf6",
+  "45212130": "#f97316"
 };
 
 function parseCSV(text) {
