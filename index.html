@@ -875,18 +875,22 @@ function renderCustomerTenders(result, c) {
       + '<a href="https://tenders.procurement.gov.ge/public/suppliers/' + c.id + '" target="_blank" class="official-link">🔗 Открыть профиль на сайте ↗</a>'
       + '</div>';
   }
+
   const sorted = result.items.slice().sort((a, b) => parseTenderDate(b.publish_date) - parseTenderDate(a.publish_date));
   let html = '<div class="ct-top"><div class="ct-title">Все иhaлей</div><div class="ct-badge">' + sorted.length + ' иhaлей</div></div>';
+
   html += sorted.map(t => {
-    const id = t.reg_id || t.id || "—";
-    const name = t.name || "—";
-    const status = t.status || "—";
+    const id = t.reg_id || t.tender_id || t.id || "—";
+    const name = t.name || t.title || id;
+    const status = t.status || "Contract awarded";
     const dateStr = t.publish_date || t.deadline || "—";
-    const price = t.price || "—";
-    const org = t.org || "—";
-    const link = t.link || "#";
+    const price = t.price || t.budget || "—";
+    const org = t.org || t.organizer || "—";
+    const link = t.link || t.url || "#";
     const sCls = getStatusClass(status);
-    return '<div class="ct-card" onclick="window.open(\'' + link.replace(/'/g, "\\'") + '\',\'_blank\')">'
+    const safeId = String(id).replace(/'/g, "\\'");
+
+    return '<div class="ct-card">'
       + '<div class="ct-card-head"><span class="ct-card-num">' + id + '</span><span class="ct-card-date">📅 ' + dateStr + '</span></div>'
       + '<div class="ct-card-name">' + name + '</div>'
       + '<div class="ct-card-foot">'
@@ -894,9 +898,50 @@ function renderCustomerTenders(result, c) {
         + '<span style="font-size:12px;color:var(--text2)">🏢 ' + (org.length > 35 ? org.slice(0, 35) + "..." : org) + '</span>'
         + (price !== "—" ? '<span style="font-size:12px;font-weight:700;color:var(--blue);margin-left:auto">💰 ' + price + '</span>' : '')
       + '</div>'
+      + '<div class="card-actions" style="margin-top:12px">'
+        + '<button class="btn" onclick="openCustomerTenderDrawer(\'' + c.id + '\', \'' + safeId + '\')">Детали</button>'
+        + '<a class="btn btn-outline" href="' + link + '" target="_blank" onclick="event.stopPropagation()">Официальный сайт ↗</a>'
+      + '</div>'
     + '</div>';
   }).join("");
+
   return html;
+}
+
+function openCustomerTenderDrawer(customerId, tenderId) {
+  const list = CUSTOMER_TENDERS[customerId] || [];
+  const t = list.find(x => String(x.reg_id || x.tender_id || x.id) === String(tenderId));
+  if (!t) return;
+
+  const id = t.reg_id || t.tender_id || t.id || "—";
+  const name = t.name || t.title || id;
+  const status = t.status || "Contract awarded";
+  const published = t.publish_date || "—";
+  const deadline = t.deadline || "—";
+  const price = t.price || t.budget || "—";
+  const org = t.org || t.organizer || "—";
+  const link = t.link || t.url || "#";
+  const sCls = getStatusClass(status);
+
+  document.getElementById("drawerTitle").textContent = id;
+
+  document.getElementById("drawerBody").innerHTML =
+    '<div class="drawer-section"><div class="drawer-section-title">Детали закупки</div>'
+    + '<table class="drawer-table">'
+    + '<tr><td>Номер заявки</td><td>' + id + '</td></tr>'
+    + '<tr><td>Название</td><td>' + name + '</td></tr>'
+    + '<tr><td>Статус закупки</td><td><span class="status-badge ' + sCls + '">' + status + '</span></td></tr>'
+    + '<tr><td>Закупщик</td><td>' + org + '</td></tr>'
+    + '<tr><td>Дата объявления закупки</td><td>' + published + '</td></tr>'
+    + '<tr><td>Истекает срок принятия предложений</td><td>' + deadline + '</td></tr>'
+    + '<tr><td>Предполагаемая цена закупки</td><td style="color:var(--blue)">' + price + '</td></tr>'
+    + '</table></div>';
+
+  document.getElementById("drawerActions").innerHTML =
+    '<a class="btn" href="' + link + '" target="_blank">Официальный сайт ↗</a>';
+
+  document.getElementById("sideDrawer").classList.add("open");
+  document.getElementById("drawerOverlay").classList.add("show");
 }
 
 let cpvChartInstance = null;
