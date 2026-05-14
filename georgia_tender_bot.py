@@ -14,6 +14,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_
 
 DATA_FILE = "tender_data.json"
 CSV_FILE = "tenders.csv"
+CUSTOMER_CSV_FILE = "customer_tenders.csv"
 
 ALLOWED_CPVS = {
     "45100000": "45100000 - Работы по подготовке строительной площадки",
@@ -23,7 +24,13 @@ ALLOWED_CPVS = {
     "45112710": "45112710 - Ландшафтные работы в зеленых зонах",
 }
 
-# Реальные статусы с сайта
+CUSTOMERS = {
+    "424611441": "Lago",
+    "436034916": "Our Group chveni jgupi",
+    "405142634": "Ander Konstrakshen",
+    "425057341": "Eplaini",
+}
+
 REAL_STATUSES = [
     "Объявлен",
     "Приём предложений начался",
@@ -63,7 +70,6 @@ def save_data(data):
 
 
 def get_ignored_tenders():
-    """Supabase'den ignored tender listesini çek"""
     ignored = set()
     try:
         r = requests.get(
@@ -75,8 +81,7 @@ def get_ignored_tenders():
             timeout=15,
         )
         if r.status_code == 200:
-            data = r.json()
-            for row in data:
+            for row in r.json():
                 ignored.add(str(row.get("tender_id", "")))
             print(f"Ignored tenders from Supabase: {len(ignored)}")
     except Exception as e:
@@ -123,7 +128,6 @@ def get_session():
 
 
 def get_tender_status(session, tender_id):
-    """Tender detay sayfasından gerçek statüyü çek"""
     try:
         r = session.get(
             f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
@@ -131,16 +135,11 @@ def get_tender_status(session, tender_id):
         )
         if r.status_code != 200:
             return None
-
         html = r.text
-
-        # Gerçek statülerden birini ara
         for status in REAL_STATUSES:
             if status in html:
                 return status
-
         return None
-
     except Exception as e:
         print(f"Status fetch error for {tender_id}: {e}")
         return None
@@ -173,16 +172,13 @@ def get_tender_attachments(session, tender_id):
         )
         if r.status_code != 200:
             return result
-
         soup = BeautifulSoup(r.text, "html.parser")
         links = soup.find_all("a", href=True)
         attachment_links = []
-
         for a in links:
             href = a.get("href", "").lower()
             if any(x in href for x in [".pdf", ".xls", ".xlsx", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip", "download"]):
                 attachment_links.append(href)
-
         result["attachment_count"] = len(attachment_links)
         for href in attachment_links:
             if ".pdf" in href:
@@ -191,7 +187,6 @@ def get_tender_attachments(session, tender_id):
                 result["excel_count"] += 1
             elif any(x in href for x in [".jpg", ".jpeg", ".png"]):
                 result["image_count"] += 1
-
     except Exception as e:
         print("Attachment parse error:", e)
     return result
@@ -201,47 +196,37 @@ def parse_tenders(html):
     soup = BeautifulSoup(html, "html.parser")
     tenders = []
     rows = soup.find_all("tr", id=re.compile(r"^A\d+"))
-
     for row in rows:
         row_text = row.get_text(" ", strip=True)
         tender_id = ""
-
         row_id = row.get("id", "")
         if row_id.startswith("A"):
             tender_id = row_id.replace("A", "")
-
         onclick = row.get("onclick", "")
         m = re.search(r"ShowApp\((\d+)", onclick)
         if m:
             tender_id = m.group(1)
-
         reg_id = ""
         m = re.search(r"(NAT|SPA|GEO|CON|MEP|DAP)\d+", row_text)
         if m:
             reg_id = m.group(0)
-
         price = ""
         m = re.search(r"[\d\s`']+\.00\s*GEL", row_text)
         if m:
             price = m.group(0).strip()
-
         deadline = ""
         m = re.search(r"Срок принятия предложения[:\s]+(\d{2}\.\d{2}\.\d{4})", row_text)
         if m:
             deadline = m.group(1)
-
         org = ""
         m = re.search(r"Закупщик[:\s]+(.+?)(?:Категория|Предполагаемая|$)", row_text)
         if m:
             org = m.group(1).strip()
-
         name = ""
         m = re.search(r"Категория закупки[:\s]+(.+?)(?:Предполагаемая|Коды|$)", row_text)
         if m:
             name = m.group(1).strip()
-
         cpvs = extract_cpvs(row_text)
-
         if tender_id:
             tenders.append({
                 "id": tender_id,
@@ -252,8 +237,129 @@ def parse_tenders(html):
                 "deadline": deadline,
                 "cpvs": cpvs,
             })
-
     return tenders
+
+
+def parse_customer_tenders(html, customer_id):
+    """Müşterinin katıldığı ihaleleri parse et"""
+    soup = BeautifulSoup(html, "html.parser")
+    tenders = []
+    rows = soup.find_all("tr", id=re.compile(r"^A\d+"))
+    for row in rows:
+        row_text = row.get_text(" ", strip=True)
+        tender_id = ""
+        row_id = row.get("id", "")
+        if row_id.startswith("A"):
+            tender_id = row_id.replace("A", "")
+        onclick = row.get("onclick", "")
+        m = re.search(r"ShowApp\((\d+)", onclick)
+        if m:
+            tender_id = m.group(1)
+        reg_id = ""
+        m = re.search(r"(NAT|SPA|GEO|CON|MEP|DAP)\d+", row_text)
+        if m:
+            reg_id = m.group(0)
+        price = ""
+        m = re.search(r"[\d\s`']+\.00\s*GEL", row_text)
+        if m:
+            price = m.group(0).strip()
+        deadline = ""
+        m = re.search(r"Срок принятия предложения[:\s]+(\d{2}\.\d{2}\.\d{4})", row_text)
+        if m:
+            deadline = m.group(1)
+        publish_date = ""
+        m = re.search(r"Дата объявления[:\s]+(\d{2}\.\d{2}\.\d{4})", row_text)
+        if not m:
+            m = re.search(r"(\d{2}\.\d{2}\.\d{4})", row_text)
+        if m:
+            publish_date = m.group(1)
+        org = ""
+        m = re.search(r"Закупщик[:\s]+(.+?)(?:Категория|Предполагаемая|$)", row_text)
+        if m:
+            org = m.group(1).strip()
+        name = ""
+        m = re.search(r"Категория закупки[:\s]+(.+?)(?:Предполагаемая|Коды|$)", row_text)
+        if m:
+            name = m.group(1).strip()
+        status = ""
+        for s in REAL_STATUSES:
+            if s in row_text:
+                status = s
+                break
+        if tender_id:
+            tenders.append({
+                "customer_id": customer_id,
+                "id": tender_id,
+                "reg_id": reg_id,
+                "name": name,
+                "org": org,
+                "price": price,
+                "deadline": deadline,
+                "publish_date": publish_date,
+                "status": status or "Объявлен",
+                "link": f"https://tenders.procurement.gov.ge/public/?lang=ru&go={tender_id}",
+            })
+    return tenders
+
+
+def search_customer_tenders(customer_id, customer_name):
+    """Tedarikçi ID'sine göre müşterinin tüm ihalelerini çek"""
+    session = get_session()
+    data = {
+        "action": "search_app", "app_t": "0", "search": "1",
+        "app_reg_id": "", "app_shems_id": "0", "org_a": "",
+        "app_monac_id": "0",
+        "org_b": customer_id,
+        "app_particip_status_id": "0",
+        "app_donor_id": "0",
+        "app_status": "0",
+        "app_agr_status": "0",
+        "app_type": "0",
+        "app_basecode": "0",
+        "app_codes": "",
+        "app_date_type": "1", "app_date_from": "", "app_date_tlll": "",
+        "app_amount_from": "", "app_amount_to": "",
+        "app_currency": "2", "app_pricelist": "0",
+    }
+    try:
+        session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
+        time.sleep(1)
+        r = session.post(
+            "https://tenders.procurement.gov.ge/public/library/controller.php",
+            data=data, timeout=30,
+        )
+        print(f"Customer [{customer_name}] {customer_id}: HTTP {r.status_code}, {len(r.text)} bytes")
+        if r.status_code == 200:
+            tenders = parse_customer_tenders(r.text, customer_id)
+            print(f"  → {len(tenders)} tenders found")
+            return tenders
+    except Exception as e:
+        print(f"Customer search error [{customer_name}]: {e}")
+    return []
+
+
+def save_customer_csv(all_tenders):
+    """Tüm müşteri ihalelerini customer_tenders.csv'ye kaydet"""
+    with open(CUSTOMER_CSV_FILE, "w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "customer_id", "id", "reg_id", "name", "org",
+            "price", "deadline", "publish_date", "status", "link",
+        ])
+        for t in all_tenders:
+            writer.writerow([
+                t.get("customer_id", ""),
+                t.get("id", ""),
+                t.get("reg_id", ""),
+                t.get("name", ""),
+                t.get("org", ""),
+                t.get("price", ""),
+                t.get("deadline", ""),
+                t.get("publish_date", ""),
+                t.get("status", ""),
+                t.get("link", ""),
+            ])
+    print(f"Saved {len(all_tenders)} customer tenders to {CUSTOMER_CSV_FILE}")
 
 
 def search_tenders(params):
@@ -270,20 +376,16 @@ def search_tenders(params):
         "app_amount_from": "", "app_amount_to": "",
         "app_currency": "2", "app_pricelist": "0",
     }
-
     try:
         session.get("https://tenders.procurement.gov.ge/public/?lang=ru", timeout=20)
         time.sleep(1)
-
         r = session.post(
             "https://tenders.procurement.gov.ge/public/library/controller.php",
             data=data, timeout=30,
         )
         print(f"Search {params['label']}:", r.status_code, len(r.text))
-
         if r.status_code == 200:
             tenders = parse_tenders(r.text)
-
             for tender in tenders:
                 tender_id = tender.get("id")
                 if tender_id:
@@ -291,12 +393,9 @@ def search_tenders(params):
                     tender.update(attachments)
                     print(f"  {tender.get('reg_id') or tender_id}: {attachments['attachment_count']} attachments")
                     time.sleep(0.4)
-
             return tenders
-
     except Exception as e:
         print("Search error:", e)
-
     return []
 
 
@@ -353,42 +452,30 @@ def main():
 
     db = load_data()
     active_now = set()
-
-    # Supabase'den ignored listesini al
     ignored_tenders = get_ignored_tenders()
     print(f"Total ignored: {len(ignored_tenders)}")
 
     new_count = 0
     updated_count = 0
 
+    # ── Tender araması (CPV bazlı) ──
     for params in SEARCH_PARAMS:
         tenders = search_tenders(params)
         print(params["label"], "found:", len(tenders))
-
         search_cpv = params["label"].split(" - ")[0]
 
         for t in tenders:
             tid = t.get("id")
             if not tid:
                 continue
-
             active_now.add(tid)
-
-            # Ignored tender ise atla - Telegram'a gönderme
             if tid in ignored_tenders:
                 print(f"  Skipping ignored tender: {t.get('reg_id') or tid}")
-                # DB'yi güncelle ama bildirim gönderme
                 if tid in db:
                     db[tid]["last_seen"] = now_str()
                 continue
-
             existing = db.get(tid, {})
-            merged_cpvs = merge_cpvs(
-                existing.get("cpvs", []),
-                t.get("cpvs", []),
-                [search_cpv],
-            )
-
+            merged_cpvs = merge_cpvs(existing.get("cpvs", []), t.get("cpvs", []), [search_cpv])
             if tid not in db:
                 db[tid] = {
                     "id": tid,
@@ -408,7 +495,6 @@ def main():
                 }
                 new_count += 1
                 send_telegram(format_new_message(db[tid]))
-
             else:
                 db[tid]["reg_id"] = t.get("reg_id") or db[tid].get("reg_id", "")
                 db[tid]["name"] = t.get("name") or db[tid].get("name", "")
@@ -424,20 +510,16 @@ def main():
 
         time.sleep(2)
 
-    # Statü kontrolü — aktif olmayan tenderler için gerçek statüyü çek
+    # ── Statü kontrolü ──
     session = get_session()
     for tid, tender in db.items():
         if tid in ignored_tenders:
-            continue  # Ignored olanları kontrol etme
-
+            continue
         if tid not in active_now:
             old_status = tender.get("status", "Объявлен")
-
-            # Sadece aktif statüdeyse kontrol et
             if old_status in ["Объявлен", "Приём предложений начался"]:
                 print(f"Checking status for {tender.get('reg_id') or tid}...")
                 real_status = get_tender_status(session, tid)
-
                 if real_status and real_status != old_status:
                     tender["status"] = real_status
                     updated_count += 1
@@ -445,20 +527,31 @@ def main():
                     print(f"  Status changed: {old_status} → {real_status}")
                 else:
                     print(f"  Status unchanged: {old_status}")
-
                 time.sleep(1)
 
     save_data(db)
     save_csv(db)
 
+    # ── Müşteri ihaleleri ──
+    print("\n=== Fetching customer tenders ===")
+    all_customer_tenders = []
+    for customer_id, customer_name in CUSTOMERS.items():
+        tenders = search_customer_tenders(customer_id, customer_name)
+        all_customer_tenders.extend(tenders)
+        time.sleep(2)
+
+    save_customer_csv(all_customer_tenders)
+
     send_telegram(
         f"✅ <b>GPT Tender Bot цикл завершён</b>\n"
         f"🆕 Новых: <b>{new_count}</b>\n"
         f"🔄 Обновлено: <b>{updated_count}</b>\n"
-        f"📌 Всего: <b>{len(db)}</b>"
+        f"📌 Всего: <b>{len(db)}</b>\n"
+        f"👥 Клиентских тендеров: <b>{len(all_customer_tenders)}</b>"
     )
 
     print("Done. New:", new_count, "Updated:", updated_count, "Total:", len(db))
+    print("Customer tenders:", len(all_customer_tenders))
 
 
 if __name__ == "__main__":
