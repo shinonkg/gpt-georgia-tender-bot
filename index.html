@@ -778,10 +778,25 @@ async function loadCustomerTendersCSV() {
     const data = rows
       .map(r => { const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o; })
       .filter(r => r.customer_id && r.customer_id !== "customer_id");
-    CUSTOMER_TENDERS = {};
-    data.forEach(t => {
-      if (!CUSTOMER_TENDERS[t.customer_id]) CUSTOMER_TENDERS[t.customer_id] = [];
-      CUSTOMER_TENDERS[t.customer_id].push(t);
+CUSTOMER_TENDERS = {};
+
+data.forEach(t => {
+
+  // kolon eşitleme
+  t.reg_id = t.reg_id || t.tender_id || t.announcement_number || "";
+  t.name = t.name || t.title || t.tender_name || "Unnamed Tender";
+  t.publish_date = t.publish_date || t.date || "";
+  t.status = t.status || "Active";
+  t.price = t.price || t.estimated_value || "";
+  t.link = t.link || t.url || "#";
+
+  // push
+  if (!CUSTOMER_TENDERS[t.customer_id]) {
+    CUSTOMER_TENDERS[t.customer_id] = [];
+  }
+
+  CUSTOMER_TENDERS[t.customer_id].push(t);
+
     });
     Object.keys(CUSTOMER_TENDERS).forEach(id => {
       CUSTOMER_TENDERS[id].sort((a, b) => parseTenderDate(b.publish_date) - parseTenderDate(a.publish_date));
