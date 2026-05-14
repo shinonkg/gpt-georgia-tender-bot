@@ -9,7 +9,6 @@ import time
 import logging
 import hashlib
 import requests
-from datetime import datetime, timedelta
 from pathlib import Path
 
 # ── Настройки ─────────────────────────────────────────────────────────────────
@@ -20,17 +19,17 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 KEYWORDS: list[str] = []
 CPV_CODES: list[str] = []
 
-CHECK_INTERVAL = 300  # 5 минут
+CHECK_INTERVAL = 300
 
 SEEN_FILE = Path("seen_tenders_georgia.json")
 CUSTOMER_CSV_FILE = "customer_tenders.csv"
 
 # (identification_code): (display_name, monac_id, georgian_name)
 CUSTOMERS = {
-    "424611441": ("Lago",                  "12891", "ლაგო"),
-    "436034916": ("Our Group chveni jgupi", "",      ""),
-    "405142634": ("Ander Konstrakshen",     "",      ""),
-    "425057341": ("Eplaini",                "",      ""),
+    "424611441": ("Lago",                   "12891", "ლაგო"),
+    "436034916": ("Our Group chveni jgupi",  "",      ""),
+    "405142634": ("Ander Konstrakshen",      "",      ""),
+    "425057341": ("Eplaini",                 "",      ""),
 }
 
 # ── Логирование ────────────────────────────────────────────────────────────────
@@ -45,24 +44,22 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ── Настройки портала ─────────────────────────────────────────────────────────
+# ── Портал ────────────────────────────────────────────────────────────────────
 
-BASE_URL = "https://tenders.procurement.gov.ge"
-API_URL = f"{BASE_URL}/public/api"
+BASE_URL    = "https://tenders.procurement.gov.ge"
+API_URL     = f"{BASE_URL}/public/api"
 LIBRARY_URL = f"{BASE_URL}/public/library"
 CONTROLLER_URL = f"{LIBRARY_URL}/controller.php"
-LIST_ORG_URL = f"{LIBRARY_URL}/list_org.php"
+LIST_ORG_URL   = f"{LIBRARY_URL}/list_org.php"
 
-HEADERS = {
+SESSION = requests.Session()
+SESSION.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     "Accept": "*/*",
     "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
     "X-Requested-With": "XMLHttpRequest",
     "Referer": f"{LIBRARY_URL}/",
-}
-
-SESSION = requests.Session()
-SESSION.headers.update(HEADERS)
+})
 
 
 def init_session() -> None:
@@ -76,9 +73,8 @@ def init_session() -> None:
 
 
 def get_monac_id(customer_id: str) -> tuple[str, str]:
-    """Hardcoded değer varsa onu döndür, yoksa list_org.php dene."""
     info = CUSTOMERS.get(customer_id, ("", "", ""))
-    if info[1]:  # hardcoded monac_id mevcut
+    if info[1]:
         log.info("  Hardcoded: monac_id=%s, org_b=%s", info[1], info[2])
         return info[1], info[2]
 
@@ -108,13 +104,10 @@ def get_monac_id(customer_id: str) -> tuple[str, str]:
     return "0", ""
 
 
+# ── Tender API ────────────────────────────────────────────────────────────────
+
 def fetch_tenders(page: int = 1, page_size: int = 20) -> dict:
-    params = {
-        "page": page,
-        "pageSize": page_size,
-        "sortBy": "publishDate",
-        "sortOrder": "desc",
-    }
+    params = {"page": page, "pageSize": page_size, "sortBy": "publishDate", "sortOrder": "desc"}
     try:
         resp = SESSION.get(f"{API_URL}/tenders", params=params, timeout=30)
         resp.raise_for_status()
@@ -130,15 +123,12 @@ def fetch_tenders_html() -> list[dict]:
     except ImportError:
         log.warning("beautifulsoup4 не установлен")
         return []
-
-    url = f"{BASE_URL}/public/tenders"
     try:
-        resp = SESSION.get(url, timeout=30)
+        resp = SESSION.get(f"{BASE_URL}/public/tenders", timeout=30)
         resp.raise_for_status()
     except requests.RequestException as e:
         log.error("Ошибка HTML-запроса: %s", e)
         return []
-
     soup = BeautifulSoup(resp.text, "html.parser")
     tenders = []
     for row in soup.select("table.tender-list tbody tr"):
@@ -147,13 +137,13 @@ def fetch_tenders_html() -> list[dict]:
             continue
         link_tag = cols[1].find("a")
         tenders.append({
-            "id": cols[0].get_text(strip=True),
-            "title": cols[1].get_text(strip=True),
-            "url": BASE_URL + link_tag["href"] if link_tag else "",
+            "id":        cols[0].get_text(strip=True),
+            "title":     cols[1].get_text(strip=True),
+            "url":       BASE_URL + link_tag["href"] if link_tag else "",
             "organizer": cols[2].get_text(strip=True),
-            "deadline": cols[3].get_text(strip=True),
-            "budget": cols[4].get_text(strip=True) if len(cols) > 4 else "",
-            "status": cols[5].get_text(strip=True) if len(cols) > 5 else "",
+            "deadline":  cols[3].get_text(strip=True),
+            "budget":    cols[4].get_text(strip=True) if len(cols) > 4 else "",
+            "status":    cols[5].get_text(strip=True) if len(cols) > 5 else "",
         })
     return tenders
 
@@ -161,10 +151,6 @@ def fetch_tenders_html() -> list[dict]:
 # ── Müşteri tender çekme ───────────────────────────────────────────────────────
 
 def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
-    """
-    Gerçek form parametreleriyle controller.php'ye POST at,
-    tüm sayfalardaki tenderları çek.
-    """
     try:
         from bs4 import BeautifulSoup
     except ImportError:
@@ -173,11 +159,10 @@ def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
 
     log.info("Загрузка тендеров клиента: %s (%s)", customer_name, customer_id)
 
-    # 1. İlk olarak monac_id ve Gürcüce ismi al
     monac_id, org_name_ge = get_monac_id(customer_id)
     if not monac_id or monac_id == "0":
-        log.warning("  monac_id bulunamadı, org_b boş bırakılıyor")
-        org_name_ge = ""
+        log.warning("  monac_id bulunamadı, atlanıyor")
+        return []
 
     log.info("  → monac_id=%s, org_b=%s", monac_id, org_name_ge)
 
@@ -185,31 +170,30 @@ def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
     page = 1
 
     while True:
-        # 2. Tarayıcının gönderdiği tam parametreler
         post_data = {
-            "action": "search_app",
-            "app_t": "0",
-            "search": "",
-            "app_reg_id": "",
-            "app_shems_id": "0",
-            "org_a": "",
-            "app_monac_id": monac_id,
-            "org_b": org_name_ge,
+            "action":               "search_app",
+            "app_t":                "0",
+            "search":               "",
+            "app_reg_id":           "",
+            "app_shems_id":         "0",
+            "org_a":                "",
+            "app_monac_id":         monac_id,
+            "org_b":                org_name_ge,
             "app_particip_status_id": "0",
-            "app_donor_id": "0",
-            "app_status": "0",
-            "app_agr_status": "0",
-            "app_type": "0",
-            "app_basecode": "0",
-            "app_codes": "",
-            "app_date_type": "1",
-            "app_date_from": "",
-            "app_date_till": "",
-            "app_amount_from": "",
-            "app_amount_to": "",
-            "app_currency": "2",
-            "app_pricelist": "0",
-            "page": str(page),
+            "app_donor_id":         "0",
+            "app_status":           "0",
+            "app_agr_status":       "0",
+            "app_type":             "0",
+            "app_basecode":         "0",
+            "app_codes":            "",
+            "app_date_type":        "1",
+            "app_date_from":        "",
+            "app_date_till":        "",
+            "app_amount_from":      "",
+            "app_amount_to":        "",
+            "app_currency":         "2",
+            "app_pricelist":        "0",
+            "page":                 str(page),
         }
 
         try:
@@ -229,7 +213,6 @@ def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
         all_tenders.extend(parsed)
         log.info("  Sayfa %d: %d tender", page, len(parsed))
 
-        # Sonraki sayfa var mı?
         next_link = soup.find("a", string=lambda t: t and (
             ">" in t or "შემდეგი" in t or "next" in (t or "").lower()
         ))
@@ -244,59 +227,50 @@ def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
 
 
 def parse_customer_tenders(soup, customer_id: str) -> list[dict]:
-    """HTML tablosundan tender satırlarını parse et."""
     tenders = []
-    rows = soup.select("table tbody tr")
-
-    for row in rows:
+    for row in soup.select("table tbody tr"):
         cols = row.find_all("td")
         if len(cols) < 2:
             continue
 
-        tender_id = cols[0].get_text(strip=True) if len(cols) > 0 else ""
-        name = ""
-        link = ""
-        org = ""
-        price = ""
-        deadline = ""
+        tender_id   = cols[0].get_text(strip=True) if len(cols) > 0 else ""
+        name        = ""
+        link        = ""
+        org         = ""
+        price       = ""
+        deadline    = ""
         publish_date = ""
-        status = ""
+        status      = ""
 
-        if len(cols) >= 2:
-            a_tag = cols[1].find("a", href=True)
-            if a_tag:
-                raw_href = a_tag["href"]
-                link = (BASE_URL + raw_href) if raw_href.startswith("/") else raw_href
-                name = a_tag.get_text(strip=True)
-            else:
-                name = cols[1].get_text(strip=True)
-        if len(cols) >= 3:
-            org = cols[2].get_text(strip=True)
-        if len(cols) >= 4:
-            price = cols[3].get_text(strip=True)
-        if len(cols) >= 5:
-            deadline = cols[4].get_text(strip=True)
-        if len(cols) >= 6:
-            publish_date = cols[5].get_text(strip=True)
-        if len(cols) >= 7:
-            status = cols[6].get_text(strip=True)
+        a_tag = cols[1].find("a", href=True) if len(cols) >= 2 else None
+        if a_tag:
+            raw_href = a_tag["href"]
+            link = (BASE_URL + raw_href) if raw_href.startswith("/") else raw_href
+            name = a_tag.get_text(strip=True)
+        elif len(cols) >= 2:
+            name = cols[1].get_text(strip=True)
+
+        if len(cols) >= 3: org          = cols[2].get_text(strip=True)
+        if len(cols) >= 4: price        = cols[3].get_text(strip=True)
+        if len(cols) >= 5: deadline     = cols[4].get_text(strip=True)
+        if len(cols) >= 6: publish_date = cols[5].get_text(strip=True)
+        if len(cols) >= 7: status       = cols[6].get_text(strip=True)
 
         if not name and not tender_id:
             continue
 
         tenders.append({
-            "customer_id": customer_id,
-            "id": tender_id,
-            "reg_id": tender_id,
-            "name": name,
-            "org": org,
-            "price": price,
-            "deadline": deadline,
+            "customer_id":  customer_id,
+            "id":           tender_id,
+            "reg_id":       tender_id,
+            "name":         name,
+            "org":          org,
+            "price":        price,
+            "deadline":     deadline,
             "publish_date": publish_date,
-            "status": status,
-            "link": link,
+            "status":       status,
+            "link":         link,
         })
-
     return tenders
 
 
@@ -304,20 +278,17 @@ def save_customer_csv(all_tenders: list[dict]) -> None:
     if not all_tenders:
         log.warning("Müşteri tender verisi yok, CSV yazılmadı")
         return
-
     fieldnames = ["customer_id", "id", "reg_id", "name", "org", "price",
                   "deadline", "publish_date", "status", "link"]
-
     with open(CUSTOMER_CSV_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for t in all_tenders:
             writer.writerow({k: t.get(k, "") for k in fieldnames})
-
     log.info("Сохранено %d тендеров клиентов → %s", len(all_tenders), CUSTOMER_CSV_FILE)
 
 
-# ── Хранилище просмотренных тендеров ──────────────────────────────────────────
+# ── Seen tenders ──────────────────────────────────────────────────────────────
 
 def load_seen() -> set[str]:
     if SEEN_FILE.exists():
@@ -381,30 +352,33 @@ def send_telegram(message: str) -> bool:
 
 
 def format_tender_message(tender: dict) -> str:
-    title = tender.get("title") or tender.get("subject") or "Без названия"
-    tid = tender.get("id") or tender.get("tenderId", "—")
+    title     = tender.get("title") or tender.get("subject") or "Без названия"
+    tid       = tender.get("id") or tender.get("tenderId", "—")
     organizer = tender.get("organizer") or tender.get("organizerName", "—")
-    budget = tender.get("budget") or tender.get("estimatedValue", "—")
-    deadline = tender.get("deadline") or tender.get("submissionDeadline", "—")
+    budget    = tender.get("budget") or tender.get("estimatedValue", "—")
+    deadline  = tender.get("deadline") or tender.get("submissionDeadline", "—")
     published = tender.get("publishDate") or tender.get("publicationDate", "—")
-    url = tender.get("url") or f"{BASE_URL}/public/tenders/{tid}"
-    cpv = tender.get("cpvCode") or tender.get("cpv", "")
-
-    lines = ["🇬🇪 <b>Новый тендер — Грузия</b>", "",
-             f"📋 <b>{title}</b>",
-             f"🆔 ID: <code>{tid}</code>",
-             f"🏢 Организатор: {organizer}"]
+    url       = tender.get("url") or f"{BASE_URL}/public/tenders/{tid}"
+    cpv       = tender.get("cpvCode") or tender.get("cpv", "")
+    lines = [
+        "🇬🇪 <b>Новый тендер — Грузия</b>", "",
+        f"📋 <b>{title}</b>",
+        f"🆔 ID: <code>{tid}</code>",
+        f"🏢 Организатор: {organizer}",
+    ]
     if budget and budget != "—":
         lines.append(f"💰 Бюджет: {budget}")
     if cpv:
         lines.append(f"📦 CPV: {cpv}")
-    lines += [f"📅 Опубликован: {published}",
-              f"⏰ Срок подачи: {deadline}",
-              f"🔗 <a href='{url}'>Открыть тендер</a>"]
+    lines += [
+        f"📅 Опубликован: {published}",
+        f"⏰ Срок подачи: {deadline}",
+        f"🔗 <a href='{url}'>Открыть тендер</a>",
+    ]
     return "\n".join(lines)
 
 
-# ── Основной цикл ──────────────────────────────────────────────────────────────
+# ── Ana döngü ─────────────────────────────────────────────────────────────────
 
 def process_tenders(tenders: list[dict], seen: set[str]) -> int:
     new_count = 0
@@ -440,11 +414,10 @@ def run_once() -> None:
     save_seen(seen)
     log.info("Готово. Новых: %d / Проверено: %d", new, len(all_tenders))
 
-    # ── Müşteri tenderları ──────────────────────────────────────────────────
     log.info("Обновление тендеров клиентов…")
     all_customer_tenders: list[dict] = []
     for cust_id, cust_info in CUSTOMERS.items():
-    cust_name = cust_info[0]
+        cust_name = cust_info[0]
         try:
             tenders = search_customer_tenders(cust_id, cust_name)
             all_customer_tenders.extend(tenders)
@@ -459,9 +432,8 @@ def run_once() -> None:
 def run_loop() -> None:
     log.info("=" * 60)
     log.info("Georgia Tender Bot запущен")
-    log.info("Клиенты: %s", list(CUSTOMERS.values()))
+    log.info("Клиенты: %s", [v[0] for v in CUSTOMERS.values()])
     log.info("=" * 60)
-
     while True:
         try:
             run_once()
@@ -474,18 +446,15 @@ def run_loop() -> None:
         time.sleep(CHECK_INTERVAL)
 
 
-# ── Точка входа ────────────────────────────────────────────────────────────────
+# ── Giriş noktası ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser(description="Georgia Tender Bot")
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--interval", type=int, default=CHECK_INTERVAL)
     args = parser.parse_args()
-
     CHECK_INTERVAL = args.interval
-
     if args.once:
         run_once()
     else:
