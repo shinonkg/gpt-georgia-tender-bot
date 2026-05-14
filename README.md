@@ -1,12 +1,12 @@
 # Georgia Tender Monitor
 
-AI-assisted tender tracking and monitoring dashboard for Georgian public procurement data, with a static frontend dashboard, Python scraping/monitoring bot, Supabase-backed review state, Telegram notifications, and Lago supplier tender integration.
+AI-assisted tender tracking and monitoring dashboard for Georgian public procurement data, with a static frontend dashboard, Python scraping/monitoring bot, Supabase-backed review state, Telegram notifications, and monitored supplier tender integration.
 
 > AI assistant note: this repository is currently a static dashboard plus Python automation. The requested Flask backend is a target architecture item, but no Flask application entrypoint is present in the current codebase.
 
 ## Project Overview
 
-The project monitors tenders from `tenders.procurement.gov.ge`, stores extracted tender data in CSV/JSON files, renders an authenticated browser dashboard, and notifies operators when monitored suppliers such as Lago appear in new tender results.
+The project monitors tenders from `tenders.procurement.gov.ge`, stores extracted tender data in CSV/JSON files, renders an authenticated browser dashboard, and notifies operators when monitored suppliers appear in new tender results.
 
 Primary use cases:
 
@@ -25,7 +25,7 @@ Primary use cases:
 | Supabase authentication | Active | Frontend uses Supabase Auth in browser. |
 | Supabase review state | Active | Stores review status and notes for tenders. |
 | Tender scraping | Active | Implemented in `georgia_tender_bot.py`. |
-| Lago tender integration | Active | Uses supplier `monac_id=12891`; follows pagination for yearly results. |
+| Monitored supplier integration | Active | Tracks Lago, Our Group, Ander Konstrakshen, and Eplaini; follows pagination for yearly results. |
 | Official tender URLs | Active | Uses `https://tenders.procurement.gov.ge/public/?lang=ru&go={app_id}`. |
 | Telegram notifications | Active | Sends a message when new customer tender rows are detected. |
 | GitHub Actions automation | Active | Runs twice daily and can be triggered manually. |
@@ -91,6 +91,7 @@ Then open `http://localhost:8000`.
 | `TELEGRAM_TOKEN` | Yes for notifications | `georgia_tender_bot.py` | Telegram bot token. |
 | `TELEGRAM_CHAT_ID` | Yes for notifications | `georgia_tender_bot.py` | Target Telegram chat/channel ID. |
 | `CUSTOMER_TENDER_YEAR` | Optional | `georgia_tender_bot.py` | Year filter for customer tender searches. Defaults to current year. |
+| `CUSTOMER_TENDER_DATE_TYPE` | Optional | `georgia_tender_bot.py` | Procurement portal date filter. Defaults to `2`, the offer reception/auction date, so late previous-year announcements with current-year participation are included. |
 | Supabase URL/key | Currently inline in frontend | `index.html` | Supabase project credentials used by browser app. |
 
 ## Deployment
@@ -165,5 +166,5 @@ Telegram notifications are triggered by customer tender synchronization:
 - Do not assume Flask exists until an app file such as `app.py` or `wsgi.py` is added.
 - Main data contracts are the CSV headers in `tenders.csv` and `customer_tenders.csv`.
 - Official tender links should use `/public/?lang=ru&go={app_id}`, not `/public/library/#/tenders/apinfo/{app_id}`.
-- Lago uses `customer_id=424611441` and `monac_id=12891`.
+- Monitored supplier IDs: Lago `12891`, Our Group chveni jgupi `36827`, Ander Konstrakshen `104814`, Eplaini `71057`.
 - Preserve GitHub Actions behavior when changing generated data files.

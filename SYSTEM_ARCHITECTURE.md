@@ -148,27 +148,31 @@ Tender parsing is HTML-based:
 https://tenders.procurement.gov.ge/public/?lang=ru&go={app_id}
 ```
 
-## Lago Integration
+## Monitored Supplier Integration
 
-Lago is configured in `CUSTOMERS`:
+Monitored suppliers are configured in `CUSTOMERS`:
 
 ```python
-"424611441": ("Lago", "12891", "lago")
+"424611441": ("Lago", "12891", "lago"),
+"436034916": ("Our Group chveni jgupi", "36827", "our group"),
+"405142634": ("Ander Konstrakshen", "104814", "ander konstrakshen"),
+"425057341": ("Eplaini", "71057", "eplaini"),
 ```
 
 | Value | Meaning |
 | --- | --- |
-| `424611441` | Customer/supplier ID used by dashboard. |
-| `Lago` | Display name. |
-| `12891` | Procurement portal `app_monac_id`. |
-| `lago` | Supplier search text. |
+| First field | Customer/supplier ID used by dashboard. |
+| Second field | Display name. |
+| Third field | Procurement portal `app_monac_id`. |
+| Fourth field | Supplier search text. |
 
 Current behavior:
 
 - Searches the current year by default.
 - Uses `CUSTOMER_TENDER_YEAR` if set.
+- Uses procurement `app_date_type=2` by default, so the year is based on offer reception/auction date rather than only announcement date.
 - Follows procurement result pagination.
-- Writes all Lago rows to `customer_tenders.csv`.
+- Writes all monitored supplier rows to `customer_tenders.csv`.
 - Sends Telegram alerts for newly detected `customer_id:tender_id` keys.
 
 ## Telegram Notification System

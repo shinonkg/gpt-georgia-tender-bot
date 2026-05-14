@@ -38,6 +38,7 @@ This file tracks active work for humans and AI coding assistants.
 | 2026-05-14 | Lago pagination | Bot follows result pages and loads all 2026 Lago tender rows. |
 | 2026-05-14 | Telegram new-entry detection | Compares current customer CSV against previous CSV before sending alerts. |
 | 2026-05-14 | Drawer z-index fix | Tender drawer appears above customer modal. |
+| 2026-05-14 | Expanded monitored suppliers | Added Our Group, Ander Konstrakshen, and Eplaini supplier tender history. |
 
 ## Technical Debt
 

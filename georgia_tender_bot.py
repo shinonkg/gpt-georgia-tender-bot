@@ -19,16 +19,18 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 CHECK_INTERVAL = 300
+MAX_CUSTOMER_PAGES = int(os.getenv("MAX_CUSTOMER_TENDER_PAGES", "25"))
 
 SEEN_FILE = Path("seen_tenders_georgia.json")
 CUSTOMER_TENDERS_CSV = Path("customer_tenders.csv")
 CUSTOMER_TENDER_YEAR = int(os.getenv("CUSTOMER_TENDER_YEAR", str(datetime.now().year)))
+CUSTOMER_TENDER_DATE_TYPE = os.getenv("CUSTOMER_TENDER_DATE_TYPE", "2")
 
 CUSTOMERS = {
     "424611441": ("Lago", "12891", "lago"),
-    "436034916": ("Our Group", "", "our group"),
-    "405142634": ("Ander Konstrakshen", "", "ander konstrakshen"),
-    "425057341": ("Eplaini", "", "eplaini"),
+    "436034916": ("Our Group chveni jgupi", "36827", "our group"),
+    "405142634": ("Ander Konstrakshen", "104814", "ander konstrakshen"),
+    "425057341": ("Eplaini", "71057", "eplaini"),
 }
 
 logging.basicConfig(
@@ -97,13 +99,24 @@ def load_existing_customer_tender_ids() -> set[str]:
 
 
 def extract_page_count(html: str) -> int:
-    matches = [
-        re.search(r"page:\s*\d+\s*/\s*(\d+)", html, re.I),
-        re.search(r"plastpage\s*=\s*eval\('(\d+)'\)", html, re.I),
+    patterns = [
+        r"page:\s*\d+\s*/\s*(\d+)",
+        r"plastpage\s*=\s*eval\(['\"]?(\d+)['\"]?\)",
+        r"lastpage\s*=\s*eval\(['\"]?(\d+)['\"]?\)",
+        r"page_count\s*[:=]\s*['\"]?(\d+)",
     ]
-    for match in matches:
+    for pattern in patterns:
+        match = re.search(pattern, html, re.I)
         if match:
-            return max(1, int(match.group(1)))
+            return max(1, min(MAX_CUSTOMER_PAGES, int(match.group(1))))
+
+    page_numbers = [
+        int(value)
+        for value in re.findall(r"(?:page=|go_to_page\(|changePage\()\s*['\"]?(\d+)", html, re.I)
+        if value.isdigit()
+    ]
+    if page_numbers:
+        return max(1, min(MAX_CUSTOMER_PAGES, max(page_numbers)))
     return 1
 
 
@@ -187,7 +200,7 @@ def fetch_customer_tenders_playwright(
         "app_type": "0",
         "app_basecode": "0",
         "app_codes": "",
-        "app_date_type": "1",
+        "app_date_type": CUSTOMER_TENDER_DATE_TYPE,
         "app_date_from": date_from,
         "app_date_till": "",
         "app_date_tlll": date_till,
@@ -216,15 +229,35 @@ def fetch_customer_tenders_playwright(
     """
 
     js_get_page = """
-    async (pageNo) => {
-        const params = new URLSearchParams({ action: 'search_app', page: String(pageNo) });
-        const resp = await fetch('/public/library/controller.php?' + params.toString(), {
+    async ({ params, pageNo }) => {
+        const body = new URLSearchParams(params);
+        body.set('page', String(pageNo));
+
+        let resp = await fetch('/public/library/controller.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': '*/*'
+            },
+            credentials: 'include',
+            body: body.toString()
+        });
+        let text = await resp.text();
+
+        if (resp.status === 200 && text.trim()) {
+            return { status: resp.status, body: text, method: 'POST' };
+        }
+
+        const query = new URLSearchParams(params);
+        query.set('page', String(pageNo));
+        resp = await fetch('/public/library/controller.php?' + query.toString(), {
             method: 'GET',
             credentials: 'include',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': '*/*' }
         });
-        const text = await resp.text();
-        return { status: resp.status, body: text };
+        text = await resp.text();
+        return { status: resp.status, body: text, method: 'GET' };
     }
     """
 
@@ -254,12 +287,17 @@ def fetch_customer_tenders_playwright(
                 browser.close()
                 return []
 
-            results.extend(parse_customer_tender_rows(body, customer_id, customer_label))
+            first_page_rows = parse_customer_tender_rows(body, customer_id, customer_label)
+            results.extend(first_page_rows)
+            seen_page_keys = {
+                row["customer_id"] + ":" + row["tender_id"]
+                for row in first_page_rows
+            }
             page_count = extract_page_count(body)
             log.info("[%s] Page 1/%d: %d rows", customer_label, page_count, len(results))
 
             for page_no in range(2, page_count + 1):
-                page_result = page.evaluate(js_get_page, page_no)
+                page_result = page.evaluate(js_get_page, {"params": post_data, "pageNo": page_no})
                 page_status = page_result.get("status", 0)
                 page_body = page_result.get("body", "")
                 if page_status != 200 or not page_body.strip():
@@ -267,8 +305,27 @@ def fetch_customer_tenders_playwright(
                     continue
 
                 page_rows = parse_customer_tender_rows(page_body, customer_id, customer_label)
-                results.extend(page_rows)
-                log.info("[%s] Page %d/%d: %d rows", customer_label, page_no, page_count, len(page_rows))
+                new_page_rows = []
+                for row in page_rows:
+                    key = row["customer_id"] + ":" + row["tender_id"]
+                    if key not in seen_page_keys:
+                        seen_page_keys.add(key)
+                        new_page_rows.append(row)
+
+                if page_rows and not new_page_rows:
+                    log.warning("[%s] Page %d repeated already-seen rows; stopping pagination", customer_label, page_no)
+                    break
+
+                results.extend(new_page_rows)
+                log.info(
+                    "[%s] Page %d/%d via %s: %d rows, %d new",
+                    customer_label,
+                    page_no,
+                    page_count,
+                    page_result.get("method", "unknown"),
+                    len(page_rows),
+                    len(new_page_rows),
+                )
 
             browser.close()
 

@@ -179,6 +179,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .drawer-body{flex:1;overflow-y:auto;padding:20px 24px}
 .drawer-section{margin-bottom:20px}
 .drawer-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);margin-bottom:10px}
+.drawer-title-text{font-size:16px;font-weight:800;line-height:1.35;color:var(--text);margin-bottom:8px;overflow-wrap:anywhere}
+.drawer-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--text3);font-size:12px}
 .drawer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .drawer-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px}
 .drawer-label{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
@@ -188,7 +190,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .drawer-table tr:last-child{border-bottom:none}
 .drawer-table td{padding:9px 10px;vertical-align:top}
 .drawer-table td:first-child{color:var(--text3);width:45%;font-size:12px}
-.drawer-table td:last-child{color:var(--text);font-weight:600}
+.drawer-table td:last-child{color:var(--text);font-weight:600;overflow-wrap:anywhere}
 .drawer-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
 /* ── Customer Modal ── */
 .cm-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,0.45);backdrop-filter:blur(3px);z-index:9000}
@@ -506,6 +508,8 @@ document.addEventListener('keydown', e => {
 let ALL_TENDERS = [], CURRENT_FILTER = "all", QUICK_FILTER = "all";
 let REVIEW_STATUSES = {}, TENDER_NOTES = {}, IGNORED_TENDERS = [];
 let CUSTOMER_TENDERS = {};
+let CUSTOMER_TENDERS_LOADED = false;
+let CUSTOMER_TENDERS_LOADING = null;
 
 let toastTimer = null;
 function showToast(msg, type = "success") {
@@ -699,7 +703,7 @@ function render() {
     const docHtml = totalN > 0 ? '<div class="doc-counts"><div class="doc-item">📄 <strong>' + pdfN + '</strong> PDF</div><div class="doc-item">📊 <strong>' + xlsN + '</strong> Excel</div><div class="doc-item">🖼 <strong>' + imgN + '</strong> Images</div><div class="doc-item" style="margin-left:auto">📎 <strong>' + totalN + '</strong> Всего</div></div>' : "";
     const noteHtml = TENDER_NOTES[t.id] ? '<span style="color:var(--blue);font-weight:600;font-size:11px">📝 Note</span>' : "";
     const safeId = (t.id || "").replace(/'/g, "\\'");
-    const safeLink = (t.link || "#").replace(/"/g, "&quot;");
+    const safeLink = escapeAttr(officialTenderLink(t));
     return '<div class="' + cardClass + '">'
       + '<div class="card-top"><div class="badges">' + renderBadges(t) + '</div><span class="priority ' + pCls + '">' + priority + '</span></div>'
       + '<div class="card-title">' + (t.name || "Без названия") + '</div>'
@@ -732,19 +736,25 @@ function openDrawer(tenderId) {
   const [priority, pCls] = getPriority(t.price);
   const c = getDeadlineCountdown(t.deadline);
   const safeId = (tenderId || "").replace(/'/g, "\\'");
-  const safeLink = (t.link || "#").replace(/"/g, "&quot;");
+  const safeLink = escapeAttr(officialTenderLink(t));
+  const appId = officialTenderAppId(t);
   document.getElementById("drawerTitle").textContent = t.reg_id || "Tender";
   document.getElementById("drawerBody").innerHTML =
+    '<div class="drawer-section">'
+    + '<div class="drawer-title-text">' + escapeHtml(t.name || t.reg_id || "Tender") + '</div>'
+    + '<div class="drawer-meta"><span>' + escapeHtml(t.reg_id || "N/A") + '</span><span>Portal ID: ' + escapeHtml(appId || "N/A") + '</span><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div>'
+    + '</div>'
+    +
     '<div class="drawer-section"><div class="drawer-section-title">Детали закупки</div>'
     + '<table class="drawer-table">'
-    + '<tr><td>Номер заявки</td><td>' + (t.reg_id || "—") + '</td></tr>'
-    + '<tr><td>Статус закупки</td><td><span class="status-badge ' + getStatusClass(t.status) + '">' + (t.status || "—") + '</span></td></tr>'
-    + '<tr><td>Закупщик</td><td>' + (t.org || "—") + '</td></tr>'
-    + '<tr><td>Дата объявления закупки</td><td>' + (t.published || t.date_found || "—") + '</td></tr>'
-    + '<tr><td>Начало приема предложений</td><td>' + (t.bid_start || "—") + '</td></tr>'
-    + '<tr><td>Истекает срок принятия предложений</td><td><span class="' + c.cls + '">' + (t.deadline || "—") + ' (' + c.text + ')</span></td></tr>'
-    + '<tr><td>Предполагаемая цена закупки</td><td style="color:var(--blue)">' + (t.price || "—") + '</td></tr>'
-    + '<tr><td>Приоритет</td><td><span class="priority ' + pCls + '">' + priority + '</span></td></tr>'
+    + '<tr><td>Номер заявки</td><td>' + escapeHtml(t.reg_id || "—") + '</td></tr>'
+    + '<tr><td>Статус закупки</td><td><span class="status-badge ' + getStatusClass(t.status) + '">' + escapeHtml(t.status || "—") + '</span></td></tr>'
+    + '<tr><td>Закупщик</td><td>' + escapeHtml(t.org || "—") + '</td></tr>'
+    + '<tr><td>Дата объявления закупки</td><td>' + escapeHtml(t.published || t.date_found || "—") + '</td></tr>'
+    + '<tr><td>Начало приема предложений</td><td>' + escapeHtml(t.bid_start || "—") + '</td></tr>'
+    + '<tr><td>Истекает срок принятия предложений</td><td><span class="' + c.cls + '">' + escapeHtml(t.deadline || "—") + ' (' + escapeHtml(c.text) + ')</span></td></tr>'
+    + '<tr><td>Предполагаемая цена закупки</td><td style="color:var(--blue)">' + escapeHtml(t.price || "—") + '</td></tr>'
+    + '<tr><td>Приоритет</td><td><span class="priority ' + pCls + '">' + escapeHtml(priority) + '</span></td></tr>'
     + '</table></div>'
     + '<div class="drawer-section"><div class="drawer-section-title">Категория закупки (CPV)</div><div>' + renderBadges(t) + '</div></div>'
     + '<div class="drawer-section"><div class="drawer-section-title">Review статус</div><div><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div></div>'
@@ -752,7 +762,7 @@ function openDrawer(tenderId) {
       ? '<div class="drawer-section"><div class="drawer-section-title">Документы</div><div style="display:flex;gap:14px;font-size:13px"><span>📄 <strong>' + (t.pdf_count||0) + '</strong> PDF</span><span>📊 <strong>' + (t.excel_count||0) + '</strong> Excel</span><span>🖼 <strong>' + (t.image_count||0) + '</strong> Images</span></div></div>'
       : '')
     + '<div class="drawer-section"><div class="drawer-section-title">Заметки</div>'
-    + '<textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Inter,sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">' + (TENDER_NOTES[t.id] || "") + '</textarea>'
+    + '<textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Inter,sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">' + escapeHtml(TENDER_NOTES[t.id] || "") + '</textarea>'
     + '</div>';
   const isIgnored = getReviewStatus(tenderId) === "ignored";
   document.getElementById("drawerActions").innerHTML =
@@ -775,42 +785,54 @@ function closeDrawer() {
 // ── Customer CSV loading ──
 
 async function loadCustomerTendersCSV() {
+  if (CUSTOMER_TENDERS_LOADING) return CUSTOMER_TENDERS_LOADING;
+  CUSTOMER_TENDERS_LOADING = (async () => {
   try {
     const res = await fetch("customer_tenders.csv?v=" + Date.now());
-    if (!res.ok) return;
+    if (!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
     const rows = parseCSV(text);
-    if (rows.length < 2) return;
+    if (rows.length < 2) {
+      CUSTOMER_TENDERS = {};
+      CUSTOMER_TENDERS_LOADED = true;
+      return;
+    }
     const headers = rows.shift().map(h => h.replace(/\uFEFF/g, "").trim());
     const data = rows
       .map(r => { const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o; })
       .filter(r => r.customer_id && r.customer_id !== "customer_id");
-CUSTOMER_TENDERS = {};
+    CUSTOMER_TENDERS = {};
 
-data.forEach(t => {
+    data.forEach(t => {
 
-  // kolon eşitleme
-  t.reg_id = t.reg_id || t.tender_id || t.announcement_number || "";
-  t.name = t.name || t.title || t.tender_name || "Unnamed Tender";
-  t.publish_date = t.publish_date || t.date || "";
-  t.status = t.status || "Active";
-  t.price = t.price || t.estimated_value || "";
-  t.link = t.link || t.url || "#";
+      // kolon eşitleme
+      t.reg_id = t.reg_id || t.tender_id || t.announcement_number || "";
+      t.name = t.name || t.title || t.tender_name || "Unnamed Tender";
+      t.publish_date = t.publish_date || t.date || "";
+      t.status = t.status || "Active";
+      t.price = t.price || t.estimated_value || "";
+      t.link = t.link || t.url || "#";
 
-  // push
-  if (!CUSTOMER_TENDERS[t.customer_id]) {
-    CUSTOMER_TENDERS[t.customer_id] = [];
-  }
+      // push
+      if (!CUSTOMER_TENDERS[t.customer_id]) {
+        CUSTOMER_TENDERS[t.customer_id] = [];
+      }
 
-  CUSTOMER_TENDERS[t.customer_id].push(t);
+      CUSTOMER_TENDERS[t.customer_id].push(t);
 
     });
     Object.keys(CUSTOMER_TENDERS).forEach(id => {
       CUSTOMER_TENDERS[id].sort((a, b) => parseTenderDate(b.publish_date) - parseTenderDate(a.publish_date));
     });
+    CUSTOMER_TENDERS_LOADED = true;
   } catch(e) {
+    CUSTOMER_TENDERS_LOADED = false;
     console.warn("customer_tenders.csv yüklenemedi:", e.message);
+  } finally {
+    CUSTOMER_TENDERS_LOADING = null;
   }
+  })();
+  return CUSTOMER_TENDERS_LOADING;
 }
 
 // ── Customer modal ──
@@ -867,6 +889,9 @@ function renderCustomerProfile(c) {
 }
 
 async function fetchCustomerTenders(idCode) {
+  if (!CUSTOMER_TENDERS_LOADED) {
+    await loadCustomerTendersCSV();
+  }
   const tenders = CUSTOMER_TENDERS[idCode];
   if (!tenders || tenders.length === 0) {
     return { ok: false, error: "no_data" };
@@ -884,11 +909,21 @@ function escapeHtml(v) {
   }[ch]));
 }
 
+function escapeAttr(v) {
+  return escapeHtml(v).replace(/`/g, "&#96;");
+}
+
 function officialTenderLink(t) {
   const raw = t.link || t.url || "";
   const appMatch = String(raw).match(/apinfo\/(\d+)/) || String(raw).match(/[?&]go=(\d+)/);
   if (appMatch) return "https://tenders.procurement.gov.ge/public/?lang=ru&go=" + appMatch[1];
   return raw || "#";
+}
+
+function officialTenderAppId(t) {
+  const raw = t.link || t.url || "";
+  const appMatch = String(raw).match(/apinfo\/(\d+)/) || String(raw).match(/[?&]go=(\d+)/);
+  return appMatch ? appMatch[1] : (t.id || "");
 }
 
 function pickCustomerTenderDetails(t) {
@@ -925,7 +960,7 @@ function renderCustomerTenders(result, c) {
 
   html += sorted.map(t => {
     const d = pickCustomerTenderDetails(t);
-    const link = officialTenderLink(t);
+    const link = escapeAttr(officialTenderLink(t));
     const safeId = String(d.id).replace(/'/g, "\\'");
 
     return '<div class="ct-card">'
@@ -961,12 +996,18 @@ function openCustomerTenderDrawer(customerId, tenderId) {
   if (!t) return;
 
   const d = pickCustomerTenderDetails(t);
-  const link = officialTenderLink(t);
+  const link = escapeAttr(officialTenderLink(t));
+  const appId = officialTenderAppId(t);
   const sCls = getStatusClass(d.status);
 
   document.getElementById("drawerTitle").textContent = d.id;
 
   document.getElementById("drawerBody").innerHTML =
+    '<div class="drawer-section">'
+    + '<div class="drawer-title-text">' + escapeHtml(d.category || d.kind || d.id || "Tender") + '</div>'
+    + '<div class="drawer-meta"><span>' + escapeHtml(d.id || "N/A") + '</span><span>Portal ID: ' + escapeHtml(appId || "N/A") + '</span><span>' + escapeHtml(t.customer_name || "") + '</span></div>'
+    + '</div>'
+    +
     '<div class="drawer-section"><div class="drawer-section-title">Детали закупки</div>'
     + '<table class="drawer-table">'
     + '<tr><td>Номер заявки</td><td>' + escapeHtml(d.id) + '</td></tr>'
