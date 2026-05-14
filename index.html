@@ -216,13 +216,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ct-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .ct-title{font-size:15px;font-weight:800;color:var(--text)}
 .ct-badge{background:var(--blue2);color:var(--blue);font-size:12px;font-weight:700;padding:3px 12px;border-radius:10px}
-.ct-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:0.15s;cursor:pointer}
-.ct-card:hover{border-color:#c7d2fe;box-shadow:0 4px 16px rgba(0,0,0,0.07);transform:translateY(-1px)}
-.ct-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
-.ct-card-num{font-size:12px;font-weight:700;color:var(--blue);background:var(--blue2);padding:2px 8px;border-radius:6px}
-.ct-card-date{font-size:11px;color:var(--text3)}
-.ct-card-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:8px}
-.ct-card-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ct-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:12px;margin-bottom:8px;transition:0.15s;display:grid;grid-template-columns:28px minmax(0,1fr) 220px;gap:10px;align-items:start}
+.ct-card:hover{border-color:#c7d2fe;border-left-color:var(--blue);box-shadow:0 4px 16px rgba(0,0,0,0.07)}
+.ct-icon{width:22px;height:22px;border-radius:5px;background:var(--green2);border:1px solid #86efac;color:var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.ct-main{min-width:0}
+.ct-kind{font-size:12px;color:var(--text2);margin-bottom:7px}
+.ct-line{font-size:12px;color:var(--text);line-height:1.7}
+.ct-line strong{font-weight:800;color:var(--text)}
+.ct-linkish{color:var(--blue);font-weight:700}
+.ct-price{color:#ec4899;font-weight:800}
+.ct-side{text-align:right;font-size:12px;line-height:1.45}
+.ct-status-text{font-weight:700;color:var(--text)}
+.ct-winner{color:var(--blue);font-weight:700}
+.ct-bidders{color:#ec4899;font-weight:800}
+.ct-actions{grid-column:2 / 4;display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
 .ct-spinner{text-align:center;padding:50px 20px;color:var(--text3);font-size:14px}
 .ct-err{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:30px;text-align:center}
 .ct-err-icon{font-size:36px;margin-bottom:10px}
@@ -230,7 +237,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .official-link{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--blue);color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:0.15s}
 .official-link:hover{background:#4338ca}
 @media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
-@media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}#loginScreen{grid-template-columns:1fr}.cm-body{grid-template-columns:1fr}.cm-profile{border-right:none;border-bottom:1px solid var(--border)}}
+@media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}#loginScreen{grid-template-columns:1fr}.cm-body{grid-template-columns:1fr}.cm-profile{border-right:none;border-bottom:1px solid var(--border)}.ct-card{grid-template-columns:28px minmax(0,1fr)}.ct-side{grid-column:2;text-align:left}.ct-actions{grid-column:2;justify-content:flex-start;flex-wrap:wrap}}
 @media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}.ls-left{display:none}.drawer{width:100%;right:-100%}.cm-modal{top:0;left:0;right:0;bottom:0;border-radius:0}}
 </style>
 </head>
@@ -867,6 +874,43 @@ async function fetchCustomerTenders(idCode) {
   return { ok: true, items: tenders };
 }
 
+function escapeHtml(v) {
+  return String(v ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[ch]));
+}
+
+function officialTenderLink(t) {
+  const raw = t.link || t.url || "";
+  const appMatch = String(raw).match(/apinfo\/(\d+)/) || String(raw).match(/[?&]go=(\d+)/);
+  if (appMatch) return "https://tenders.procurement.gov.ge/public/?lang=ru&go=" + appMatch[1];
+  return raw || "#";
+}
+
+function pickCustomerTenderDetails(t) {
+  const text = t.title || t.name || "";
+  const find = (re, fallback = "—") => {
+    const m = text.match(re);
+    return m && m[1] ? m[1].trim() : fallback;
+  };
+  return {
+    id: t.reg_id || t.tender_id || t.id || find(/Announcment number:\s*(NAT\d+)/i),
+    kind: find(/Bidders\s*-\s*\d+\s*(.*?)\s*Announcment number:/i, "Electronic Tender Without Reverse Auction(NAT)"),
+    published: find(/Procurement announcment date:\s*([0-9.]+)/i, t.publish_date || "—"),
+    deadline: find(/Offer reception term:\s*([0-9.]+)/i, t.deadline || "—"),
+    org: t.org || t.organizer || find(/Procuring entities:\s*(.*?)\s*Procuring category:/i),
+    category: find(/Procuring category:\s*(.*?)\s*Estimated value/i, t.name || t.title || "—"),
+    price: t.price || t.budget || find(/Estimated value of procurement:\s*([\d'`.,\s]+GEL)/i),
+    status: t.status || (text.match(/Contract awarded/i) ? "Договор подписан" : "—"),
+    winner: find(/Winner:\s*(.*?)\s*Bidders\s*-/i, ""),
+    bidders: find(/Bidders\s*-\s*(\d+)/i, "")
+  };
+}
+
 function renderCustomerTenders(result, c) {
   if (!result.ok) {
     return '<div class="ct-err">'
@@ -880,25 +924,28 @@ function renderCustomerTenders(result, c) {
   let html = '<div class="ct-top"><div class="ct-title">Все иhaлей</div><div class="ct-badge">' + sorted.length + ' иhaлей</div></div>';
 
   html += sorted.map(t => {
-    const id = t.reg_id || t.tender_id || t.id || "—";
-    const name = t.name || t.title || id;
-    const status = t.status || "Contract awarded";
-    const dateStr = t.publish_date || t.deadline || "—";
-    const price = t.price || t.budget || "—";
-    const org = t.org || t.organizer || "—";
-    const link = t.link || t.url || "#";
-    const sCls = getStatusClass(status);
-    const safeId = String(id).replace(/'/g, "\\'");
+    const d = pickCustomerTenderDetails(t);
+    const link = officialTenderLink(t);
+    const safeId = String(d.id).replace(/'/g, "\\'");
 
     return '<div class="ct-card">'
-      + '<div class="ct-card-head"><span class="ct-card-num">' + id + '</span><span class="ct-card-date">📅 ' + dateStr + '</span></div>'
-      + '<div class="ct-card-name">' + name + '</div>'
-      + '<div class="ct-card-foot">'
-        + '<span class="status-badge ' + sCls + '">' + status + '</span>'
-        + '<span style="font-size:12px;color:var(--text2)">🏢 ' + (org.length > 35 ? org.slice(0, 35) + "..." : org) + '</span>'
-        + (price !== "—" ? '<span style="font-size:12px;font-weight:700;color:var(--blue);margin-left:auto">💰 ' + price + '</span>' : '')
+      + '<div class="ct-icon">▦</div>'
+      + '<div class="ct-main">'
+        + '<div class="ct-kind">' + escapeHtml(d.kind) + '</div>'
+        + '<div class="ct-line">Номер заявки: <strong>' + escapeHtml(d.id) + '</strong></div>'
+        + '<div class="ct-line">Дата объявления закупки: <strong>' + escapeHtml(d.published) + '</strong></div>'
+        + '<div class="ct-line">Срок принятия предложения: <strong>' + escapeHtml(d.deadline) + '</strong></div>'
+        + '<div class="ct-line">Закупщик: <strong>' + escapeHtml(d.org) + '</strong></div>'
+        + '<div class="ct-line">Категория закупки: <span class="ct-linkish">' + escapeHtml(d.category) + '</span></div>'
+        + '<div class="ct-line">Предполагаемая цена закупки: <span class="ct-price">' + escapeHtml(d.price) + '</span></div>'
       + '</div>'
-      + '<div class="card-actions" style="margin-top:12px">'
+      + '<div class="ct-side">'
+        + '<div class="ct-status-text">' + escapeHtml(d.status) + '</div>'
+        + '<div class="ct-linkish">Текущий договор</div>'
+        + (d.winner ? '<div class="ct-winner">Победитель: ' + escapeHtml(d.winner) + '</div>' : '')
+        + (d.bidders ? '<div class="ct-bidders">Количество участников - ' + escapeHtml(d.bidders) + '</div>' : '')
+      + '</div>'
+      + '<div class="ct-actions">'
         + '<button class="btn" onclick="openCustomerTenderDrawer(\'' + c.id + '\', \'' + safeId + '\')">Детали</button>'
         + '<a class="btn btn-outline" href="' + link + '" target="_blank" onclick="event.stopPropagation()">Официальный сайт ↗</a>'
       + '</div>'
@@ -913,28 +960,25 @@ function openCustomerTenderDrawer(customerId, tenderId) {
   const t = list.find(x => String(x.reg_id || x.tender_id || x.id) === String(tenderId));
   if (!t) return;
 
-  const id = t.reg_id || t.tender_id || t.id || "—";
-  const name = t.name || t.title || id;
-  const status = t.status || "Contract awarded";
-  const published = t.publish_date || "—";
-  const deadline = t.deadline || "—";
-  const price = t.price || t.budget || "—";
-  const org = t.org || t.organizer || "—";
-  const link = t.link || t.url || "#";
-  const sCls = getStatusClass(status);
+  const d = pickCustomerTenderDetails(t);
+  const link = officialTenderLink(t);
+  const sCls = getStatusClass(d.status);
 
-  document.getElementById("drawerTitle").textContent = id;
+  document.getElementById("drawerTitle").textContent = d.id;
 
   document.getElementById("drawerBody").innerHTML =
     '<div class="drawer-section"><div class="drawer-section-title">Детали закупки</div>'
     + '<table class="drawer-table">'
-    + '<tr><td>Номер заявки</td><td>' + id + '</td></tr>'
-    + '<tr><td>Название</td><td>' + name + '</td></tr>'
-    + '<tr><td>Статус закупки</td><td><span class="status-badge ' + sCls + '">' + status + '</span></td></tr>'
-    + '<tr><td>Закупщик</td><td>' + org + '</td></tr>'
-    + '<tr><td>Дата объявления закупки</td><td>' + published + '</td></tr>'
-    + '<tr><td>Истекает срок принятия предложений</td><td>' + deadline + '</td></tr>'
-    + '<tr><td>Предполагаемая цена закупки</td><td style="color:var(--blue)">' + price + '</td></tr>'
+    + '<tr><td>Номер заявки</td><td>' + escapeHtml(d.id) + '</td></tr>'
+    + '<tr><td>Название</td><td>' + escapeHtml(d.kind) + '</td></tr>'
+    + '<tr><td>Статус закупки</td><td><span class="status-badge ' + sCls + '">' + escapeHtml(d.status) + '</span></td></tr>'
+    + '<tr><td>Закупщик</td><td>' + escapeHtml(d.org) + '</td></tr>'
+    + '<tr><td>Категория закупки</td><td>' + escapeHtml(d.category) + '</td></tr>'
+    + '<tr><td>Дата объявления закупки</td><td>' + escapeHtml(d.published) + '</td></tr>'
+    + '<tr><td>Истекает срок принятия предложений</td><td>' + escapeHtml(d.deadline) + '</td></tr>'
+    + '<tr><td>Предполагаемая цена закупки</td><td style="color:var(--blue)">' + escapeHtml(d.price) + '</td></tr>'
+    + (d.winner ? '<tr><td>Победитель</td><td>' + escapeHtml(d.winner) + '</td></tr>' : '')
+    + (d.bidders ? '<tr><td>Количество участников</td><td>' + escapeHtml(d.bidders) + '</td></tr>' : '')
     + '</table></div>';
 
   document.getElementById("drawerActions").innerHTML =

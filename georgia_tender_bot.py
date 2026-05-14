@@ -192,7 +192,7 @@ def fetch_customer_tenders_playwright(
                     "status": "",
                     "publish_date": today,
                     "deadline": "",
-                    "url": f"{BASE_URL}/public/library/#/tenders/apinfo/{app_id}",
+                    "url": f"{BASE_URL}/public/?lang=ru&go={app_id}",
                 })
 
             browser.close()
