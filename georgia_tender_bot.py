@@ -190,6 +190,7 @@ def fetch_customer_tenders_playwright(
 
     post_data = {
         "action":                  "search_app",
+        "lang":                    "ka",          # ← EKLENDİ
         "app_t":                   "0",
         "search":                  "",
         "app_reg_id":              "",
