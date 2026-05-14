@@ -64,6 +64,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .menu-label{display:flex;flex-direction:column;gap:1px}
 .menu-code{font-size:13px}
 .menu-name{font-size:10px;opacity:0.5;font-weight:400}
+.customer-btn{width:100%;background:transparent;border:none;color:rgba(255,255,255,0.7);padding:8px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;display:flex;align-items:center;gap:8px;transition:0.15s;margin-bottom:2px}
+.customer-btn:hover{background:rgba(255,255,255,0.06);color:white}
+.customer-btn-avatar{width:26px;height:26px;border-radius:7px;background:rgba(79,110,247,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0}
+.customer-btn-info{flex:1;min-width:0}
+.customer-btn-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.customer-btn-id{font-size:10px;opacity:0.45}
 .sb-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06)}
 .sb-status{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:4px}
 .sb-status-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
@@ -184,9 +190,48 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .drawer-table td:first-child{color:var(--text3);width:45%;font-size:12px}
 .drawer-table td:last-child{color:var(--text);font-weight:600}
 .drawer-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+/* ── Customer Modal ── */
+.cm-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,0.45);backdrop-filter:blur(3px);z-index:9000}
+.cm-overlay.show{display:block}
+.cm-modal{position:fixed;top:3%;left:3%;right:3%;bottom:3%;background:var(--bg);border-radius:20px;z-index:9001;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,0.25);opacity:0;transform:scale(0.96);transition:0.25s;pointer-events:none;overflow:hidden}
+.cm-modal.open{opacity:1;transform:scale(1);pointer-events:auto}
+.cm-header{padding:18px 24px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cm-header-left{display:flex;align-items:center;gap:12px}
+.cm-avatar{width:42px;height:42px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:white;flex-shrink:0}
+.cm-header-name{font-size:17px;font-weight:800;color:var(--text)}
+.cm-header-id{font-size:12px;color:var(--text3);margin-top:1px}
+.cm-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg2);cursor:pointer;font-size:14px;color:var(--text2)}
+.cm-close:hover{background:var(--border)}
+.cm-body{flex:1;overflow:hidden;display:grid;grid-template-columns:270px 1fr}
+.cm-profile{background:var(--card);border-right:1px solid var(--border);padding:20px;overflow-y:auto}
+.cm-tenders{padding:20px;overflow-y:auto}
+.cp-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin:14px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.cp-row{display:flex;flex-direction:column;margin-bottom:10px}
+.cp-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px}
+.cp-val{font-size:13px;color:var(--text);font-weight:500;word-break:break-word}
+.cp-contact-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:4px}
+.cp-contact-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.cp-contact-role{font-size:11px;color:var(--text3);margin-bottom:6px}
+.cp-contact-detail{font-size:12px;color:var(--text2)}
+.ct-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ct-title{font-size:15px;font-weight:800;color:var(--text)}
+.ct-badge{background:var(--blue2);color:var(--blue);font-size:12px;font-weight:700;padding:3px 12px;border-radius:10px}
+.ct-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:0.15s;cursor:pointer}
+.ct-card:hover{border-color:#c7d2fe;box-shadow:0 4px 16px rgba(0,0,0,0.07);transform:translateY(-1px)}
+.ct-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.ct-card-num{font-size:12px;font-weight:700;color:var(--blue);background:var(--blue2);padding:2px 8px;border-radius:6px}
+.ct-card-date{font-size:11px;color:var(--text3)}
+.ct-card-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:8px}
+.ct-card-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ct-spinner{text-align:center;padding:50px 20px;color:var(--text3);font-size:14px}
+.ct-err{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:30px;text-align:center}
+.ct-err-icon{font-size:36px;margin-bottom:10px}
+.ct-err-msg{font-size:14px;color:var(--text2);margin-bottom:16px}
+.official-link{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--blue);color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:0.15s}
+.official-link:hover{background:#4338ca}
 @media(max-width:1100px){.stats{grid-template-columns:1fr 1fr}.analytics{grid-template-columns:1fr 1fr}}
-@media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}#loginScreen{grid-template-columns:1fr}}
-@media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}.ls-left{display:none}.drawer{width:100%;right:-100%}}
+@media(max-width:900px){.wrapper{flex-direction:column}.sidebar{width:100%}#loginScreen{grid-template-columns:1fr}.cm-body{grid-template-columns:1fr}.cm-profile{border-right:none;border-bottom:1px solid var(--border)}}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.analytics{grid-template-columns:1fr}.ls-left{display:none}.drawer{width:100%;right:-100%}.cm-modal{top:0;left:0;right:0;bottom:0;border-radius:0}}
 </style>
 </head>
 <body>
@@ -273,6 +318,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="menu-btn" data-filter="45112723" onclick="setFilter('45112723',this)"><span class="menu-label"><span class="menu-code">🎠 45112723</span><span class="menu-name">Ландшафтные работы на игровых площадках</span></span><span class="menu-count" id="cnt-45112723">0</span></button>
       <button class="menu-btn" data-filter="45112710" onclick="setFilter('45112710',this)"><span class="menu-label"><span class="menu-code">🌱 45112710</span><span class="menu-name">Ландшафтные работы в зелёных зонах</span></span><span class="menu-count" id="cnt-45112710">0</span></button>
       <button class="menu-btn" data-filter="45212130" onclick="setFilter('45212130',this)"><span class="menu-label"><span class="menu-code">🎡 45212130</span><span class="menu-name">Строительство парков развлечения</span></span><span class="menu-count" id="cnt-45212130">0</span></button>
+      <div class="sb-section">Müşteriler</div>
+      <button class="customer-btn" onclick="openCustomer('424611441')">
+        <div class="customer-btn-avatar">L</div>
+        <div class="customer-btn-info"><div class="customer-btn-name">Lago</div><div class="customer-btn-id">424611441</div></div>
+      </button>
+      <button class="customer-btn" onclick="openCustomer('436034916')">
+        <div class="customer-btn-avatar">OG</div>
+        <div class="customer-btn-info"><div class="customer-btn-name">Our Group chveni jgupi</div><div class="customer-btn-id">436034916</div></div>
+      </button>
+      <button class="customer-btn" onclick="openCustomer('405142634')">
+        <div class="customer-btn-avatar">AK</div>
+        <div class="customer-btn-info"><div class="customer-btn-name">Ander Konstrakshen</div><div class="customer-btn-id">405142634</div></div>
+      </button>
+      <button class="customer-btn" onclick="openCustomer('425057341')">
+        <div class="customer-btn-avatar">EP</div>
+        <div class="customer-btn-info"><div class="customer-btn-name">Eplaini</div><div class="customer-btn-id">425057341</div></div>
+      </button>
       <div class="sb-section">Diğer</div>
       <button class="menu-btn" data-filter="ignored" onclick="setFilter('ignored',this)"><span>🗑 Ignored</span><span class="menu-count" id="cnt-ignored">0</span></button>
     </div>
@@ -324,11 +386,87 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="drawer-actions" id="drawerActions"></div>
 </div>
 
+<!-- Customer Modal -->
+<div class="cm-overlay" id="cmOverlay" onclick="closeCustomer()"></div>
+<div class="cm-modal" id="cmModal">
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <div class="cm-avatar" id="cmAvatar">?</div>
+      <div><div class="cm-header-name" id="cmName">—</div><div class="cm-header-id" id="cmId">—</div></div>
+    </div>
+    <button class="cm-close" onclick="closeCustomer()">✕</button>
+  </div>
+  <div class="cm-body">
+    <div class="cm-profile" id="cmProfile"></div>
+    <div class="cm-tenders" id="cmTenders"></div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = "https://pibdlregqkpgwapdikdc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const CSV_FILE = "tenders.csv";
+const MIN_DATE = new Date(2025, 5, 1);
+
+const CUSTOMERS = [
+  {
+    id: "424611441",
+    name: "Lago",
+    initials: "L",
+    type: "Общество с ограниченной ответственностью (ООО)",
+    country: "Грузия",
+    city: "ახმეტა",
+    address: "ერისთავის #3",
+    phone: "+995599566772",
+    fax: "+995",
+    email: "gnikatbilisi@mail.ru",
+    website: "",
+    contacts: []
+  },
+  {
+    id: "436034916",
+    name: "Our Group chveni jgupi",
+    initials: "OG",
+    type: "Общество с ограниченной ответственностью (ООО)",
+    country: "Грузия",
+    city: "ქალაქი მცხეთა",
+    address: "ქ.მცხეთა არმაზის ქ 2, კორ.8, ბ 10",
+    phone: "+99555198318",
+    fax: "+995",
+    email: "ramazimuza@gmail.com",
+    website: "",
+    contacts: [{ name: "რამაზი მუზაშვილი", role: "Директор", phone: "555 19 83 18", email: "ramazi_muza@mail.ru" }]
+  },
+  {
+    id: "405142634",
+    name: "Ander Konstrakshen",
+    initials: "AK",
+    type: "Общество с ограниченной ответственностью (ООО)",
+    country: "Грузия",
+    city: "Тбилиси",
+    address: "ვაკის რაიონი, შ. ნუცუბიძის ფერდობი, III მიკ/რ., III კვარ., კორ. 3, ბინა 27",
+    phone: "+995595925500",
+    fax: "",
+    email: "underconstructionge@gmail.com",
+    website: "",
+    contacts: []
+  },
+  {
+    id: "425057341",
+    name: "Eplaini",
+    initials: "EP",
+    type: "Общество с ограниченной ответственностью (ООО)",
+    country: "Грузия",
+    city: "Тбилиси",
+    address: "წყნეთის ქ. I კორპ. მე-3 სად. ბინა #79",
+    phone: "599970044",
+    fax: "+995",
+    email: "ninochkheidze999@yahoo.com",
+    website: "",
+    contacts: [{ name: "ბობო ხხდოდე", role: "Директор", phone: "599970044", email: "ninochkheidze999@yahoo.com" }]
+  }
+];
 
 async function checkAuth() {
   const { data } = await supabaseClient.auth.getSession();
@@ -346,40 +484,25 @@ function showApp() {
 async function loginUser() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  if (!email || !password) {
-    document.getElementById('loginError').textContent = 'Email ve şifre gereklidir.';
-    return;
-  }
+  if (!email || !password) { document.getElementById('loginError').textContent = 'Email ve şifre gereklidir.'; return; }
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) {
-    document.getElementById('loginError').textContent = 'Login failed. Check email or password.';
-    return;
-  }
+  if (error) { document.getElementById('loginError').textContent = 'Login failed. Check email or password.'; return; }
   document.getElementById('loginError').textContent = '';
-  showApp();
-  loadData();
+  showApp(); loadData();
 }
-async function logoutUser() {
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
+async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !document.getElementById('loginScreen').classList.contains('hidden')) loginUser();
-  if (e.key === 'Escape') closeDrawer();
+  if (e.key === 'Escape') { closeDrawer(); closeCustomer(); }
 });
 
-let ALL_TENDERS = [];
-let CURRENT_FILTER = "all";
-let QUICK_FILTER = "all";
-let REVIEW_STATUSES = {};
-let TENDER_NOTES = {};
-let IGNORED_TENDERS = [];
+let ALL_TENDERS = [], CURRENT_FILTER = "all", QUICK_FILTER = "all";
+let REVIEW_STATUSES = {}, TENDER_NOTES = {}, IGNORED_TENDERS = [];
 
 let toastTimer = null;
 function showToast(msg, type = "success") {
   const el = document.getElementById("toastEl");
-  el.textContent = msg;
-  el.className = "toast " + type + " show";
+  el.textContent = msg; el.className = "toast " + type + " show";
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.classList.remove("show"); }, 3500);
 }
@@ -393,32 +516,20 @@ const CPV_NAMES = {
   "45212130": "Строительство парков развлечения"
 };
 const CPV_COLORS = {
-  "45100000": "#f59e0b",
-  "45112720": "#3b82f6",
-  "45112700": "#10b981",
-  "45112723": "#ec4899",
-  "45112710": "#8b5cf6",
-  "45212130": "#f97316"
+  "45100000": "#f59e0b", "45112720": "#3b82f6", "45112700": "#10b981",
+  "45112723": "#ec4899", "45112710": "#8b5cf6", "45212130": "#f97316"
 };
 
-// Тендеры старше этой даты не показываем
-const MIN_DATE = new Date(2025, 5, 1); // 01.06.2025
-
 function parseCSV(text) {
-  const rows = [];
-  let current = "";
-  let row = [];
-  let insideQuotes = false;
+  const rows = []; let current = "", row = []; let insideQuotes = false;
   for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
+    const char = text[i], next = text[i + 1];
     if (char === '"' && next === '"') { current += '"'; i++; }
     else if (char === '"') { insideQuotes = !insideQuotes; }
     else if (char === ',' && !insideQuotes) { row.push(current); current = ""; }
     else if ((char === '\n' || char === '\r') && !insideQuotes) {
       if (current || row.length) { row.push(current); rows.push(row); row = []; current = ""; }
-    }
-    else { current += char; }
+    } else { current += char; }
   }
   if (current || row.length) { row.push(current); rows.push(row); }
   return rows;
@@ -426,9 +537,7 @@ function parseCSV(text) {
 
 function parseDateField(val) {
   if (!val) return null;
-  // ISO format: 2025-06-01 or 2025-06-01T...
   if (val.includes("-") && val.length >= 10) return new Date(val);
-  // DD.MM.YYYY or DD.MM.YYYY HH:MM
   const p = val.split(" ")[0].split(".");
   if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
   return null;
@@ -453,47 +562,22 @@ function getReviewClass(id) {
 async function saveTenderNote(tenderId) {
   if (!tenderId) return;
   const note = document.getElementById("tenderNote")?.value || "";
-  const { error } = await supabaseClient
-    .from("tender_reviews")
-    .upsert(
-      { tender_id: tenderId, review_status: REVIEW_STATUSES[tenderId] || "new", note },
-      { onConflict: "tender_id" }
-    );
-  if (error) {
-    console.error("Supabase saveTenderNote error:", error);
-    showToast("❌ Kayıt başarısız: " + error.message, "error");
-    return;
-  }
+  const { error } = await supabaseClient.from("tender_reviews")
+    .upsert({ tender_id: tenderId, review_status: REVIEW_STATUSES[tenderId] || "new", note }, { onConflict: "tender_id" });
+  if (error) { showToast("❌ Kayıt başarısız: " + error.message, "error"); return; }
   TENDER_NOTES[tenderId] = note;
-  showToast("✅ Not kaydedildi");
-  closeDrawer();
-  render();
-  updateStats();
+  showToast("✅ Not kaydedildi"); closeDrawer(); render(); updateStats();
 }
 
 async function setTenderReviewStatus(tenderId, status) {
   if (!tenderId) return;
-  const { error } = await supabaseClient
-    .from("tender_reviews")
-    .upsert(
-      { tender_id: tenderId, review_status: status, note: TENDER_NOTES[tenderId] || "" },
-      { onConflict: "tender_id" }
-    );
-  if (error) {
-    console.error("Supabase setTenderReviewStatus error:", error);
-    showToast("❌ Kayıt başarısız: " + error.message, "error");
-    return;
-  }
+  const { error } = await supabaseClient.from("tender_reviews")
+    .upsert({ tender_id: tenderId, review_status: status, note: TENDER_NOTES[tenderId] || "" }, { onConflict: "tender_id" });
+  if (error) { showToast("❌ Kayıt başarısız: " + error.message, "error"); return; }
   REVIEW_STATUSES[tenderId] = status;
-  if (status === "ignored") {
-    if (!IGNORED_TENDERS.includes(tenderId)) IGNORED_TENDERS.push(tenderId);
-  } else {
-    IGNORED_TENDERS = IGNORED_TENDERS.filter(x => x !== tenderId);
-  }
-  showToast("✅ Durum kaydedildi");
-  closeDrawer();
-  render();
-  updateStats();
+  if (status === "ignored") { if (!IGNORED_TENDERS.includes(tenderId)) IGNORED_TENDERS.push(tenderId); }
+  else { IGNORED_TENDERS = IGNORED_TENDERS.filter(x => x !== tenderId); }
+  showToast("✅ Durum kaydedildi"); closeDrawer(); render(); updateStats();
 }
 
 function getCpvs(t) {
@@ -561,9 +645,9 @@ function shouldShowTender(t) {
   if (CURRENT_FILTER === "relevant" && rs !== "relevant") return false;
   if (CURRENT_FILTER === "ignored" && rs !== "ignored") return false;
   if (CURRENT_FILTER === "all" && rs === "ignored") return false;
-  if (!["all", "review", "relevant", "ignored"].includes(CURRENT_FILTER) && rs === "ignored") return false;
+  if (!["all","review","relevant","ignored"].includes(CURRENT_FILTER) && rs === "ignored") return false;
   const cpvs = getCpvs(t);
-  if (!["all", "review", "relevant", "ignored"].includes(CURRENT_FILTER) && !cpvs.includes(CURRENT_FILTER)) return false;
+  if (!["all","review","relevant","ignored"].includes(CURRENT_FILTER) && !cpvs.includes(CURRENT_FILTER)) return false;
   const search = document.getElementById("searchInput").value.toLowerCase();
   if (search && !JSON.stringify(t).toLowerCase().includes(search)) return false;
   if (QUICK_FILTER === "high") {
@@ -594,13 +678,9 @@ function render() {
     if (pCls === "high") cardClass += " card-high";
     if (rs === "review") cardClass += " card-review";
     if (rs === "relevant") cardClass += " card-relevant";
-    const pdfN = parseInt(t.pdf_count || 0) || 0;
-    const xlsN = parseInt(t.excel_count || 0) || 0;
-    const imgN = parseInt(t.image_count || 0) || 0;
+    const pdfN = parseInt(t.pdf_count || 0) || 0, xlsN = parseInt(t.excel_count || 0) || 0, imgN = parseInt(t.image_count || 0) || 0;
     const totalN = pdfN + xlsN + imgN;
-    const docHtml = totalN > 0
-      ? '<div class="doc-counts"><div class="doc-item">📄 <strong>' + pdfN + '</strong> PDF</div><div class="doc-item">📊 <strong>' + xlsN + '</strong> Excel</div><div class="doc-item">🖼 <strong>' + imgN + '</strong> Images</div><div class="doc-item" style="margin-left:auto">📎 <strong>' + totalN + '</strong> Всего</div></div>'
-      : "";
+    const docHtml = totalN > 0 ? '<div class="doc-counts"><div class="doc-item">📄 <strong>' + pdfN + '</strong> PDF</div><div class="doc-item">📊 <strong>' + xlsN + '</strong> Excel</div><div class="doc-item">🖼 <strong>' + imgN + '</strong> Images</div><div class="doc-item" style="margin-left:auto">📎 <strong>' + totalN + '</strong> Всего</div></div>' : "";
     const noteHtml = TENDER_NOTES[t.id] ? '<span style="color:var(--blue);font-weight:600;font-size:11px">📝 Note</span>' : "";
     const safeId = (t.id || "").replace(/'/g, "\\'");
     const safeLink = (t.link || "#").replace(/"/g, "&quot;");
@@ -625,10 +705,7 @@ function render() {
         + '</div>'
       + '</div>'
       + docHtml
-      + '<div class="card-actions">'
-        + '<button class="btn" onclick="openDrawer(\'' + safeId + '\')">Детали</button>'
-        + '<a class="btn btn-outline" href="' + safeLink + '" target="_blank">Официальный сайт ↗</a>'
-      + '</div>'
+      + '<div class="card-actions"><button class="btn" onclick="openDrawer(\'' + safeId + '\')">Детали</button><a class="btn btn-outline" href="' + safeLink + '" target="_blank">Официальный сайт ↗</a></div>'
     + '</div>';
   }).join("");
 }
@@ -654,15 +731,9 @@ function openDrawer(tenderId) {
     + '<tr><td>Приоритет</td><td><span class="priority ' + pCls + '">' + priority + '</span></td></tr>'
     + '</table></div>'
     + '<div class="drawer-section"><div class="drawer-section-title">Категория закупки (CPV)</div><div>' + renderBadges(t) + '</div></div>'
-    + '<div class="drawer-section"><div class="drawer-section-title">Review статус</div>'
-    + '<div><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div></div>'
-    + (parseInt(t.pdf_count || 0) + parseInt(t.excel_count || 0) + parseInt(t.image_count || 0) > 0
-      ? '<div class="drawer-section"><div class="drawer-section-title">Документы</div>'
-        + '<div style="display:flex;gap:14px;font-size:13px">'
-        + '<span>📄 <strong>' + (t.pdf_count || 0) + '</strong> PDF</span>'
-        + '<span>📊 <strong>' + (t.excel_count || 0) + '</strong> Excel</span>'
-        + '<span>🖼 <strong>' + (t.image_count || 0) + '</strong> Images</span>'
-        + '</div></div>'
+    + '<div class="drawer-section"><div class="drawer-section-title">Review статус</div><div><span class="review-badge ' + getReviewClass(t.id) + '">' + getReviewLabel(t.id) + '</span></div></div>'
+    + (parseInt(t.pdf_count||0)+parseInt(t.excel_count||0)+parseInt(t.image_count||0) > 0
+      ? '<div class="drawer-section"><div class="drawer-section-title">Документы</div><div style="display:flex;gap:14px;font-size:13px"><span>📄 <strong>' + (t.pdf_count||0) + '</strong> PDF</span><span>📊 <strong>' + (t.excel_count||0) + '</strong> Excel</span><span>🖼 <strong>' + (t.image_count||0) + '</strong> Images</span></div></div>'
       : '')
     + '<div class="drawer-section"><div class="drawer-section-title">Заметки</div>'
     + '<textarea id="tenderNote" style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;resize:vertical;font-family:Inter,sans-serif;background:var(--card2);color:var(--text)" placeholder="Добавить заметку...">' + (TENDER_NOTES[t.id] || "") + '</textarea>'
@@ -683,6 +754,115 @@ function openDrawer(tenderId) {
 function closeDrawer() {
   document.getElementById("sideDrawer").classList.remove("open");
   document.getElementById("drawerOverlay").classList.remove("show");
+}
+
+// ── Customer functions ──
+
+async function openCustomer(customerId) {
+  const c = CUSTOMERS.find(x => x.id === customerId);
+  if (!c) return;
+  document.getElementById("cmAvatar").textContent = c.initials;
+  document.getElementById("cmName").textContent = c.name;
+  document.getElementById("cmId").textContent = "ID: " + c.id + " · Грузия";
+  document.getElementById("cmProfile").innerHTML = renderCustomerProfile(c);
+  document.getElementById("cmTenders").innerHTML = '<div class="ct-spinner">⏳ Загрузка иhaлей...</div>';
+  document.getElementById("cmOverlay").classList.add("show");
+  document.getElementById("cmModal").classList.add("open");
+  const tenders = await fetchCustomerTenders(c.id);
+  document.getElementById("cmTenders").innerHTML = renderCustomerTenders(tenders, c);
+}
+
+function closeCustomer() {
+  document.getElementById("cmModal").classList.remove("open");
+  document.getElementById("cmOverlay").classList.remove("show");
+}
+
+function renderCustomerProfile(c) {
+  let html = '';
+  const fields = [
+    { l: "Тип", v: c.type },
+    { l: "Идентификационный код", v: c.id },
+    { l: "Страна", v: c.country },
+    { l: "Город / Посёлок", v: c.city },
+    { l: "Адрес", v: c.address },
+    { l: "Телефон", v: c.phone },
+    { l: "Факс", v: c.fax },
+    { l: "Электронная почта", v: c.email ? '<a href="mailto:' + c.email + '" style="color:var(--blue)">' + c.email + '</a>' : "—" }
+  ];
+  html += '<div class="cp-section-title">Информация о поставщике</div>';
+  fields.forEach(f => {
+    if (!f.v) return;
+    html += '<div class="cp-row"><div class="cp-lbl">' + f.l + '</div><div class="cp-val">' + f.v + '</div></div>';
+  });
+  if (c.contacts.length) {
+    html += '<div class="cp-section-title">Контактные лица</div>';
+    c.contacts.forEach(ct => {
+      html += '<div class="cp-contact-card">'
+        + '<div class="cp-contact-name">' + ct.name + '</div>'
+        + '<div class="cp-contact-role">' + ct.role + '</div>'
+        + '<div class="cp-contact-detail">📞 ' + ct.phone + '</div>'
+        + (ct.email ? '<div class="cp-contact-detail">✉️ ' + ct.email + '</div>' : '')
+        + '</div>';
+    });
+  }
+  html += '<div style="margin-top:16px"><a href="https://tenders.procurement.gov.ge/public/suppliers/' + c.id + '" target="_blank" class="official-link" style="width:100%;justify-content:center">🔗 Официальный профиль ↗</a></div>';
+  return html;
+}
+
+async function fetchCustomerTenders(idCode) {
+  const url = "https://tenders.procurement.gov.ge/api/public/tenders?supplierId=" + idCode + "&page=0&size=200&sort=publishDate,desc";
+  try {
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const items = data.content || data.tenders || data.items || (Array.isArray(data) ? data : null);
+    if (items && items.length) return { ok: true, items };
+    return { ok: true, items: [] };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+function renderCustomerTenders(result, c) {
+  if (!result.ok) {
+    return '<div class="ct-err">'
+      + '<div class="ct-err-icon">⚠️</div>'
+      + '<div class="ct-err-msg">Не удалось загрузить данные напрямую.<br>Откройте официальный сайт для просмотра иhaлей.</div>'
+      + '<a href="https://tenders.procurement.gov.ge/public/suppliers/' + c.id + '" target="_blank" class="official-link">🔗 Открыть профиль на сайте ↗</a>'
+      + '</div>';
+  }
+  if (!result.items.length) {
+    return '<div class="ct-err"><div class="ct-err-icon">📭</div><div class="ct-err-msg">Иhaлей не найдено</div>'
+      + '<a href="https://tenders.procurement.gov.ge/public/suppliers/' + c.id + '" target="_blank" class="official-link">🔗 Проверить на сайте ↗</a></div>';
+  }
+  // Sort by date descending
+  const sorted = result.items.slice().sort((a, b) => {
+    const da = new Date(a.publishDate || a.announcementDate || a.date || 0);
+    const db = new Date(b.publishDate || b.announcementDate || b.date || 0);
+    return db - da;
+  });
+  let html = '<div class="ct-top"><div class="ct-title">Все иhaлей</div><div class="ct-badge">' + sorted.length + ' иhaлей</div></div>';
+  html += sorted.map(t => {
+    const id = t.id || t.tenderId || t.registrationNumber || "—";
+    const name = t.title || t.name || t.subject || "—";
+    const status = t.status || t.statusName || "—";
+    const dateRaw = t.publishDate || t.announcementDate || t.date || "";
+    const dateStr = dateRaw ? new Date(dateRaw).toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit", year:"numeric" }) : "—";
+    const price = t.estimatedValue ? t.estimatedValue.toLocaleString("ru-RU") + " " + (t.currency || "GEL") : (t.budget || t.price || "—");
+    const org = t.procuringEntity || t.procuringEntityName || t.organization || "—";
+    const link = t.url || ("https://tenders.procurement.gov.ge/public/tenders/" + id);
+    const sCls = getStatusClass(status);
+    return '<div class="ct-card" onclick="window.open(\'' + link + '\',\'_blank\')">'
+      + '<div class="ct-card-head"><span class="ct-card-num">' + id + '</span><span class="ct-card-date">📅 ' + dateStr + '</span></div>'
+      + '<div class="ct-card-name">' + name + '</div>'
+      + '<div class="ct-card-foot">'
+        + '<span class="status-badge ' + sCls + '">' + status + '</span>'
+        + '<span style="font-size:12px;color:var(--text2)">🏢 ' + (org.length > 30 ? org.slice(0,30)+"..." : org) + '</span>'
+        + (price !== "—" ? '<span style="font-size:12px;font-weight:700;color:var(--blue);margin-left:auto">💰 ' + price + '</span>' : '')
+      + '</div>'
+    + '</div>';
+  }).join("");
+  return html;
 }
 
 let cpvChartInstance = null;
@@ -715,8 +895,8 @@ function updateAnalytics(active, reviewN) {
   const topOrgs = Object.entries(orgMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const maxOrg = topOrgs[0] ? topOrgs[0][1] : 1;
   document.getElementById("topOrgs").innerHTML = topOrgs.map(([org, count]) =>
-    '<div class="an-row"><div class="an-label" title="' + org + '">' + (org.length > 16 ? org.slice(0, 16) + "..." : org) + '</div>'
-    + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + Math.round(count / maxOrg * 100) + '%"></div></div>'
+    '<div class="an-row"><div class="an-label" title="' + org + '">' + (org.length > 16 ? org.slice(0,16)+"..." : org) + '</div>'
+    + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + Math.round(count/maxOrg*100) + '%"></div></div>'
     + '<div class="an-num">' + count + '</div></div>').join("");
   const cpvMap = {};
   active.forEach(t => getCpvs(t).forEach(c => { cpvMap[c] = (cpvMap[c] || 0) + 1; }));
@@ -726,44 +906,34 @@ function updateAnalytics(active, reviewN) {
   const ctx = document.getElementById("cpvChart").getContext("2d");
   cpvChartInstance = new Chart(ctx, {
     type: "doughnut",
-    data: {
-      labels: cpvEntries.map(([c]) => c),
-      datasets: [{ data: cpvEntries.map(([, n]) => n), backgroundColor: cpvEntries.map(([c]) => CPV_COLORS[c] || "#94a3b8"), borderWidth: 0 }]
-    },
+    data: { labels: cpvEntries.map(([c]) => c), datasets: [{ data: cpvEntries.map(([,n]) => n), backgroundColor: cpvEntries.map(([c]) => CPV_COLORS[c] || "#94a3b8"), borderWidth: 0 }] },
     options: { plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: "65%", animation: { duration: 500 } }
   });
-  document.getElementById("cpvLegend").innerHTML = cpvEntries.slice(0, 5).map(([code, count]) =>
-    '<div class="dl-item"><div class="dl-dot" style="background:' + (CPV_COLORS[code] || '#94a3b8') + '"></div><span>' + code + '</span><span style="margin-left:auto;font-weight:700;color:var(--text)">' + count + ' (' + Math.round(count / total * 100) + '%)</span></div>').join("");
+  document.getElementById("cpvLegend").innerHTML = cpvEntries.slice(0,5).map(([code, count]) =>
+    '<div class="dl-item"><div class="dl-dot" style="background:' + (CPV_COLORS[code]||'#94a3b8') + '"></div><span>' + code + '</span><span style="margin-left:auto;font-weight:700;color:var(--text)">' + count + ' (' + Math.round(count/total*100) + '%)</span></div>').join("");
   const now = new Date();
-  let d3 = 0, d7 = 0, d14 = 0, dMore = 0;
+  let d3=0, d7=0, d14=0, dMore=0;
   active.forEach(t => {
     if (!t.deadline) return;
     const p = t.deadline.split(".");
     if (p.length !== 3) return;
-    const days = Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - now) / 864e5);
+    const days = Math.ceil((new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0])) - now) / 864e5);
     if (days < 0) return;
-    if (days <= 3) d3++;
-    else if (days <= 7) d7++;
-    else if (days <= 14) d14++;
-    else dMore++;
+    if (days <= 3) d3++; else if (days <= 7) d7++; else if (days <= 14) d14++; else dMore++;
   });
-  const dl = [
-    { l: "0–3 дня", n: d3, c: "#ef4444" },
-    { l: "4–7 дней", n: d7, c: "#f59e0b" },
-    { l: "8–14 дней", n: d14, c: "#3b82f6" },
-    { l: "14+ дней", n: dMore, c: "#22c55e" }
-  ];
-  document.getElementById("deadlineStats").innerHTML = dl.map(r =>
-    '<div class="an-row"><div class="an-label" style="color:' + r.c + '">⭐ ' + r.l + '</div>'
-    + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + (active.length ? Math.round(r.n / active.length * 100) : 0) + '%;background:' + r.c + '"></div></div>'
+  document.getElementById("deadlineStats").innerHTML = [
+    { l:"0–3 дня", n:d3, c:"#ef4444" }, { l:"4–7 дней", n:d7, c:"#f59e0b" },
+    { l:"8–14 дней", n:d14, c:"#3b82f6" }, { l:"14+ дней", n:dMore, c:"#22c55e" }
+  ].map(r => '<div class="an-row"><div class="an-label" style="color:' + r.c + '">⭐ ' + r.l + '</div>'
+    + '<div class="an-bar-bg"><div class="an-bar-fill" style="width:' + (active.length ? Math.round(r.n/active.length*100) : 0) + '%;background:' + r.c + '"></div></div>'
     + '<div class="an-num">' + r.n + '</div></div>').join("");
   const urgent = active.filter(t => {
     if (!t.deadline) return false;
     const p = t.deadline.split(".");
     if (p.length !== 3) return false;
-    return Math.ceil((new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])) - now) / 864e5) <= 3;
+    return Math.ceil((new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0])) - now) / 864e5) <= 3;
   }).length;
-  const highVal = active.filter(t => parseFloat((t.price || "").replace(/GEL/g, "").replace(/[`'\s]/g, "")) >= 500000).length;
+  const highVal = active.filter(t => parseFloat((t.price||"").replace(/GEL/g,"").replace(/[`'\s]/g,"")) >= 500000).length;
   document.getElementById("attentionItems").innerHTML =
     '<div class="attention-item"><div class="att-label">' + (urgent > 0 ? '<span class="blink">🔴</span>' : "⚪") + ' Истекают в 3 дня</div><span class="att-count" style="color:' + (urgent > 0 ? "#ef4444" : "var(--text2)") + '">' + urgent + '</span></div>'
     + '<div class="attention-item"><div class="att-label">🟡 Стоимость 500K+</div><span class="att-count" style="color:#d97706">' + highVal + '</span></div>'
@@ -772,15 +942,10 @@ function updateAnalytics(active, reviewN) {
 }
 
 async function loadData() {
-  ALL_TENDERS = [];
-  REVIEW_STATUSES = {};
-  TENDER_NOTES = {};
-  IGNORED_TENDERS = [];
+  ALL_TENDERS = []; REVIEW_STATUSES = {}; TENDER_NOTES = {}; IGNORED_TENDERS = [];
   const { data, error } = await supabaseClient.from("tender_reviews").select("*");
-  if (error) {
-    console.error("Supabase read error:", error);
-    showToast("❌ Supabase bağlantı hatası: " + error.message, "error");
-  } else if (data) {
+  if (error) { showToast("❌ Supabase bağlantı hatası: " + error.message, "error"); }
+  else if (data) {
     data.forEach(row => {
       REVIEW_STATUSES[row.tender_id] = row.review_status || "new";
       TENDER_NOTES[row.tender_id] = row.note || "";
@@ -792,31 +957,21 @@ async function loadData() {
     if (!res.ok) throw new Error("CSV fetch failed: " + res.status);
     const text = await res.text();
     const rows = parseCSV(text);
-    if (rows.length < 2) { console.warn("CSV boş veya başlık yok"); return; }
+    if (rows.length < 2) { console.warn("CSV boş"); return; }
     const headers = rows.shift().map(h => h.replace(/﻿/g, "").trim());
     ALL_TENDERS = rows
       .map(r => { const obj = {}; headers.forEach((h, i) => obj[h] = (r[i] || "").trim()); return obj; })
       .filter(t => t.id && t.id.trim() !== "")
       .filter(t => {
-        // Sadece 01.06.2025 tarihinden sonraki tenderlar
         const d = parseDateField(t.published || t.date_found);
         return !d || d >= MIN_DATE;
       });
-  } catch (e) {
-    console.error("CSV error", e);
-  }
-  updateStats();
-  render();
+  } catch(e) { console.error("CSV error", e); }
+  updateStats(); render();
 }
 
 document.getElementById("searchInput").addEventListener("input", render);
-
-setInterval(() => {
-  supabaseClient.auth.getSession().then(({ data }) => {
-    if (data.session) loadData();
-  });
-}, 5 * 60 * 1000);
-
+setInterval(() => { supabaseClient.auth.getSession().then(({ data }) => { if (data.session) loadData(); }); }, 5 * 60 * 1000);
 checkAuth();
 </script>
 </body>
