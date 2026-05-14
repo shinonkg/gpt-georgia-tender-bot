@@ -193,7 +193,6 @@ def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
             "app_amount_to":        "",
             "app_currency":         "2",
             "app_pricelist":        "0",
-            "page":                 str(page),
         }
 
         try:
