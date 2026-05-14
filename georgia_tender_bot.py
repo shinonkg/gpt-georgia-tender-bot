@@ -9,27 +9,27 @@ import time
 import logging
 import hashlib
 import requests
+from datetime import datetime
 from pathlib import Path
 
 # ── Настройки ─────────────────────────────────────────────────────────────────
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
+TELEGRAM_TOKEN  = os.getenv("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 KEYWORDS: list[str] = []
 CPV_CODES: list[str] = []
-
 CHECK_INTERVAL = 300
 
-SEEN_FILE = Path("seen_tenders_georgia.json")
-CUSTOMER_CSV_FILE = "customer_tenders.csv"
+SEEN_FILE            = Path("seen_tenders_georgia.json")
+CUSTOMER_TENDERS_CSV = Path("customer_tenders.csv")
 
-# (identification_code): (display_name, monac_id, georgian_name)
+# Müşteriler: id_kodu → (isim, monac_id, gürcüce_isim)
 CUSTOMERS = {
-    "424611441": ("Lago",                   "12891", "ლაგო"),
-    "436034916": ("Our Group chveni jgupi",  "",      ""),
-    "405142634": ("Ander Konstrakshen",      "",      ""),
-    "425057341": ("Eplaini",                 "",      ""),
+    "424611441": ("Lago",                  "12891", "ლაგო"),
+    "436034916": ("Our Group",             "",      "ჩვენი ჯგუფი"),
+    "405142634": ("Ander Konstrakshen",    "",      "ანდერ კონსტრაქშენი"),
+    "425057341": ("Eplaini",               "",      "ეფლეინი"),
 }
 
 # ── Логирование ────────────────────────────────────────────────────────────────
@@ -44,250 +44,18 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ── Портал ────────────────────────────────────────────────────────────────────
+# ── URLs ───────────────────────────────────────────────────────────────────────
 
-BASE_URL    = "https://tenders.procurement.gov.ge"
-API_URL     = f"{BASE_URL}/public/api"
-LIBRARY_URL = f"{BASE_URL}/public/library"
+BASE_URL       = "https://tenders.procurement.gov.ge"
+API_URL        = f"{BASE_URL}/public/api"
+LIBRARY_URL    = f"{BASE_URL}/public/library"
 CONTROLLER_URL = f"{LIBRARY_URL}/controller.php"
-LIST_ORG_URL   = f"{LIBRARY_URL}/list_org.php"
 
+HEADERS = {"User-Agent": "TenderMonitorBot/1.0", "Accept": "application/json"}
 SESSION = requests.Session()
-SESSION.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-    "Accept": "*/*",
-    "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": f"{LIBRARY_URL}/",
-})
+SESSION.headers.update(HEADERS)
 
-
-def init_session() -> None:
-    try:
-        SESSION.get(f"{LIBRARY_URL}/", timeout=30)
-        SESSION.get(f"{LIBRARY_URL}/who.php", timeout=15)
-        SESSION.headers["Referer"] = f"{LIBRARY_URL}/"
-        log.info("Session hazır. Cookies: %s", list(SESSION.cookies.keys()))
-    except Exception as e:
-        log.warning("init_session: %s", e)
-
-
-def get_monac_id(customer_id: str) -> tuple[str, str]:
-    info = CUSTOMERS.get(customer_id, ("", "", ""))
-    if info[1]:
-        log.info("  Hardcoded: monac_id=%s, org_b=%s", info[1], info[2])
-        return info[1], info[2]
-
-    ts = int(time.time() * 1000)
-    try:
-        resp = SESSION.get(
-            LIST_ORG_URL,
-            params={"q": customer_id, "limit": "50", "timestamp": str(ts)},
-            headers={"Accept": "application/json, text/javascript, */*; q=0.01"},
-            timeout=30,
-        )
-        raw = resp.text.strip()
-        log.info("  list_org raw: %s", repr(raw[:200]))
-        if not raw:
-            return "0", ""
-        data = resp.json()
-        items = data if isinstance(data, list) else data.get("results", [])
-        if items:
-            item = items[0]
-            monac_id = str(item.get("id", ""))
-            name = item.get("name", item.get("label", item.get("value", "")))
-            if "(" in name:
-                name = name[:name.rfind("(")].strip()
-            return monac_id, name
-    except Exception as e:
-        log.error("get_monac_id(%s): %s", customer_id, e)
-    return "0", ""
-
-
-# ── Tender API ────────────────────────────────────────────────────────────────
-
-def fetch_tenders(page: int = 1, page_size: int = 20) -> dict:
-    params = {"page": page, "pageSize": page_size, "sortBy": "publishDate", "sortOrder": "desc"}
-    try:
-        resp = SESSION.get(f"{API_URL}/tenders", params=params, timeout=30)
-        resp.raise_for_status()
-        return resp.json()
-    except requests.RequestException as e:
-        log.error("Ошибка при запросе тендеров: %s", e)
-        return {}
-
-
-def fetch_tenders_html() -> list[dict]:
-    try:
-        from bs4 import BeautifulSoup
-    except ImportError:
-        log.warning("beautifulsoup4 не установлен")
-        return []
-    try:
-        resp = SESSION.get(f"{BASE_URL}/public/tenders", timeout=30)
-        resp.raise_for_status()
-    except requests.RequestException as e:
-        log.error("Ошибка HTML-запроса: %s", e)
-        return []
-    soup = BeautifulSoup(resp.text, "html.parser")
-    tenders = []
-    for row in soup.select("table.tender-list tbody tr"):
-        cols = row.find_all("td")
-        if len(cols) < 4:
-            continue
-        link_tag = cols[1].find("a")
-        tenders.append({
-            "id":        cols[0].get_text(strip=True),
-            "title":     cols[1].get_text(strip=True),
-            "url":       BASE_URL + link_tag["href"] if link_tag else "",
-            "organizer": cols[2].get_text(strip=True),
-            "deadline":  cols[3].get_text(strip=True),
-            "budget":    cols[4].get_text(strip=True) if len(cols) > 4 else "",
-            "status":    cols[5].get_text(strip=True) if len(cols) > 5 else "",
-        })
-    return tenders
-
-
-# ── Müşteri tender çekme ───────────────────────────────────────────────────────
-
-def search_customer_tenders(customer_id: str, customer_name: str) -> list[dict]:
-    try:
-        from bs4 import BeautifulSoup
-    except ImportError:
-        log.warning("beautifulsoup4 не установлен")
-        return []
-
-    log.info("Загрузка тендеров клиента: %s (%s)", customer_name, customer_id)
-
-    monac_id, org_name_ge = get_monac_id(customer_id)
-    if not monac_id or monac_id == "0":
-        log.warning("  monac_id bulunamadı, atlanıyor")
-        return []
-
-    log.info("  → monac_id=%s, org_b=%s", monac_id, org_name_ge)
-
-    all_tenders = []
-    page = 1
-
-    while True:
-        post_data = {
-            "action":               "search_app",
-            "app_t":                "0",
-            "search":               "",
-            "app_reg_id":           "",
-            "app_shems_id":         "0",
-            "org_a":                "",
-            "app_monac_id":         monac_id,
-            "org_b":                org_name_ge,
-            "app_particip_status_id": "0",
-            "app_donor_id":         "0",
-            "app_status":           "0",
-            "app_agr_status":       "0",
-            "app_type":             "0",
-            "app_basecode":         "0",
-            "app_codes":            "",
-            "app_date_type":        "1",
-            "app_date_from":        "",
-            "app_date_till":        "",
-            "app_amount_from":      "",
-            "app_amount_to":        "",
-            "app_currency":         "2",
-            "app_pricelist":        "0",
-        }
-
-        try:
-            resp = SESSION.post(CONTROLLER_URL, data=post_data, timeout=30)
-            resp.raise_for_status()
-        except requests.RequestException as e:
-            log.error("POST controller.php hata (sayfa %d): %s", page, e)
-            break
-
-        soup = BeautifulSoup(resp.text, "html.parser")
-        parsed = parse_customer_tenders(soup, customer_id)
-
-        if not parsed:
-            log.info("  Sayfa %d boş, bitti.", page)
-            break
-
-        all_tenders.extend(parsed)
-        log.info("  Sayfa %d: %d tender", page, len(parsed))
-
-        next_link = soup.find("a", string=lambda t: t and (
-            ">" in t or "შემდეგი" in t or "next" in (t or "").lower()
-        ))
-        if not next_link:
-            break
-
-        page += 1
-        time.sleep(0.5)
-
-    log.info("Клиент %s: итого %d тендеров", customer_name, len(all_tenders))
-    return all_tenders
-
-
-def parse_customer_tenders(soup, customer_id: str) -> list[dict]:
-    tenders = []
-    for row in soup.select("table tbody tr"):
-        cols = row.find_all("td")
-        if len(cols) < 2:
-            continue
-
-        tender_id   = cols[0].get_text(strip=True) if len(cols) > 0 else ""
-        name        = ""
-        link        = ""
-        org         = ""
-        price       = ""
-        deadline    = ""
-        publish_date = ""
-        status      = ""
-
-        a_tag = cols[1].find("a", href=True) if len(cols) >= 2 else None
-        if a_tag:
-            raw_href = a_tag["href"]
-            link = (BASE_URL + raw_href) if raw_href.startswith("/") else raw_href
-            name = a_tag.get_text(strip=True)
-        elif len(cols) >= 2:
-            name = cols[1].get_text(strip=True)
-
-        if len(cols) >= 3: org          = cols[2].get_text(strip=True)
-        if len(cols) >= 4: price        = cols[3].get_text(strip=True)
-        if len(cols) >= 5: deadline     = cols[4].get_text(strip=True)
-        if len(cols) >= 6: publish_date = cols[5].get_text(strip=True)
-        if len(cols) >= 7: status       = cols[6].get_text(strip=True)
-
-        if not name and not tender_id:
-            continue
-
-        tenders.append({
-            "customer_id":  customer_id,
-            "id":           tender_id,
-            "reg_id":       tender_id,
-            "name":         name,
-            "org":          org,
-            "price":        price,
-            "deadline":     deadline,
-            "publish_date": publish_date,
-            "status":       status,
-            "link":         link,
-        })
-    return tenders
-
-
-def save_customer_csv(all_tenders: list[dict]) -> None:
-    if not all_tenders:
-        log.warning("Müşteri tender verisi yok, CSV yazılmadı")
-        return
-    fieldnames = ["customer_id", "id", "reg_id", "name", "org", "price",
-                  "deadline", "publish_date", "status", "link"]
-    with open(CUSTOMER_CSV_FILE, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for t in all_tenders:
-            writer.writerow({k: t.get(k, "") for k in fieldnames})
-    log.info("Сохранено %d тендеров клиентов → %s", len(all_tenders), CUSTOMER_CSV_FILE)
-
-
-# ── Seen tenders ──────────────────────────────────────────────────────────────
+# ── Seen store ────────────────────────────────────────────────────────────────
 
 def load_seen() -> set[str]:
     if SEEN_FILE.exists():
@@ -297,18 +65,16 @@ def load_seen() -> set[str]:
             return set()
     return set()
 
-
 def save_seen(seen: set[str]) -> None:
     SEEN_FILE.write_text(
-        json.dumps(list(seen), ensure_ascii=False, indent=2),
-        encoding="utf-8",
+        json.dumps(list(seen), ensure_ascii=False, indent=2), encoding="utf-8"
     )
-
 
 def tender_id(tender: dict) -> str:
     raw = tender.get("id") or tender.get("tenderId") or tender.get("title", "")
     return hashlib.md5(str(raw).encode()).hexdigest()
 
+# ── Фильтрация ─────────────────────────────────────────────────────────────────
 
 def matches_filters(tender: dict) -> bool:
     if not KEYWORDS and not CPV_CODES:
@@ -318,15 +84,13 @@ def matches_filters(tender: dict) -> bool:
         tender.get("description", ""),
         tender.get("subject", ""),
     ]).lower()
-    if KEYWORDS:
-        if not any(kw.lower() in text for kw in KEYWORDS):
-            return False
+    if KEYWORDS and not any(kw.lower() in text for kw in KEYWORDS):
+        return False
     if CPV_CODES:
         cpv = tender.get("cpvCode", "") or tender.get("cpv", "")
         if not any(cpv.startswith(code) for code in CPV_CODES):
             return False
     return True
-
 
 # ── Telegram ───────────────────────────────────────────────────────────────────
 
@@ -346,9 +110,8 @@ def send_telegram(message: str) -> bool:
         resp.raise_for_status()
         return True
     except requests.RequestException as e:
-        log.error("Telegram hatası: %s", e)
+        log.error("Ошибка Telegram: %s", e)
         return False
-
 
 def format_tender_message(tender: dict) -> str:
     title     = tender.get("title") or tender.get("subject") or "Без названия"
@@ -359,6 +122,7 @@ def format_tender_message(tender: dict) -> str:
     published = tender.get("publishDate") or tender.get("publicationDate", "—")
     url       = tender.get("url") or f"{BASE_URL}/public/tenders/{tid}"
     cpv       = tender.get("cpvCode") or tender.get("cpv", "")
+
     lines = [
         "🇬🇪 <b>Новый тендер — Грузия</b>", "",
         f"📋 <b>{title}</b>",
@@ -376,8 +140,18 @@ def format_tender_message(tender: dict) -> str:
     ]
     return "\n".join(lines)
 
+# ── Genel tender API ───────────────────────────────────────────────────────────
 
-# ── Ana döngü ─────────────────────────────────────────────────────────────────
+def fetch_tenders(page: int = 1, page_size: int = 20) -> dict:
+    params = {"page": page, "pageSize": page_size,
+               "sortBy": "publishDate", "sortOrder": "desc"}
+    try:
+        resp = SESSION.get(f"{API_URL}/tenders", params=params, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+    except requests.RequestException as e:
+        log.error("Ошибка тендеров: %s", e)
+        return {}
 
 def process_tenders(tenders: list[dict], seen: set[str]) -> int:
     new_count = 0
@@ -396,65 +170,239 @@ def process_tenders(tenders: list[dict], seen: set[str]) -> int:
         time.sleep(0.5)
     return new_count
 
+# ── MÜŞTERİ TENDER — PLAYWRIGHT ───────────────────────────────────────────────
+
+def fetch_customer_tenders_playwright(
+    customer_id: str,
+    monac_id: str,
+    org_name_ge: str,
+    customer_label: str,
+) -> list[dict]:
+    """
+    Playwright ile gerçek Chromium tarayıcı kullanarak controller.php'ye POST yapar.
+    Anti-bot korumasını geçer çünkü gerçek bir tarayıcı fingerprint'i gönderir.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        log.error("playwright kurulu değil: pip install playwright && playwright install chromium")
+        return []
+
+    post_data = {
+        "action":                  "search_app",
+        "app_t":                   "0",
+        "search":                  "",
+        "app_reg_id":              "",
+        "app_shems_id":            "0",
+        "org_a":                   "",
+        "app_monac_id":            monac_id,
+        "org_b":                   org_name_ge,
+        "app_particip_status_id":  "0",
+        "app_donor_id":            "0",
+        "app_status":              "0",
+        "app_agr_status":          "0",
+        "app_type":                "0",
+        "app_basecode":            "0",
+        "app_codes":               "",
+        "app_date_type":           "1",
+        "app_date_from":           "",
+        "app_date_till":           "",
+        "app_amount_from":         "",
+        "app_amount_to":           "",
+        "app_currency":            "2",
+        "app_pricelist":           "0",
+    }
+
+    # JavaScript fetch kodu — tarayıcı context'i içinde çalışır
+    js_fetch = """
+    async (params) => {
+        const body = new URLSearchParams(params);
+        try {
+            const resp = await fetch('/public/library/controller.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'include',
+                body: body.toString()
+            });
+            const text = await resp.text();
+            return { status: resp.status, body: text };
+        } catch(e) {
+            return { status: 0, body: e.toString() };
+        }
+    }
+    """
+
+    results = []
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
+            context = browser.new_context(
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/124.0.0.0 Safari/537.36"
+                ),
+                locale="ka-GE",
+                timezone_id="Asia/Tbilisi",
+            )
+            page = context.new_page()
+
+            # 1) Sayfayı ziyaret et → cookie al
+            log.info("  [%s] Sayfaya gidiliyor…", customer_label)
+            page.goto(f"{BASE_URL}/public/library/", wait_until="networkidle", timeout=60_000)
+
+            # 2) fetch ile POST yap (aynı origin → CORS yok)
+            log.info("  [%s] controller.php POST…", customer_label)
+            result = page.evaluate(js_fetch, post_data)
+
+            status = result.get("status", 0)
+            body   = result.get("body", "")
+            log.info("  [%s] HTTP %d, body[:200]: %s", customer_label, status, body[:200])
+
+            if status == 200 and body.strip():
+                try:
+                    data = json.loads(body)
+                    # Yanıt liste veya dict olabilir
+                    if isinstance(data, list):
+                        raw_list = data
+                    elif isinstance(data, dict):
+                        raw_list = (
+                            data.get("items")
+                            or data.get("tenders")
+                            or data.get("data")
+                            or data.get("results")
+                            or []
+                        )
+                    else:
+                        raw_list = []
+
+                    log.info("  [%s] %d tender bulundu", customer_label, len(raw_list))
+
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    for t in raw_list:
+                        results.append({
+                            "customer_id":    customer_id,
+                            "customer_name":  customer_label,
+                            "tender_id":      t.get("app_id") or t.get("id") or "",
+                            "title":          t.get("app_name") or t.get("title") or t.get("subject") or "",
+                            "organizer":      t.get("org_name") or t.get("organizer") or "",
+                            "budget":         t.get("app_amount") or t.get("budget") or t.get("estimatedValue") or "",
+                            "currency":       t.get("currency_name") or "GEL",
+                            "status":         t.get("app_status_name") or t.get("status") or "",
+                            "publish_date":   t.get("app_reg_date") or t.get("publishDate") or today,
+                            "deadline":       t.get("app_end_date") or t.get("submissionDeadline") or "",
+                            "url":            (
+                                t.get("url")
+                                or f"{BASE_URL}/public/library/#/tenders/apinfo/"
+                                   f"{t.get('app_id') or t.get('id', '')}"
+                            ),
+                        })
+                except json.JSONDecodeError:
+                    log.error("  [%s] JSON parse hatası: %s", customer_label, body[:300])
+            else:
+                log.error("  [%s] Hata: HTTP %d", customer_label, status)
+
+            browser.close()
+    except Exception as e:
+        log.exception("  [%s] Playwright hatası: %s", customer_label, e)
+
+    return results
+
+
+def update_customer_tenders_csv() -> None:
+    """Tüm müşteriler için tender çek, CSV'ye yaz."""
+    all_rows: list[dict] = []
+
+    for customer_id, (label, monac_id, org_name_ge) in CUSTOMERS.items():
+        if not monac_id:
+            log.warning("[%s] monac_id bilinmiyor, atlanıyor", label)
+            continue
+
+        log.info("Müşteri: %s (monac_id=%s)", label, monac_id)
+        rows = fetch_customer_tenders_playwright(customer_id, monac_id, org_name_ge, label)
+        all_rows.extend(rows)
+        time.sleep(3)  # aşırı yük önleme
+
+    if not all_rows:
+        log.warning("Hiç müşteri tender'i bulunamadı, CSV güncellenmedi")
+        return
+
+    fieldnames = [
+        "customer_id", "customer_name", "tender_id", "title",
+        "organizer", "budget", "currency", "status",
+        "publish_date", "deadline", "url",
+    ]
+    with open(CUSTOMER_TENDERS_CSV, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(all_rows)
+
+    log.info("customer_tenders.csv güncellendi: %d satır", len(all_rows))
+
+
+# ── ANA DÖNGÜ ─────────────────────────────────────────────────────────────────
 
 def run_once() -> None:
-    init_session()
     seen = load_seen()
     log.info("Проверка новых тендеров (Грузия)…")
 
+    # Genel tenderler
     data = fetch_tenders(page=1, page_size=50)
     all_tenders = data.get("items") or data.get("tenders") or data.get("data") or []
-
-    if not all_tenders:
-        log.info("API пустой, пробуем HTML-парсинг…")
-        all_tenders = fetch_tenders_html()
-
     new = process_tenders(all_tenders, seen)
     save_seen(seen)
-    log.info("Готово. Новых: %d / Проверено: %d", new, len(all_tenders))
+    log.info("Genel tenderler: %d yeni / %d toplam", new, len(all_tenders))
 
-    log.info("Обновление тендеров клиентов…")
-    all_customer_tenders: list[dict] = []
-    for cust_id, cust_info in CUSTOMERS.items():
-        cust_name = cust_info[0]
-        try:
-            tenders = search_customer_tenders(cust_id, cust_name)
-            all_customer_tenders.extend(tenders)
-        except Exception as e:
-            log.error("Ошибка клиента %s: %s", cust_name, e)
-        time.sleep(1)
-
-    save_customer_csv(all_customer_tenders)
-    log.info("Тендеры клиентов: итого %d", len(all_customer_tenders))
+    # Müşteri tenderler
+    log.info("Müşteri tender'leri güncelleniyor…")
+    update_customer_tenders_csv()
 
 
 def run_loop() -> None:
     log.info("=" * 60)
-    log.info("Georgia Tender Bot запущен")
-    log.info("Клиенты: %s", [v[0] for v in CUSTOMERS.values()])
+    log.info("Georgia Tender Bot başladı")
+    log.info("Portal: %s", BASE_URL)
+    log.info("Kontrol aralığı: %d sn", CHECK_INTERVAL)
     log.info("=" * 60)
+
     while True:
         try:
             run_once()
         except KeyboardInterrupt:
-            log.info("Остановлено")
+            log.info("Kullanıcı tarafından durduruldu")
             break
         except Exception as e:
-            log.exception("Ошибка: %s", e)
-        log.info("Следующая проверка через %d сек…", CHECK_INTERVAL)
+            log.exception("Beklenmedik hata: %s", e)
+
+        log.info("Sonraki kontrol %d sn sonra…", CHECK_INTERVAL)
         time.sleep(CHECK_INTERVAL)
 
 
-# ── Giriş noktası ─────────────────────────────────────────────────────────────
+# ── GİRİŞ NOKTASI ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Georgia Tender Bot")
-    parser.add_argument("--once", action="store_true")
-    parser.add_argument("--interval", type=int, default=CHECK_INTERVAL)
+    parser.add_argument("--once",     action="store_true",
+                        help="Bir kez çalıştır ve çık")
+    parser.add_argument("--interval", type=int, default=CHECK_INTERVAL,
+                        help=f"Kontrol aralığı saniye (varsayılan {CHECK_INTERVAL})")
+    parser.add_argument("--customers-only", action="store_true",
+                        help="Sadece müşteri tender'lerini güncelle")
     args = parser.parse_args()
+
     CHECK_INTERVAL = args.interval
-    if args.once:
+
+    if args.customers_only:
+        update_customer_tenders_csv()
+    elif args.once:
         run_once()
     else:
         run_loop()
