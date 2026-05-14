@@ -443,7 +443,8 @@ def run_once() -> None:
     # ── Müşteri tenderları ──────────────────────────────────────────────────
     log.info("Обновление тендеров клиентов…")
     all_customer_tenders: list[dict] = []
-    for cust_id, cust_name in CUSTOMERS.items():
+    for cust_id, cust_info in CUSTOMERS.items():
+    cust_name = cust_info[0]
         try:
             tenders = search_customer_tenders(cust_id, cust_name)
             all_customer_tenders.extend(tenders)
