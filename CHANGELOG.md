@@ -10,18 +10,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) styl
 
 - AI-friendly project documentation set.
 - `/docs` folder structure for frontend, backend, database, and integrations notes.
+- `scripts/refresh_tenders.mjs` for the main `Все тендеры` dashboard feed.
+- `scripts/refresh_customer_tenders.mjs` as a local Node helper for monitored supplier CSV refreshes.
 
 ### Changed
 
-- Placeholder for future changes.
+- Main tender feed now includes all statuses for CPV `45100000` from announcement date `01.03.2026` onward.
+- GitHub Actions now refreshes the main tender feed after the Python monitored-supplier sync.
+- `customer_tenders.csv` now includes Lago, Our Group chveni jgupi, Ander Konstrakshen, and Eplaini.
+- Supplier tender search defaults to `app_date_type=2` to include current-year participation even when announcement date is in the previous year.
 
 ### Fixed
 
-- Placeholder for future fixes.
-
-### Removed
-
-- Placeholder for future removals.
+- Customer modal now waits for `customer_tenders.csv` loading before showing an empty/no-data state.
+- Tender detail drawer now shows a clearer summary, normalized official links, and safer escaped content.
+- Main dashboard no longer depends on a stale hand-curated `tenders.csv` with only active announced rows.
 
 ## [0.3.0] - 2026-05-14
 

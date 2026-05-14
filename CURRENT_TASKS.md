@@ -15,8 +15,7 @@ This file tracks active work for humans and AI coding assistants.
 
 | Priority | Task | Owner | Notes |
 | --- | --- | --- | --- |
-| P1 | Stabilize Lago tender monitoring | AI/Human | Pagination is implemented; monitor next scheduled run. |
-| P2 | Improve documentation coverage | AI | Initial documentation set created. |
+| P1 | Verify scheduled data refresh after latest workflow changes | AI/Human | Confirm GitHub Actions updates both main tenders and monitored supplier tenders. |
 
 ## Pending
 
@@ -27,6 +26,7 @@ This file tracks active work for humans and AI coding assistants.
 | P2 | Add Flask backend if required | Backend | Flask app exposes documented API routes and does not break static deployment. |
 | P2 | Add automated parser tests | Backend | HTML fixtures validate pagination, NAT extraction, dates, organizer, and budget. |
 | P2 | Add frontend smoke test | Frontend | Dashboard loads CSVs and opens tender/customer drawers. |
+| P2 | Confirm main tender feed business filters | Data | Current rule is announcement date >= 01.03.2026, all statuses, CPV 45100000. |
 | P3 | Split `index.html` into modules | Frontend | Preserve current behavior while improving maintainability. |
 
 ## Completed
@@ -39,6 +39,9 @@ This file tracks active work for humans and AI coding assistants.
 | 2026-05-14 | Telegram new-entry detection | Compares current customer CSV against previous CSV before sending alerts. |
 | 2026-05-14 | Drawer z-index fix | Tender drawer appears above customer modal. |
 | 2026-05-14 | Expanded monitored suppliers | Added Our Group, Ander Konstrakshen, and Eplaini supplier tender history. |
+| 2026-05-14 | Customer tender load race fix | Customer modal waits for `customer_tenders.csv` before showing no-data state. |
+| 2026-05-14 | Main tender feed refresh | `Все тендеры` now uses announcement date from 01.03.2026, all statuses, CPV 45100000. |
+| 2026-05-14 | GitHub Actions main-feed refresh | Workflow now runs `scripts/refresh_tenders.mjs` after the Python supplier sync. |
 
 ## Technical Debt
 
