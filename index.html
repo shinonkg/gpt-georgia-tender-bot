@@ -416,7 +416,7 @@ const SUPABASE_URL = "https://pibdlregqkpgwapdikdc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_xo8SnVOwSqDuKqXBqCT1ZA_xNAgssrv";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const CSV_FILE = "tenders.csv";
-const MIN_DATE = new Date(2025, 5, 1);
+const MIN_DATE = new Date(2026, 2, 1);
 
 const CUSTOMERS = [
   {
@@ -614,9 +614,9 @@ function renderBadges(t) {
 
 function getStatusClass(status) {
   const s = (status || "").toLowerCase();
-  if (s.includes("объявлен") || s.includes("приём")) return "status-active";
-  if (s.includes("оценка") || s.includes("подготовка")) return "status-warning";
-  if (s.includes("победитель") || s.includes("договор")) return "status-success";
+  if (s.includes("объявлен") || s.includes("приём") || s.includes("announced") || s.includes("bidding")) return "status-active";
+  if (s.includes("оценка") || s.includes("подготовка") || s.includes("evaluation") || s.includes("finalization")) return "status-warning";
+  if (s.includes("победитель") || s.includes("договор") || s.includes("winner") || s.includes("contract awarded")) return "status-success";
   return "status-ended";
 }
 
