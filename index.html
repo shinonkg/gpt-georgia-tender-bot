@@ -498,6 +498,7 @@ document.addEventListener('keydown', e => {
 
 let ALL_TENDERS = [], CURRENT_FILTER = "all", QUICK_FILTER = "all";
 let REVIEW_STATUSES = {}, TENDER_NOTES = {}, IGNORED_TENDERS = [];
+let CUSTOMER_TENDERS = {};
 
 let toastTimer = null;
 function showToast(msg, type = "success") {
@@ -541,6 +542,14 @@ function parseDateField(val) {
   const p = val.split(" ")[0].split(".");
   if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
   return null;
+}
+
+function parseTenderDate(str) {
+  if (!str) return 0;
+  const p = str.split(".");
+  if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])).getTime();
+  const d = new Date(str);
+  return isNaN(d) ? 0 : d.getTime();
 }
 
 function getReviewStatus(id) { return REVIEW_STATUSES[id] || "new"; }
@@ -756,7 +765,33 @@ function closeDrawer() {
   document.getElementById("drawerOverlay").classList.remove("show");
 }
 
-// ── Customer functions ──
+// ── Customer CSV loading ──
+
+async function loadCustomerTendersCSV() {
+  try {
+    const res = await fetch("customer_tenders.csv?v=" + Date.now());
+    if (!res.ok) return;
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) return;
+    const headers = rows.shift().map(h => h.replace(/\uFEFF/g, "").trim());
+    const data = rows
+      .map(r => { const o = {}; headers.forEach((h, i) => o[h] = (r[i] || "").trim()); return o; })
+      .filter(r => r.customer_id && r.customer_id !== "customer_id");
+    CUSTOMER_TENDERS = {};
+    data.forEach(t => {
+      if (!CUSTOMER_TENDERS[t.customer_id]) CUSTOMER_TENDERS[t.customer_id] = [];
+      CUSTOMER_TENDERS[t.customer_id].push(t);
+    });
+    Object.keys(CUSTOMER_TENDERS).forEach(id => {
+      CUSTOMER_TENDERS[id].sort((a, b) => parseTenderDate(b.publish_date) - parseTenderDate(a.publish_date));
+    });
+  } catch(e) {
+    console.warn("customer_tenders.csv yüklenemedi:", e.message);
+  }
+}
+
+// ── Customer modal ──
 
 async function openCustomer(customerId) {
   const c = CUSTOMERS.find(x => x.id === customerId);
@@ -768,8 +803,8 @@ async function openCustomer(customerId) {
   document.getElementById("cmTenders").innerHTML = '<div class="ct-spinner">⏳ Загрузка иhaлей...</div>';
   document.getElementById("cmOverlay").classList.add("show");
   document.getElementById("cmModal").classList.add("open");
-  const tenders = await fetchCustomerTenders(c.id);
-  document.getElementById("cmTenders").innerHTML = renderCustomerTenders(tenders, c);
+  const result = await fetchCustomerTenders(c.id);
+  document.getElementById("cmTenders").innerHTML = renderCustomerTenders(result, c);
 }
 
 function closeCustomer() {
@@ -794,7 +829,7 @@ function renderCustomerProfile(c) {
     if (!f.v) return;
     html += '<div class="cp-row"><div class="cp-lbl">' + f.l + '</div><div class="cp-val">' + f.v + '</div></div>';
   });
-  if (c.contacts.length) {
+  if (c.contacts && c.contacts.length) {
     html += '<div class="cp-section-title">Контактные лица</div>';
     c.contacts.forEach(ct => {
       html += '<div class="cp-contact-card">'
@@ -810,57 +845,42 @@ function renderCustomerProfile(c) {
 }
 
 async function fetchCustomerTenders(idCode) {
-  const url = "https://tenders.procurement.gov.ge/api/public/tenders?supplierId=" + idCode + "&page=0&size=200&sort=publishDate,desc";
-  try {
-    const res = await fetch(url, { headers: { "Accept": "application/json" } });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
-    const items = data.content || data.tenders || data.items || (Array.isArray(data) ? data : null);
-    if (items && items.length) return { ok: true, items };
-    return { ok: true, items: [] };
-  } catch(e) {
-    return { ok: false, error: e.message };
+  const tenders = CUSTOMER_TENDERS[idCode];
+  if (!tenders || tenders.length === 0) {
+    return { ok: false, error: "no_data" };
   }
+  return { ok: true, items: tenders };
 }
 
 function renderCustomerTenders(result, c) {
   if (!result.ok) {
     return '<div class="ct-err">'
-      + '<div class="ct-err-icon">⚠️</div>'
-      + '<div class="ct-err-msg">Не удалось загрузить данные напрямую.<br>Откройте официальный сайт для просмотра иhaлей.</div>'
+      + '<div class="ct-err-icon">📭</div>'
+      + '<div class="ct-err-msg">Данные ещё не загружены.<br>Бот должен запуститься хотя бы один раз, чтобы собрать иhaлей этого поставщика.</div>'
       + '<a href="https://tenders.procurement.gov.ge/public/suppliers/' + c.id + '" target="_blank" class="official-link">🔗 Открыть профиль на сайте ↗</a>'
       + '</div>';
   }
-  if (!result.items.length) {
-    return '<div class="ct-err"><div class="ct-err-icon">📭</div><div class="ct-err-msg">Иhaлей не найдено</div>'
-      + '<a href="https://tenders.procurement.gov.ge/public/suppliers/' + c.id + '" target="_blank" class="official-link">🔗 Проверить на сайте ↗</a></div>';
-  }
-  // Sort by date descending
-  const sorted = result.items.slice().sort((a, b) => {
-    const da = new Date(a.publishDate || a.announcementDate || a.date || 0);
-    const db = new Date(b.publishDate || b.announcementDate || b.date || 0);
-    return db - da;
-  });
+  const sorted = result.items.slice().sort((a, b) => parseTenderDate(b.publish_date) - parseTenderDate(a.publish_date));
   let html = '<div class="ct-top"><div class="ct-title">Все иhaлей</div><div class="ct-badge">' + sorted.length + ' иhaлей</div></div>';
-html += sorted.map(t => {
-  const id = t.reg_id || t.id || "—";
-  const name = t.name || "—";
-  const status = t.status || "—";
-  const dateStr = t.publish_date || t.deadline || "—";
-  const price = t.price || "—";
-  const org = t.org || "—";
-  const link = t.link || "#";
-  const sCls = getStatusClass(status);
-  return '<div class="ct-card" onclick="window.open(\'' + link.replace(/'/g,"\'") + '\',\'_blank\')">'
-    + '<div class="ct-card-head"><span class="ct-card-num">' + id + '</span><span class="ct-card-date">📅 ' + dateStr + '</span></div>'
-    + '<div class="ct-card-name">' + name + '</div>'
-    + '<div class="ct-card-foot">'
-      + '<span class="status-badge ' + sCls + '">' + status + '</span>'
-      + '<span style="font-size:12px;color:var(--text2)">🏢 ' + (org.length > 35 ? org.slice(0,35)+"..." : org) + '</span>'
-      + (price !== "—" ? '<span style="font-size:12px;font-weight:700;color:var(--blue);margin-left:auto">💰 ' + price + '</span>' : '')
-    + '</div>'
-  + '</div>';
-}).join("");
+  html += sorted.map(t => {
+    const id = t.reg_id || t.id || "—";
+    const name = t.name || "—";
+    const status = t.status || "—";
+    const dateStr = t.publish_date || t.deadline || "—";
+    const price = t.price || "—";
+    const org = t.org || "—";
+    const link = t.link || "#";
+    const sCls = getStatusClass(status);
+    return '<div class="ct-card" onclick="window.open(\'' + link.replace(/'/g, "\\'") + '\',\'_blank\')">'
+      + '<div class="ct-card-head"><span class="ct-card-num">' + id + '</span><span class="ct-card-date">📅 ' + dateStr + '</span></div>'
+      + '<div class="ct-card-name">' + name + '</div>'
+      + '<div class="ct-card-foot">'
+        + '<span class="status-badge ' + sCls + '">' + status + '</span>'
+        + '<span style="font-size:12px;color:var(--text2)">🏢 ' + (org.length > 35 ? org.slice(0, 35) + "..." : org) + '</span>'
+        + (price !== "—" ? '<span style="font-size:12px;font-weight:700;color:var(--blue);margin-left:auto">💰 ' + price + '</span>' : '')
+      + '</div>'
+    + '</div>';
+  }).join("");
   return html;
 }
 
@@ -957,7 +977,7 @@ async function loadData() {
     const text = await res.text();
     const rows = parseCSV(text);
     if (rows.length < 2) { console.warn("CSV boş"); return; }
-    const headers = rows.shift().map(h => h.replace(/﻿/g, "").trim());
+    const headers = rows.shift().map(h => h.replace(/\uFEFF/g, "").trim());
     ALL_TENDERS = rows
       .map(r => { const obj = {}; headers.forEach((h, i) => obj[h] = (r[i] || "").trim()); return obj; })
       .filter(t => t.id && t.id.trim() !== "")
@@ -966,6 +986,7 @@ async function loadData() {
         return !d || d >= MIN_DATE;
       });
   } catch(e) { console.error("CSV error", e); }
+  await loadCustomerTendersCSV();
   updateStats(); render();
 }
 
