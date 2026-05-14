@@ -25,11 +25,12 @@ CHECK_INTERVAL = 300  # 5 минут
 SEEN_FILE = Path("seen_tenders_georgia.json")
 CUSTOMER_CSV_FILE = "customer_tenders.csv"
 
+# (identification_code): (display_name, monac_id, georgian_name)
 CUSTOMERS = {
-    "424611441": "Lago",
-    "436034916": "Our Group chveni jgupi",
-    "405142634": "Ander Konstrakshen",
-    "425057341": "Eplaini",
+    "424611441": ("Lago",                  "12891", "ლაგო"),
+    "436034916": ("Our Group chveni jgupi", "",      ""),
+    "405142634": ("Ander Konstrakshen",     "",      ""),
+    "425057341": ("Eplaini",                "",      ""),
 }
 
 # ── Логирование ────────────────────────────────────────────────────────────────
@@ -65,41 +66,45 @@ SESSION.headers.update(HEADERS)
 
 
 def init_session() -> None:
-    """Visit the main library page to get session cookies."""
     try:
         SESSION.get(f"{LIBRARY_URL}/", timeout=30)
+        SESSION.get(f"{LIBRARY_URL}/who.php", timeout=15)
+        SESSION.headers["Referer"] = f"{LIBRARY_URL}/"
+        log.info("Session hazır. Cookies: %s", list(SESSION.cookies.keys()))
     except Exception as e:
-        log.warning("init_session error: %s", e)
+        log.warning("init_session: %s", e)
 
 
 def get_monac_id(customer_id: str) -> tuple[str, str]:
-    """
-    list_org.php?q={id_code} çağırarak şirketin
-    dahili monac_id ve Gürcüce ismini döndürür.
-    Returns: (monac_id, georgian_name)
-    """
+    """Hardcoded değer varsa onu döndür, yoksa list_org.php dene."""
+    info = CUSTOMERS.get(customer_id, ("", "", ""))
+    if info[1]:  # hardcoded monac_id mevcut
+        log.info("  Hardcoded: monac_id=%s, org_b=%s", info[1], info[2])
+        return info[1], info[2]
+
     ts = int(time.time() * 1000)
     try:
         resp = SESSION.get(
             LIST_ORG_URL,
             params={"q": customer_id, "limit": "50", "timestamp": str(ts)},
+            headers={"Accept": "application/json, text/javascript, */*; q=0.01"},
             timeout=30,
         )
-        resp.raise_for_status()
+        raw = resp.text.strip()
+        log.info("  list_org raw: %s", repr(raw[:200]))
+        if not raw:
+            return "0", ""
         data = resp.json()
-        # Response formats: list of dicts or {"results": [...]}
-        items = data if isinstance(data, list) else data.get("results", data.get("items", []))
+        items = data if isinstance(data, list) else data.get("results", [])
         if items:
             item = items[0]
-            monac_id = str(item.get("id", item.get("monac_id", item.get("value", ""))))
-            name = item.get("name", item.get("label", item.get("text", "")))
-            # Strip "(ID)" suffix if present in label
+            monac_id = str(item.get("id", ""))
+            name = item.get("name", item.get("label", item.get("value", "")))
             if "(" in name:
                 name = name[:name.rfind("(")].strip()
-            log.info("  monac_id=%s name=%s", monac_id, name)
             return monac_id, name
     except Exception as e:
-        log.error("get_monac_id(%s) error: %s", customer_id, e)
+        log.error("get_monac_id(%s): %s", customer_id, e)
     return "0", ""
 
 
