@@ -219,7 +219,7 @@ def fetch_customer_tenders_playwright(
     async (params) => {
         const body = new URLSearchParams(params);
         try {
-            const resp = await fetch('/public/library/controller.php', {
+            const resp = await fetch('/public/library/controller.php?lang=ka', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -256,7 +256,7 @@ def fetch_customer_tenders_playwright(
 
             # 1) Sayfayı ziyaret et → cookie al
             log.info("  [%s] Sayfaya gidiliyor…", customer_label)
-            page.goto(f"{BASE_URL}/public/library/", wait_until="networkidle", timeout=60_000)
+            page.goto(f"{BASE_URL}/public/library/?lang=ka", wait_until="networkidle", timeout=60_000)
 
             # 2) fetch ile POST yap (aynı origin → CORS yok)
             log.info("  [%s] controller.php POST…", customer_label)
