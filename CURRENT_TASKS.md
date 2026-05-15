@@ -24,7 +24,6 @@ This file tracks active work for humans and AI coding assistants.
 | P1 | Verify Telegram alerts in GitHub Actions | Integrations | A new test tender or controlled CSV diff sends exactly one Telegram message. |
 | P1 | Confirm Supabase schema | Database | `tender_reviews` columns and RLS policy documented. |
 | P2 | Add Flask backend if required | Backend | Flask app exposes documented API routes and does not break static deployment. |
-| P2 | Add automated parser tests | Backend | HTML fixtures validate pagination, NAT extraction, dates, organizer, and budget. |
 | P2 | Add frontend smoke test | Frontend | Dashboard loads CSVs and opens tender/customer drawers. |
 | P2 | Confirm main tender feed business filters | Data | Current rule is announcement date >= 01.03.2026, all statuses, CPV 45100000. |
 | P3 | Split `index.html` into modules | Frontend | Preserve current behavior while improving maintainability. |
@@ -42,6 +41,8 @@ This file tracks active work for humans and AI coding assistants.
 | 2026-05-14 | Customer tender load race fix | Customer modal waits for `customer_tenders.csv` before showing no-data state. |
 | 2026-05-14 | Main tender feed refresh | `Все тендеры` now uses announcement date from 01.03.2026, all statuses, CPV 45100000. |
 | 2026-05-14 | GitHub Actions main-feed refresh | Workflow now runs `scripts/refresh_tenders.mjs` after the Python supplier sync. |
+| 2026-05-15 | Automated parser tests | Node fixture tests validate pagination, NAT extraction, dates, organizer, budget, CSV quoting, and official URLs. |
+| 2026-05-15 | Expanded monitored suppliers | Added Jorjia Bilding Grupi, Kualiti, Legu Bildingi, SG Jgupi, and Regrini to scraper, Node helper, and dashboard. |
 
 ## Technical Debt
 

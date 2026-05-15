@@ -25,7 +25,7 @@ Primary use cases:
 | Supabase authentication | Active | Frontend uses Supabase Auth in browser. |
 | Supabase review state | Active | Stores review status and notes for tenders. |
 | Tender scraping | Active | Implemented in `georgia_tender_bot.py`. |
-| Monitored supplier integration | Active | Tracks Lago, Our Group, Ander Konstrakshen, and Eplaini; follows pagination for yearly results. |
+| Monitored supplier integration | Active | Tracks Lago, Our Group, Ander Konstrakshen, Eplaini, Jorjia Bilding Grupi, Kualiti, Legu Bildingi, SG Jgupi, and Regrini; follows pagination for yearly results. |
 | Official tender URLs | Active | Uses `https://tenders.procurement.gov.ge/public/?lang=ru&go={app_id}`. |
 | Telegram notifications | Active | Sends a message when new customer tender rows are detected. |
 | GitHub Actions automation | Active | Runs twice daily and can be triggered manually. |
@@ -84,6 +84,14 @@ python -m http.server 8000
 ```
 
 Then open `http://localhost:8000`.
+
+## Testing
+
+Run the local Node parser tests:
+
+```bash
+node --test
+```
 
 ## Environment Variables
 
@@ -181,6 +189,6 @@ Telegram notifications are triggered by customer tender synchronization:
 - Do not assume Flask exists until an app file such as `app.py` or `wsgi.py` is added.
 - Main data contracts are the CSV headers in `tenders.csv` and `customer_tenders.csv`.
 - Official tender links should use `/public/?lang=ru&go={app_id}`, not `/public/library/#/tenders/apinfo/{app_id}`.
-- Monitored supplier IDs: Lago `12891`, Our Group chveni jgupi `36827`, Ander Konstrakshen `104814`, Eplaini `71057`.
+- Monitored supplier IDs: Lago `12891`, Our Group chveni jgupi `36827`, Ander Konstrakshen `104814`, Eplaini `71057`, Jorjia Bilding Grupi `83472`, Kualiti `77262`, Legu Bildingi `115620`, SG Jgupi `79247`, Regrini `129219`.
 - Main tender dashboard feed should include all statuses from announcement date `01.03.2026` onward unless the product requirement changes.
 - Preserve GitHub Actions behavior when changing generated data files.

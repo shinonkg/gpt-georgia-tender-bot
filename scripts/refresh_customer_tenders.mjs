@@ -1,6 +1,11 @@
 import fs from "node:fs";
+import {
+  BASE_URL,
+  extractPageCount,
+  parseCustomerTenderRows,
+  rowsToCsv,
+} from "./procurement_parsers.mjs";
 
-const BASE_URL = "https://tenders.procurement.gov.ge";
 const CUSTOMER_TENDER_YEAR = Number(process.env.CUSTOMER_TENDER_YEAR || new Date().getFullYear());
 const CUSTOMER_TENDER_DATE_TYPE = process.env.CUSTOMER_TENDER_DATE_TYPE || "2";
 const MAX_CUSTOMER_PAGES = Number(process.env.MAX_CUSTOMER_TENDER_PAGES || 25);
@@ -10,6 +15,11 @@ const CUSTOMERS = {
   "436034916": ["Our Group chveni jgupi", "36827", "our group"],
   "405142634": ["Ander Konstrakshen", "104814", "ander konstrakshen"],
   "425057341": ["Eplaini", "71057", "eplaini"],
+  "422937273": ["Jorjia Bilding Grupi", "83472", "jorjia bilding grupi"],
+  "404573216": ["Kualiti", "77262", "kualiti"],
+  "402214304": ["Legu Bildingi", "115620", "legu bildingi"],
+  "405372074": ["SG Jgupi", "79247", "sg jgupi"],
+  "404764705": ["Regrini", "129219", "regrini"],
 };
 
 const fieldnames = [
@@ -25,70 +35,6 @@ const fieldnames = [
   "deadline",
   "url",
 ];
-
-function decodeHtml(value) {
-  return String(value || "")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;|&apos;/g, "'")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&nbsp;/g, " ");
-}
-
-function stripTags(value) {
-  return decodeHtml(String(value || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
-}
-
-function csvCell(value) {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
-}
-
-function extractPageCount(html) {
-  const patterns = [
-    /page:\s*\d+\s*\/\s*(\d+)/i,
-    /plastpage\s*=\s*eval\(['"]?(\d+)['"]?\)/i,
-    /lastpage\s*=\s*eval\(['"]?(\d+)['"]?\)/i,
-    /page_count\s*[:=]\s*['"]?(\d+)/i,
-  ];
-  for (const pattern of patterns) {
-    const match = String(html).match(pattern);
-    if (match) return Math.max(1, Math.min(MAX_CUSTOMER_PAGES, Number(match[1])));
-  }
-  return 1;
-}
-
-function parseRows(html, customerId, customerName) {
-  const rows = [];
-  const rowPattern = /<tr[^>]+id=["']A(\d+)["'][\s\S]*?<\/tr>/gi;
-  let match;
-
-  while ((match = rowPattern.exec(html))) {
-    const appId = match[1];
-    const text = stripTags(match[0]);
-    const nat = text.match(/NAT\d+/i)?.[0] || appId;
-    const budget = text.match(/([\d'`’.,\s]+)\s*GEL/i)?.[0]?.trim() || "";
-    const published = text.match(/Procurement announcment date:\s*([0-9.]+)/i)?.[1]?.trim() || "";
-    const deadline = text.match(/Offer reception term:\s*([0-9.]+)/i)?.[1]?.trim() || "";
-    const organizer = text.match(/Procuring entities:\s*(.*?)\s*Procuring category:/i)?.[1]?.trim() || "";
-
-    rows.push({
-      customer_id: customerId,
-      customer_name: customerName,
-      tender_id: nat,
-      title: text,
-      organizer,
-      budget,
-      currency: "GEL",
-      status: /Contract awarded/i.test(text) ? "Contract awarded" : "",
-      publish_date: published,
-      deadline,
-      url: `${BASE_URL}/public/?lang=ru&go=${appId}`,
-    });
-  }
-
-  return rows;
-}
 
 async function openSession() {
   const resp = await fetch(`${BASE_URL}/public/?lang=en`);
@@ -142,14 +88,14 @@ async function fetchCustomer(cookie, customerId, customerName, monacId, supplier
   };
 
   const firstHtml = await searchPage(cookie, baseParams);
-  const pageCount = extractPageCount(firstHtml);
-  const rows = parseRows(firstHtml, customerId, customerName);
+  const pageCount = extractPageCount(firstHtml, MAX_CUSTOMER_PAGES);
+  const rows = parseCustomerTenderRows(firstHtml, customerId, customerName);
   const seen = new Set(rows.map(row => `${row.customer_id}:${row.tender_id}`));
   console.log(`${customerName}: page 1/${pageCount}, rows=${rows.length}`);
 
   for (let page = 2; page <= pageCount; page++) {
     const html = await searchPage(cookie, { ...baseParams, page: String(page) });
-    const pageRows = parseRows(html, customerId, customerName);
+    const pageRows = parseCustomerTenderRows(html, customerId, customerName);
     const newRows = pageRows.filter(row => {
       const key = `${row.customer_id}:${row.tender_id}`;
       if (seen.has(key)) return false;
@@ -172,10 +118,5 @@ for (const [customerId, [customerName, monacId, supplierText]] of Object.entries
 }
 
 const uniqueRows = [...new Map(allRows.map(row => [`${row.customer_id}:${row.tender_id}`, row])).values()];
-const csv = [
-  fieldnames.join(","),
-  ...uniqueRows.map(row => fieldnames.map(name => csvCell(row[name])).join(",")),
-].join("\n") + "\n";
-
-fs.writeFileSync("customer_tenders.csv", csv, "utf8");
+fs.writeFileSync("customer_tenders.csv", rowsToCsv(fieldnames, uniqueRows), "utf8");
 console.log(`customer_tenders.csv updated: ${uniqueRows.length} rows`);

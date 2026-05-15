@@ -12,6 +12,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) styl
 - `/docs` folder structure for frontend, backend, database, and integrations notes.
 - `scripts/refresh_tenders.mjs` for the main `Все тендеры` dashboard feed.
 - `scripts/refresh_customer_tenders.mjs` as a local Node helper for monitored supplier CSV refreshes.
+- Shared procurement parser helpers and fixture-based Node tests for tender HTML parsing.
+- Five monitored suppliers: Jorjia Bilding Grupi, Kualiti, Legu Bildingi, SG Jgupi, and Regrini.
 
 ### Changed
 
@@ -19,6 +21,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) styl
 - GitHub Actions now refreshes the main tender feed after the Python monitored-supplier sync.
 - `customer_tenders.csv` now includes Lago, Our Group chveni jgupi, Ander Konstrakshen, and Eplaini.
 - Supplier tender search defaults to `app_date_type=2` to include current-year participation even when announcement date is in the previous year.
+- Node refresh scripts now use the same parser module for page-count extraction, row parsing, CSV quoting, and official URL construction.
 
 ### Fixed
 

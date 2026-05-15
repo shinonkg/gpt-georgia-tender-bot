@@ -31,6 +31,11 @@ CUSTOMERS = {
     "436034916": ("Our Group chveni jgupi", "36827", "our group"),
     "405142634": ("Ander Konstrakshen", "104814", "ander konstrakshen"),
     "425057341": ("Eplaini", "71057", "eplaini"),
+    "422937273": ("Jorjia Bilding Grupi", "83472", "jorjia bilding grupi"),
+    "404573216": ("Kualiti", "77262", "kualiti"),
+    "402214304": ("Legu Bildingi", "115620", "legu bildingi"),
+    "405372074": ("SG Jgupi", "79247", "sg jgupi"),
+    "404764705": ("Regrini", "129219", "regrini"),
 }
 
 logging.basicConfig(
