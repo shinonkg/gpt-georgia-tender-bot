@@ -65,10 +65,10 @@ def customer_date_range() -> tuple[str, str]:
     return f"01.01.{CUSTOMER_TENDER_YEAR}", f"31.12.{CUSTOMER_TENDER_YEAR}"
 
 
-def send_telegram_message(text: str) -> None:
+def send_telegram_message(text: str) -> bool:
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-        log.warning("Telegram ayarları eksik, bildirim gönderilmedi")
-        return
+        log.error("Telegram ayarları eksik, bildirim gönderilmedi")
+        return False
 
     try:
         resp = requests.post(
@@ -83,9 +83,12 @@ def send_telegram_message(text: str) -> None:
         )
         if resp.status_code != 200:
             log.error("Telegram hata %s: %s", resp.status_code, resp.text[:300])
+            return False
+        log.info("Telegram bildirimi gönderildi")
+        return True
     except Exception as exc:
         log.exception("Telegram bildirimi gönderilemedi: %s", exc)
-
+        return False
 
 def load_existing_customer_tender_ids() -> set[str]:
     if not CUSTOMER_TENDERS_CSV.exists():
@@ -175,6 +178,26 @@ def build_customer_tender_alert(row: dict) -> str:
         f"Resmi link: {esc(row.get('url'))}"
     )
 
+def build_no_new_tender_alert(total_rows: int) -> str:
+    return (
+        "<b>Georgia Tender Monitor</b>\n"
+        "Yeni müşteri ihalesi yok.\n"
+        f"Kontrol edilen kayıt: <b>{total_rows}</b>\n"
+        f"Tarih: <b>{html.escape(datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC'))}</b>"
+    )
+
+
+def build_test_telegram_alert() -> str:
+    return (
+        "<b>Georgia Tender Monitor test</b>\n"
+        "Telegram bildirimleri aktif.\n"
+        f"Tarih: <b>{html.escape(datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC'))}</b>"
+    )
+
+
+def send_test_telegram_message() -> None:
+    if not send_telegram_message(build_test_telegram_alert()):
+        raise RuntimeError("Telegram test mesajı gönderilemedi")
 
 def fetch_customer_tenders_playwright(
     customer_id: str,
@@ -389,14 +412,25 @@ def update_customer_tenders_csv() -> None:
         row for row in all_rows
         if row["customer_id"] + ":" + row["tender_id"] not in existing_ids
     ]
+    failed_count = 0
     if existing_ids:
-        for row in new_rows:
-            send_telegram_message(build_customer_tender_alert(row))
         if new_rows:
-            log.info("Telegram bildirimi gonderilen yeni musteri tender sayisi: %d", len(new_rows))
+            sent_count = 0
+            for row in new_rows:
+                if send_telegram_message(build_customer_tender_alert(row)):
+                    sent_count += 1
+                else:
+                    failed_count += 1
+            log.info("Telegram bildirimi gonderilen yeni musteri tender sayisi: %d", sent_count)
+        elif not send_telegram_message(build_no_new_tender_alert(len(all_rows))):
+            failed_count += 1
     else:
-        log.info("Ilk musteri tender taramasi; gecmis kayitlar icin Telegram bildirimi gonderilmedi.")
+        log.info("Ilk musteri tender taramasi; gecmis kayitlar icin yeni ihale bildirimi gonderilmedi.")
+        if not send_telegram_message(build_no_new_tender_alert(len(all_rows))):
+            failed_count += 1
 
+    if failed_count:
+        raise RuntimeError(f"Telegram bildirimi gonderilemeyen mesaj sayisi: {failed_count}")
     log.info("customer_tenders.csv güncellendi: %d satır", len(all_rows))
 
 
@@ -432,12 +466,15 @@ if __name__ == "__main__":
     parser.add_argument("--once", action="store_true", help="Bir kez çalıştır ve çık")
     parser.add_argument("--interval", type=int, default=CHECK_INTERVAL)
     parser.add_argument("--customers-only", action="store_true")
+    parser.add_argument("--test-telegram", action="store_true", help="Telegram test mesajı gönder ve çık")
 
     args = parser.parse_args()
 
     CHECK_INTERVAL = args.interval
 
-    if args.customers_only or args.once:
+    if args.test_telegram:
+        send_test_telegram_message()
+    elif args.customers_only or args.once:
         run_once()
     else:
         run_loop()

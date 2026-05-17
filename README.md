@@ -13,7 +13,7 @@ Primary use cases:
 - Track public tenders relevant to construction/site-preparation categories.
 - Review tenders in a dashboard with cards, filters, detail drawers, and official tender links.
 - Track historical tenders for monitored suppliers.
-- Notify via Telegram when a monitored supplier has a newly detected tender participation.
+- Notify via Telegram when a monitored supplier has a newly detected tender participation, and send a status message when no new customer tender is found.
 - Keep data fresh through scheduled GitHub Actions runs.
 
 ## Features
@@ -27,7 +27,7 @@ Primary use cases:
 | Tender scraping | Active | Implemented in `georgia_tender_bot.py`. |
 | Monitored supplier integration | Active | Tracks Lago, Our Group, Ander Konstrakshen, Eplaini, Jorjia Bilding Grupi, Kualiti, Legu Bildingi, SG Jgupi, and Regrini; follows pagination for yearly results. |
 | Official tender URLs | Active | Uses `https://tenders.procurement.gov.ge/public/?lang=ru&go={app_id}`. |
-| Telegram notifications | Active | Sends a message when new customer tender rows are detected. |
+| Telegram notifications | Active | Sends new customer tender alerts and no-new-tender status messages. |
 | GitHub Actions automation | Active | Runs twice daily and can be triggered manually. |
 | Flask backend | Planned | Documented as target backend layer; not currently implemented. |
 
@@ -112,7 +112,7 @@ node --test
 
 The workflow in `.github/workflows/georgia-tender-bot.yml`:
 
-- Runs at `05:00 UTC` and `17:00 UTC`.
+- Runs at `05:00 UTC`, `09:00 UTC`, and `17:00 UTC`.
 - Can be started manually with `workflow_dispatch`.
 - Installs Python dependencies and Playwright Chromium.
 - Runs `python georgia_tender_bot.py --once`.

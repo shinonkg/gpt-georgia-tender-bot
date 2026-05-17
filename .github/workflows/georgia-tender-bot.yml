@@ -3,8 +3,18 @@ name: Georgia Tender Monitor
 on:
   schedule:
     - cron: "0 5 * * *"   # 05:00 UTC
+    - cron: "0 9 * * *"   # 09:00 UTC / 12:00 Turkey-Georgia time
     - cron: "0 17 * * *"  # 17:00 UTC
   workflow_dispatch:
+    inputs:
+      send_test_telegram:
+        description: "Send a Telegram test message before refreshing data"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 permissions:
   contents: write
@@ -26,6 +36,23 @@ jobs:
           pip install -r requirements.txt
           playwright install chromium
           playwright install-deps chromium
+
+      - name: Check Telegram configuration
+        env:
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::TELEGRAM_TOKEN and TELEGRAM_CHAT_ID secrets must be configured for notifications."
+            exit 1
+          fi
+
+      - name: Send Telegram test message
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.send_test_telegram == 'true' }}
+        env:
+          TELEGRAM_TOKEN:   ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python georgia_tender_bot.py --test-telegram
 
       - name: Run bot
         env:

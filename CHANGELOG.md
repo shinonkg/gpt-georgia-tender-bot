@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) styl
 - `scripts/refresh_customer_tenders.mjs` as a local Node helper for monitored supplier CSV refreshes.
 - Shared procurement parser helpers and fixture-based Node tests for tender HTML parsing.
 - Five monitored suppliers: Jorjia Bilding Grupi, Kualiti, Legu Bildingi, SG Jgupi, and Regrini.
+- Noon scheduled monitoring run and Telegram no-new-tender status notifications.
 
 ### Changed
 
