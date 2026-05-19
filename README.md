@@ -97,8 +97,8 @@ node --test
 
 | Variable | Required | Used by | Description |
 | --- | --- | --- | --- |
-| `TELEGRAM_TOKEN` | Yes for notifications | `georgia_tender_bot.py` | Telegram bot token. |
-| `TELEGRAM_CHAT_ID` | Yes for notifications | `georgia_tender_bot.py` | Target Telegram chat/channel ID. |
+| `TELEGRAM_TOKEN` | Yes for notifications, not required for data refresh | `georgia_tender_bot.py` | Telegram bot token. |
+| `TELEGRAM_CHAT_ID` | Yes for notifications, not required for data refresh | `georgia_tender_bot.py` | Target Telegram chat/channel ID. |
 | `CUSTOMER_TENDER_YEAR` | Optional | `georgia_tender_bot.py` | Year filter for customer tender searches. Defaults to current year. |
 | `CUSTOMER_TENDER_DATE_TYPE` | Optional | `georgia_tender_bot.py` | Procurement portal date filter. Defaults to `2`, the offer reception/auction date, so late previous-year announcements with current-year participation are included. |
 | `MAIN_TENDER_DATE_FROM` | Optional | `scripts/refresh_tenders.mjs` | Main dashboard announcement-date lower bound. Defaults to `01.03.2026`. |

@@ -65,8 +65,12 @@ def customer_date_range() -> tuple[str, str]:
     return f"01.01.{CUSTOMER_TENDER_YEAR}", f"31.12.{CUSTOMER_TENDER_YEAR}"
 
 
+def telegram_configured() -> bool:
+    return bool(TELEGRAM_TOKEN and TELEGRAM_CHAT_ID)
+
+
 def send_telegram_message(text: str) -> bool:
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+    if not telegram_configured():
         log.error("Telegram ayarları eksik, bildirim gönderilmedi")
         return False
 
@@ -413,7 +417,9 @@ def update_customer_tenders_csv() -> None:
         if row["customer_id"] + ":" + row["tender_id"] not in existing_ids
     ]
     failed_count = 0
-    if existing_ids:
+    if not telegram_configured():
+        log.warning("Telegram secrets eksik; veri yenilendi ama Telegram bildirimi atlandi.")
+    elif existing_ids:
         if new_rows:
             sent_count = 0
             for row in new_rows:

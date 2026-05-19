@@ -43,8 +43,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           if [ -z "$TELEGRAM_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "::error::TELEGRAM_TOKEN and TELEGRAM_CHAT_ID secrets must be configured for notifications."
-            exit 1
+            echo "::warning::TELEGRAM_TOKEN and TELEGRAM_CHAT_ID secrets are missing. Data refresh will continue, but Telegram notifications will be skipped."
+          else
+            echo "Telegram secrets are configured."
           fi
 
       - name: Send Telegram test message

@@ -15,6 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) styl
 - Shared procurement parser helpers and fixture-based Node tests for tender HTML parsing.
 - Five monitored suppliers: Jorjia Bilding Grupi, Kualiti, Legu Bildingi, SG Jgupi, and Regrini.
 - Noon scheduled monitoring run and Telegram no-new-tender status notifications.
+- Data refresh continues when Telegram secrets are missing; notification setup issues are reported as workflow warnings.
 
 ### Changed
 
